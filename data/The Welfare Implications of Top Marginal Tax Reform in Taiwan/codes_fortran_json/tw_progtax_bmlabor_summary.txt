@@ -1,0 +1,957 @@
+Fortran File Analysis Summary
+============================================================
+
+File: data/The Welfare Implications of Top Marginal Tax Reform in Taiwan/codes_fortran/tw_progtax_bmlabor.f90
+Program: Health_GE_5period_endosur_MD_benchmark
+
+Global Variables: 72
+Subroutines: 43
+Total Lines: 17406
+
+Main Logic Blocks:
+------------------------------------------------------------
+
+FILE_IO: File I/O Operations
+  Lines: 713-743
+
+LOGIC_BLOCK: Read Data
+  Lines: 744-747
+
+LOGIC_BLOCK: ALLOCATE( EFFCROSS(RETAGE-1,2) )     ! for comboeff and psurv
+  Lines: 748-796
+
+FILE_IO: File I/O Operations
+  Lines: 797-835
+
+LOOP: Loop over IG
+  Lines: 836-844
+  Loop Variable: IG
+
+LOOP: Loop over i
+  Lines: 845-845
+  Loop Variable: i
+
+FILE_IO: File I/O Operations
+  Lines: 846-914
+
+LOOP: Loop over i
+  Lines: 915-919
+  Loop Variable: i
+
+FILE_IO: File I/O Operations
+  Lines: 920-922
+
+LOOP: Loop over i
+  Lines: 923-927
+  Loop Variable: i
+
+FILE_IO: File I/O Operations
+  Lines: 928-961
+
+LOOP: Loop over i
+  Lines: 962-962
+  Loop Variable: i
+
+FILE_IO: File I/O Operations
+  Lines: 963-966
+
+LOOP: Loop over i
+  Lines: 967-967
+  Loop Variable: i
+
+FILE_IO: File I/O Operations
+  Lines: 968-976
+
+LOGIC_BLOCK: Age-efficiency
+  Lines: 977-980
+
+LOGIC_BLOCK: ALLOCATE(  avg_z(2) )
+  Lines: 981-1042
+
+ALLOCATION: Memory Allocation
+  Lines: 1043-1043
+
+FILE_IO: File I/O Operations
+  Lines: 1044-1051
+
+ALLOCATION: Memory Allocation
+  Lines: 1052-1069
+
+LOGIC_BLOCK: Tabulate state and control variables
+  Lines: 1070-1073
+
+LOGIC_BLOCK: Tabulate asset levels
+  Lines: 1074-1096
+
+ALLOCATION: Memory Allocation
+  Lines: 1097-1108
+
+FILE_IO: File I/O Operations
+  Lines: 1109-1141
+
+ALLOCATION: Memory Allocation
+  Lines: 1142-1147
+
+FILE_IO: File I/O Operations
+  Lines: 1148-1152
+
+LOGIC_BLOCK: Preliminary Calculations
+  Lines: 1153-1156
+
+LOGIC_BLOCK: EHMAX	= EHMAX0
+  Lines: 1157-1192
+
+FILE_IO: File I/O Operations
+  Lines: 1193-1310
+
+LOOP: Loop over JTS
+  Lines: 1311-1311
+  Loop Variable: JTS
+
+LOOP: Loop over JTM
+  Lines: 1312-1338
+  Loop Variable: JTM
+
+LOGIC_BLOCK: General Equilibrium
+  Lines: 1339-1342
+
+LOGIC_BLOCK: SS      = SS0
+  Lines: 1343-1384
+
+LOGIC_BLOCK: Iterate to Convergence
+  Lines: 1385-1388
+
+SECTION_HEADER: Unnamed
+  Lines: 1389-1393
+
+FILE_IO: File I/O Operations
+  Lines: 1394-1469
+
+ALLOCATION: Memory Allocation
+  Lines: 1470-1476
+
+FILE_IO: File I/O Operations
+  Lines: 1477-1485
+
+LOGIC_BLOCK: Compute the value function of the retired single person for all time periods after
+  Lines: 1486-1494
+
+ALLOCATION: Memory Allocation
+  Lines: 1495-1502
+
+FILE_IO: File I/O Operations
+  Lines: 1503-1508
+
+ALLOCATION: Memory Allocation
+  Lines: 1509-1509
+
+FILE_IO: File I/O Operations
+  Lines: 1510-1525
+
+LOGIC_BLOCK: OPEN(UNIT=19,FILE='single_policy.txt')
+  Lines: 1526-1580
+
+LOGIC_BLOCK: Aggtincome=10.2657
+  Lines: 1581-1605
+
+ALLOCATION: Memory Allocation
+  Lines: 1606-1611
+
+LOGIC_BLOCK: OPEN(UNIT=16,FILE='single_dist.txt')
+  Lines: 1612-1666
+
+LOGIC_BLOCK: single_male_welfare = SUM(singleVW(:,:,:,:,1)*singleYW(:,:,:,:,1))/SUM(singleYW(:,:,:,:,1))
+  Lines: 1667-1753
+
+ALLOCATION: Memory Allocation
+  Lines: 1754-1896
+
+LOGIC_BLOCK: Aggregation
+  Lines: 1897-1914
+
+LOOP: Loop over AGE
+  Lines: 1915-1915
+  Loop Variable: AGE
+
+LOOP: Loop over IA
+  Lines: 1916-1916
+  Loop Variable: IA
+
+LOOP: Loop over IS
+  Lines: 1917-1917
+  Loop Variable: IS
+
+LOOP: Loop over IE
+  Lines: 1918-1918
+  Loop Variable: IE
+
+LOOP: Loop over IG
+  Lines: 1919-1934
+  Loop Variable: IG
+
+LOOP: Loop over AGE
+  Lines: 1935-1935
+  Loop Variable: AGE
+
+LOOP: Loop over IA
+  Lines: 1936-1936
+  Loop Variable: IA
+
+LOOP: Loop over IS1
+  Lines: 1937-1937
+  Loop Variable: IS1
+
+LOOP: Loop over IS2
+  Lines: 1938-1938
+  Loop Variable: IS2
+
+LOOP: Loop over IE
+  Lines: 1939-1956
+  Loop Variable: IE
+
+LOOP: Loop over AGE
+  Lines: 1957-1957
+  Loop Variable: AGE
+
+LOOP: Loop over IA
+  Lines: 1958-1958
+  Loop Variable: IA
+
+LOOP: Loop over IE
+  Lines: 1959-1959
+  Loop Variable: IE
+
+LOOP: Loop over IG
+  Lines: 1960-1970
+  Loop Variable: IG
+
+LOOP: Loop over AGE
+  Lines: 1971-1971
+  Loop Variable: AGE
+
+LOOP: Loop over IA
+  Lines: 1972-1972
+  Loop Variable: IA
+
+LOOP: Loop over IE
+  Lines: 1973-2039
+  Loop Variable: IE
+
+LOGIC_BLOCK: Update SS benifits and SS tax rate
+  Lines: 2040-2044
+
+LOOP: Loop over AGE
+  Lines: 2045-2045
+  Loop Variable: AGE
+
+LOOP: Loop over IA
+  Lines: 2046-2046
+  Loop Variable: IA
+
+LOOP: Loop over IE
+  Lines: 2047-2096
+  Loop Variable: IE
+
+LOOP: Loop over AGE
+  Lines: 2097-2097
+  Loop Variable: AGE
+
+LOOP: Loop over IA
+  Lines: 2098-2098
+  Loop Variable: IA
+
+LOOP: Loop over IS
+  Lines: 2099-2099
+  Loop Variable: IS
+
+LOOP: Loop over IE
+  Lines: 2100-2100
+  Loop Variable: IE
+
+LOOP: Loop over IG
+  Lines: 2101-2171
+  Loop Variable: IG
+
+LOOP: Loop over AGE
+  Lines: 2172-2172
+  Loop Variable: AGE
+
+LOOP: Loop over IA
+  Lines: 2173-2173
+  Loop Variable: IA
+
+LOOP: Loop over IS1
+  Lines: 2174-2174
+  Loop Variable: IS1
+
+LOOP: Loop over IS2
+  Lines: 2175-2175
+  Loop Variable: IS2
+
+LOOP: Loop over IE
+  Lines: 2176-2298
+  Loop Variable: IE
+
+LOOP: Loop over AGE
+  Lines: 2299-2299
+  Loop Variable: AGE
+
+LOOP: Loop over IA
+  Lines: 2300-2300
+  Loop Variable: IA
+
+LOOP: Loop over IE
+  Lines: 2301-2301
+  Loop Variable: IE
+
+LOOP: Loop over IG
+  Lines: 2302-2371
+  Loop Variable: IG
+
+LOOP: Loop over AGE
+  Lines: 2372-2372
+  Loop Variable: AGE
+
+LOOP: Loop over IA
+  Lines: 2373-2373
+  Loop Variable: IA
+
+LOOP: Loop over IE
+  Lines: 2374-2583
+  Loop Variable: IE
+
+LOOP: Loop over AGE
+  Lines: 2584-2584
+  Loop Variable: AGE
+
+LOOP: Loop over IA
+  Lines: 2585-2585
+  Loop Variable: IA
+
+LOOP: Loop over IS
+  Lines: 2586-2586
+  Loop Variable: IS
+
+LOOP: Loop over IE
+  Lines: 2587-2587
+  Loop Variable: IE
+
+LOOP: Loop over IG
+  Lines: 2588-2602
+  Loop Variable: IG
+
+LOOP: Loop over AGE
+  Lines: 2603-2603
+  Loop Variable: AGE
+
+LOOP: Loop over IA
+  Lines: 2604-2604
+  Loop Variable: IA
+
+LOOP: Loop over IE
+  Lines: 2605-2605
+  Loop Variable: IE
+
+LOOP: Loop over IG
+  Lines: 2606-2615
+  Loop Variable: IG
+
+LOOP: Loop over AGE
+  Lines: 2616-2616
+  Loop Variable: AGE
+
+LOOP: Loop over IA
+  Lines: 2617-2617
+  Loop Variable: IA
+
+LOOP: Loop over IS1
+  Lines: 2618-2618
+  Loop Variable: IS1
+
+LOOP: Loop over IS2
+  Lines: 2619-2619
+  Loop Variable: IS2
+
+LOOP: Loop over IE
+  Lines: 2620-2635
+  Loop Variable: IE
+
+LOOP: Loop over AGE
+  Lines: 2636-2636
+  Loop Variable: AGE
+
+LOOP: Loop over IA
+  Lines: 2637-2637
+  Loop Variable: IA
+
+LOOP: Loop over IE
+  Lines: 2638-2694
+  Loop Variable: IE
+
+FILE_IO: File I/O Operations
+  Lines: 2695-2950
+
+LOGIC_BLOCK: Calculate the Wealth Gini
+  Lines: 2951-2954
+
+LOGIC_BLOCK: print*,'IDCWA(1,1,1,1)=',IDCWA(1,1,1,1)
+  Lines: 2955-2965
+
+LOGIC_BLOCK: Calculate the Wealth share holding
+  Lines: 2966-2969
+
+LOGIC_BLOCK: CALL wealthshare
+  Lines: 2970-2973
+
+LOGIC_BLOCK: Calculate the mean,SD of return in wealth of top wealth share
+  Lines: 2974-2977
+
+LOGIC_BLOCK: CALL avg_return       ! we get Avg_R,Avg_R_weighted
+  Lines: 2978-2981
+
+LOGIC_BLOCK: Asset demand
+  Lines: 2982-3035
+
+FILE_IO: File I/O Operations
+  Lines: 3036-3136
+
+SECTION_HEADER: Unnamed
+  Lines: 3137-3138
+
+LOGIC_BLOCK: Save results
+  Lines: 3139-3142
+
+SECTION_HEADER: Unnamed
+  Lines: 3143-3144
+
+FILE_IO: File I/O Operations
+  Lines: 3145-3267
+
+LOGIC_BLOCK: Calculate the Consumption holding
+  Lines: 3268-3271
+
+LOGIC_BLOCK: CALL totalincomeshare
+  Lines: 3272-3279
+
+LOGIC_BLOCK: Calculate the Welfare
+  Lines: 3280-3283
+
+SECTION_HEADER: Unnamed
+  Lines: 3284-3285
+
+ALLOCATION: Memory Allocation
+  Lines: 3286-3293
+
+FILE_IO: File I/O Operations
+  Lines: 3294-3383
+
+SECTION_HEADER: Unnamed
+  Lines: 3384-3387
+
+LOGIC_BLOCK: Check whether kmax binding
+  Lines: 3388-3394
+
+SECTION_HEADER: Unnamed
+  Lines: 3395-3397
+
+LOGIC_BLOCK: Calculate winner_loser
+  Lines: 3398-3401
+
+LOGIC_BLOCK: source_welfare in this stage should be 1 as it has computed benchmark already
+  Lines: 3402-3408
+
+LOGIC_BLOCK: DEALLOCATE(log_income_diff_single_retire,log_cons_diff_single_retire,dist_single_retire,log_income_diff_couple_retire,log_cons_diff_couple_retire,dist_couple_retire)
+  Lines: 3409-3459
+
+LOGIC_BLOCK: Calculate the Wealth Gini
+  Lines: 3460-3463
+
+SECTION_HEADER: Unnamed
+  Lines: 3464-3467
+
+LOGIC_BLOCK: Calculate the Wealth share holding
+  Lines: 3468-3471
+
+SECTION_HEADER: Unnamed
+  Lines: 3472-3475
+
+SECTION_HEADER: Unnamed
+  Lines: 3476-3478
+
+LOGIC_BLOCK: Calculate the Age Wealth Gini
+  Lines: 3479-3482
+
+SECTION_HEADER: Unnamed
+  Lines: 3483-3486
+
+LOGIC_BLOCK: Calculate the labor income share holding
+  Lines: 3487-3490
+
+SECTION_HEADER: Unnamed
+  Lines: 3491-3494
+
+LOGIC_BLOCK: Calculate the total income share holding
+  Lines: 3495-3498
+
+SECTION_HEADER: Unnamed
+  Lines: 3499-3502
+
+LOGIC_BLOCK: Calculate the Consumption holding
+  Lines: 3503-3506
+
+LOGIC_BLOCK: CALL consumptionshare
+  Lines: 3507-3510
+
+LOGIC_BLOCK: Calculate the Skewness of wealth and earning distribution
+  Lines: 3511-3514
+
+SECTION_HEADER: Unnamed
+  Lines: 3515-3518
+
+LOGIC_BLOCK: Calculate the life cycle profile of wealth,earning,income ratio
+  Lines: 3519-3522
+
+SECTION_HEADER: Unnamed
+  Lines: 3523-3526
+
+LOGIC_BLOCK: Calculate the Income partition of top wealth share
+  Lines: 3527-3530
+
+SECTION_HEADER: Unnamed
+  Lines: 3531-3534
+
+LOGIC_BLOCK: Intra family earning correlation
+  Lines: 3535-3538
+
+SECTION_HEADER: Unnamed
+  Lines: 3539-3542
+
+LOGIC_BLOCK: var log earning and log consumption profile
+  Lines: 3543-3546
+
+SECTION_HEADER: Unnamed
+  Lines: 3547-3550
+
+LOGIC_BLOCK: Compare the earning distribution with the literature
+  Lines: 3551-3554
+
+LOGIC_BLOCK: CALL COMPARE_LITERATURE
+  Lines: 3555-3558
+
+LOGIC_BLOCK: Calculate the Synthetic Saving Rate  (Saez, Zucman 2016 QJE Table B33)
+  Lines: 3559-3562
+
+LOGIC_BLOCK: CALL saving_rate
+  Lines: 3563-3566
+
+LOGIC_BLOCK: Calculate the Bequest Moment  (De Nardi, Fang Yang 2016 JME Table 1)
+  Lines: 3567-3570
+
+LOGIC_BLOCK: CALL bequest
+  Lines: 3571-3574
+
+LOGIC_BLOCK: Calculate the consumption share by income ranking
+  Lines: 3575-3578
+
+LOGIC_BLOCK: CALL joint_dist
+  Lines: 3579-3584
+
+LOGIC_BLOCK: Summary Calculations
+  Lines: 3585-3588
+
+LOGIC_BLOCK: !  Age distribution of working age population
+  Lines: 3589-3703
+
+LOOP: Loop over AGE
+  Lines: 3708-3708
+  Loop Variable: AGE
+
+LOOP: Loop over IA
+  Lines: 3709-3709
+  Loop Variable: IA
+
+LOOP: Loop over IS
+  Lines: 3710-3710
+  Loop Variable: IS
+
+LOOP: Loop over IE
+  Lines: 3711-3711
+  Loop Variable: IE
+
+LOOP: Loop over IG
+  Lines: 3712-3725
+  Loop Variable: IG
+
+LOOP: Loop over AGE
+  Lines: 3726-3726
+  Loop Variable: AGE
+
+LOOP: Loop over IA
+  Lines: 3727-3727
+  Loop Variable: IA
+
+LOOP: Loop over IS1
+  Lines: 3728-3728
+  Loop Variable: IS1
+
+LOOP: Loop over IS2
+  Lines: 3729-3729
+  Loop Variable: IS2
+
+LOOP: Loop over IE
+  Lines: 3730-3744
+  Loop Variable: IE
+
+LOOP: Loop over AGE
+  Lines: 3745-3745
+  Loop Variable: AGE
+
+LOOP: Loop over IA
+  Lines: 3746-3746
+  Loop Variable: IA
+
+LOOP: Loop over IE
+  Lines: 3747-3747
+  Loop Variable: IE
+
+LOOP: Loop over IG
+  Lines: 3748-3757
+  Loop Variable: IG
+
+LOOP: Loop over AGE
+  Lines: 3758-3758
+  Loop Variable: AGE
+
+LOOP: Loop over IA
+  Lines: 3759-3759
+  Loop Variable: IA
+
+LOOP: Loop over IE
+  Lines: 3760-3784
+  Loop Variable: IE
+
+LOGIC_BLOCK: Calculate the tax moments
+  Lines: 3785-3788
+
+SECTION_HEADER: Unnamed
+  Lines: 3789-3792
+
+LOGIC_BLOCK: Check whether kmax binding
+  Lines: 3793-3796
+
+SECTION_HEADER: Unnamed
+  Lines: 3797-3800
+
+LOGIC_BLOCK: welfare analysis
+  Lines: 3801-3804
+
+SECTION_HEADER: Unnamed
+  Lines: 3805-3808
+
+LOGIC_BLOCK: tax penalty for couple
+  Lines: 3809-3812
+
+LOGIC_BLOCK: CALL couple_filing_tax
+  Lines: 3813-3818
+
+LOGIC_BLOCK: by what factor would one need to increase the consumption of each and every person in the benchmark economy
+  Lines: 3819-3823
+
+SECTION_HEADER: Unnamed
+  Lines: 3824-3827
+
+LOGIC_BLOCK: Computing the pass through of income shock to consumption
+  Lines: 3828-3831
+
+LOGIC_BLOCK: CALL insurance
+  Lines: 3832-3835
+
+LOGIC_BLOCK: WRITE(10,*) 'labor income ratio-output ratio =', IEND-TIEND
+  Lines: 3836-3868
+
+LOGIC_BLOCK: DEV = ((AEND*5.000/TIEND-2.63)/2.63)**2.00 + ((MEDEND/TIEND-0.151)/0.151)**2.00 + ((MEND/IEND-0.058)/0.058)**2.00
+  Lines: 3869-3880
+
+FILE_IO: File I/O Operations
+  Lines: 3881-3912
+
+LOGIC_BLOCK: WRITE(10,*) '13-16, suvrvival probablity'
+  Lines: 3913-3919
+
+LOGIC_BLOCK: WRITE(10,*) 'others'
+  Lines: 3920-3941
+
+LOGIC_BLOCK: print*, 'FINAL RESULTS'
+  Lines: 3942-4000
+
+SECTION_HEADER: Unnamed
+  Lines: 4001-4003
+
+LOGIC_BLOCK: Calibration Result
+  Lines: 4004-4007
+
+SECTION_HEADER: Unnamed
+  Lines: 4008-4010
+
+LOOP: Loop over i
+  Lines: 4011-4011
+  Loop Variable: i
+
+FILE_IO: File I/O Operations
+  Lines: 4012-4021
+
+LOOP: Loop over i
+  Lines: 4022-4022
+  Loop Variable: i
+
+FILE_IO: File I/O Operations
+  Lines: 4023-4435
+
+LOOP: Loop over i
+  Lines: 4436-4436
+  Loop Variable: i
+
+FILE_IO: File I/O Operations
+  Lines: 4437-4439
+
+LOOP: Loop over i
+  Lines: 4440-4440
+  Loop Variable: i
+
+FILE_IO: File I/O Operations
+  Lines: 4441-4443
+
+LOOP: Loop over i
+  Lines: 4444-4444
+  Loop Variable: i
+
+FILE_IO: File I/O Operations
+  Lines: 4445-4447
+
+LOOP: Loop over i
+  Lines: 4448-4448
+  Loop Variable: i
+
+FILE_IO: File I/O Operations
+  Lines: 4449-4873
+
+LOGIC_BLOCK: Internal Functions and Subroutines
+  Lines: 4874-4877
+
+Subroutines with Dependencies:
+------------------------------------------------------------
+
+single_SRCHFIVE01 (SUBROUTINE)
+  Lines: 4885-5109
+  Arguments: None
+  Global Dependencies: C2, C3, TY_MAX, C1, PREC, D_C, TAU_C, C0, RETAGE
+
+couple_SRCHFIVE01 (SUBROUTINE)
+  Lines: 5110-5845
+  Arguments: None
+  Global Dependencies: C2, C3, TY_MAX, C1, PREC, D_C, TAU_C, C0, COUPLE_LABOR, RETAGE
+
+single_BRACKET01 (SUBROUTINE)
+  Lines: 5846-6001
+  Arguments: AGE, IA, IE, IG, IS, WAGEZ
+  Global Dependencies: PREC, RETAGE
+
+couple_BRACKET01 (SUBROUTINE)
+  Lines: 6002-6205
+  Arguments: AGE, IA, IE, IS1, IS2, WAGEZ1, WAGEZ2
+  Global Dependencies: PREC, RETAGE
+
+DECRULE01 (SUBROUTINE)
+  Lines: 6206-6595
+  Arguments: None
+  Global Dependencies: TY_MAX, DELTA_LAMBDA, PREC, D_C, GAMMA1, ETA, TAU_C, BENDY, RETAGE
+
+INVAR01 (SUBROUTINE)
+  Lines: 6596-7064
+  Arguments: None
+  Global Dependencies: MARRYPROP, RETAGE
+
+PROFILE01 (SUBROUTINE)
+  Lines: 7065-7405
+  Arguments: None
+  Global Dependencies: TY_MAX, DELTA_LAMBDA, D_C, GAMMA1, TAU_C, RETAGE, Q
+
+compute_gini (SUBROUTINE)
+  Lines: 7406-7956
+  Arguments: None
+  Global Dependencies: C2, C3, TY_MAX, DELTA_LAMBDA, C1, D_C, TAU_C, C0, RETAGE
+
+age_wealth_gini (SUBROUTINE)
+  Lines: 7957-8114
+  Arguments: None
+  Global Dependencies: RETAGE
+
+sorting (SUBROUTINE)
+  Lines: 8115-8147
+  Arguments: n, a
+  Global Dependencies: PREC
+
+wealthshare (SUBROUTINE)
+  Lines: 8148-8708
+  Arguments: None
+  Global Dependencies: RETAGE
+
+wageshare (SUBROUTINE)
+  Lines: 8709-9105
+  Arguments: None
+  Global Dependencies: D_C, RETAGE
+
+totalincomeshare (SUBROUTINE)
+  Lines: 9106-9741
+  Arguments: None
+  Global Dependencies: RETAGE
+
+consumptionshare (SUBROUTINE)
+  Lines: 9742-9991
+  Arguments: None
+  Global Dependencies: TY_MAX, DELTA_LAMBDA, D_C, TAU_C, RETAGE
+
+skewness (SUBROUTINE)
+  Lines: 9992-10147
+  Arguments: None
+  Global Dependencies: PREC, RETAGE
+
+percentile (FUNCTION)
+  Lines: 10148-10163
+  Arguments: P, X
+  Global Dependencies: PREC
+
+AGE_PARTITION (SUBROUTINE)
+  Lines: 10166-10831
+  Arguments: None
+  Global Dependencies: TY_MAX, D_C, OPTIMAL_TAX_ACTIVATION, DELTA_LAMBDA, TAU_C, COUPLE_LABOR, RETAGE
+
+var_profile (SUBROUTINE)
+  Lines: 10832-11063
+  Arguments: None
+  Global Dependencies: RETAGE
+
+intrafamily_correlation (SUBROUTINE)
+  Lines: 11064-11135
+  Arguments: None
+  Global Dependencies: RETAGE
+
+income_partition (SUBROUTINE)
+  Lines: 11136-11384
+  Arguments: None
+  Global Dependencies: TY_MAX, DELTA_LAMBDA, D_C, RETAGE, TAU_C
+
+COMPARE_LITERATURE (SUBROUTINE)
+  Lines: 11385-11420
+  Arguments: None
+  Global Dependencies: None
+
+saving_rate (SUBROUTINE)
+  Lines: 11421-11942
+  Arguments: None
+  Global Dependencies: C2, RETAGE, C1, C0
+
+tax_moment (SUBROUTINE)
+  Lines: 11943-12593
+  Arguments: None
+  Global Dependencies: MEDICARE_RATE, TY_MAX, DELTA_LAMBDA, WEIGHT_MFS, D_C, TAU_C, TY_MAX_RESTRICTION, BENDY, RETAGE
+
+check_kmaxbinding (SUBROUTINE)
+  Lines: 12594-12776
+  Arguments: None
+  Global Dependencies: C2, C1, PREC, C0, RETAGE
+
+welfare_wealth (SUBROUTINE)
+  Lines: 12777-12801
+  Arguments: None
+  Global Dependencies: None
+
+welfare (SUBROUTINE)
+  Lines: 12802-12835
+  Arguments: None
+  Global Dependencies: RETAGE
+
+output_analysis (SUBROUTINE)
+  Lines: 12836-12913
+  Arguments: None
+  Global Dependencies: RETAGE
+
+tax_penalty (SUBROUTINE)
+  Lines: 12914-13259
+  Arguments: None
+  Global Dependencies: D_C, RETAGE
+
+couple_filing_tax (SUBROUTINE)
+  Lines: 13260-13307
+  Arguments: None
+  Global Dependencies: D_C, RETAGE
+
+opt_tax_welfare (SUBROUTINE)
+  Lines: 13308-15363
+  Arguments: None
+  Global Dependencies: SIGMA, ETA, OPTIMAL_TAX_ACTIVATION, SIGMA_LAB_FEMALE, SIGMA_LAB_MALE, RETAGE
+
+compensating_variation (SUBROUTINE)
+  Lines: 15364-15501
+  Arguments: None
+  Global Dependencies: CV, RETAGE
+
+welfare_consumption_change (SUBROUTINE)
+  Lines: 15502-15833
+  Arguments: None
+  Global Dependencies: TY_MAX, SIGMA, SIGMA_LAB_MALE, ETA, SIGMA_LAB_FEMALE, RETAGE
+
+winner_loser (SUBROUTINE)
+  Lines: 15834-16384
+  Arguments: None
+  Global Dependencies: SIGMA, SIGMA_LAB_MALE, ETA, SIGMA_LAB_FEMALE, RETAGE
+
+insurance (SUBROUTINE)
+  Lines: 16385-16740
+  Arguments: None
+  Global Dependencies: RETAGE
+
+SSORT_INT (SUBROUTINE)
+  Lines: 16741-17062
+  Arguments: X, Y, N, KFLAG
+  Global Dependencies: PREC
+
+search (FUNCTION)
+  Lines: 17063-17104
+  Arguments: X, Y, Z, W
+  Global Dependencies: PREC
+
+utility (FUNCTION)
+  Lines: 17105-17135
+  Arguments: cons, lei, gender, G
+  Global Dependencies: FIXCOST_MALE, PREC, SIGMA_LAB_MALE, UCONS, SIGMA_LAB_FEMALE, RHO, PSI, SIGMA
+
+couple_utility (FUNCTION)
+  Lines: 17138-17166
+  Arguments: cons, lei1, lei2, G
+  Global Dependencies: ETA, FIXCOST_MALE, PREC, SIGMA_LAB_MALE, UCONS, SIGMA_LAB_FEMALE, RHO, PSI, SIGMA
+
+SS (FUNCTION)
+  Lines: 17233-17246
+  Arguments: IE
+  Global Dependencies: PREC
+
+taxpayment (FUNCTION)
+  Lines: 17248-17320
+  Arguments: pretaxincome, taxrate, marital
+  Global Dependencies: PREC, TAU_C, BENDY, TY_MAX, DELTA_LAMBDA, D_C
+
+yd_MFJ (FUNCTION)
+  Lines: 17322-17349
+  Arguments: pretaxincome, IA
+  Global Dependencies: PREC, TAU_C, TY_MAX_RESTRICTION, BENDY, TY_MAX, MFS_METHOD, D_C
+
+yd_MFS (FUNCTION)
+  Lines: 17351-17389
+  Arguments: pretaxincome, IA
+  Global Dependencies: PREC, TAU_C, TY_MAX_RESTRICTION, BENDY, TY_MAX, DELTA_LAMBDA, MFS_METHOD, WEIGHT_MFS, D_C
+
+indicator (FUNCTION)
+  Lines: 17391-17402
+  Arguments: x, y
+  Global Dependencies: PREC
