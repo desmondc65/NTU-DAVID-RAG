@@ -1,0 +1,737 @@
+Fortran File Analysis Summary
+============================================================
+
+File: data/Accounting for Wealth Concentration in the United States/codes_fortran/benchmark_no_top_corr.f90
+Program: wealth_accounting
+
+Global Variables: 73
+Subroutines: 41
+Total Lines: 10472
+
+Main Logic Blocks:
+------------------------------------------------------------
+
+FILE_IO: File I/O Operations
+  Lines: 428-430
+
+LOGIC_BLOCK: Read Data
+  Lines: 431-434
+
+SECTION_HEADER: Unnamed
+  Lines: 435-436
+
+ALLOCATION: Memory Allocation
+  Lines: 437-437
+
+FILE_IO: File I/O Operations
+  Lines: 438-441
+
+ALLOCATION: Memory Allocation
+  Lines: 442-468
+
+FILE_IO: File I/O Operations
+  Lines: 469-527
+
+ALLOCATION: Memory Allocation
+  Lines: 528-538
+
+FILE_IO: File I/O Operations
+  Lines: 539-549
+
+ALLOCATION: Memory Allocation
+  Lines: 550-551
+
+LOOP: Loop over AGE
+  Lines: 552-558
+  Loop Variable: AGE
+
+LOOP: Loop over J
+  Lines: 559-564
+  Loop Variable: J
+
+LOOP: Loop over AGE
+  Lines: 565-570
+  Loop Variable: AGE
+
+LOOP: Loop over AGE
+  Lines: 571-584
+  Loop Variable: AGE
+
+ALLOCATION: Memory Allocation
+  Lines: 585-587
+
+LOOP: Loop over J
+  Lines: 588-593
+  Loop Variable: J
+
+LOOP: Loop over AGE
+  Lines: 594-600
+  Loop Variable: AGE
+
+LOOP: Loop over AGE
+  Lines: 601-614
+  Loop Variable: AGE
+
+LOGIC_BLOCK: 5 year transition matrix of "ordinary+awesome" idiosyncratic productivity shock
+  Lines: 617-656
+
+LOOP: Loop over i
+  Lines: 657-661
+  Loop Variable: i
+
+FILE_IO: File I/O Operations
+  Lines: 662-687
+
+LOOP: Loop over iage
+  Lines: 688-690
+  Loop Variable: iage
+
+LOOP: Loop over iage
+  Lines: 691-701
+  Loop Variable: iage
+
+FILE_IO: File I/O Operations
+  Lines: 702-707
+
+ALLOCATION: Memory Allocation
+  Lines: 711-733
+
+LOOP: Loop over i
+  Lines: 734-740
+  Loop Variable: i
+
+LOOP: Loop over IS
+  Lines: 741-741
+  Loop Variable: IS
+
+LOOP: Loop over IR
+  Lines: 742-748
+  Loop Variable: IR
+
+LOOP: Loop over iage
+  Lines: 749-749
+  Loop Variable: iage
+
+LOOP: Loop over IS
+  Lines: 750-752
+  Loop Variable: IS
+
+LOOP: Loop over IR
+  Lines: 753-757
+  Loop Variable: IR
+
+LOOP: Loop over iage
+  Lines: 758-758
+  Loop Variable: iage
+
+LOOP: Loop over IS
+  Lines: 759-766
+  Loop Variable: IS
+
+LOOP: Loop over iage
+  Lines: 767-767
+  Loop Variable: iage
+
+LOOP: Loop over IR
+  Lines: 768-775
+  Loop Variable: IR
+
+FILE_IO: File I/O Operations
+  Lines: 776-791
+
+LOGIC_BLOCK: Tabulate asset levels
+  Lines: 794-798
+
+ALLOCATION: Memory Allocation
+  Lines: 799-818
+
+LOOP: Loop over AGE
+  Lines: 819-819
+  Loop Variable: AGE
+
+LOOP: Loop over IA
+  Lines: 820-820
+  Loop Variable: IA
+
+LOOP: Loop over IR
+  Lines: 821-821
+  Loop Variable: IR
+
+LOOP: Loop over IS
+  Lines: 822-829
+  Loop Variable: IS
+
+LOGIC_BLOCK: Preliminary Calculations
+  Lines: 830-833
+
+SECTION_HEADER: Unnamed
+  Lines: 834-852
+
+ALLOCATION: Memory Allocation
+  Lines: 866-871
+
+LOOP: Loop over AGE
+  Lines: 872-872
+  Loop Variable: AGE
+
+LOOP: Loop over i
+  Lines: 873-878
+  Loop Variable: i
+
+LOOP: Loop over AGE
+  Lines: 879-879
+  Loop Variable: AGE
+
+LOOP: Loop over j
+  Lines: 880-880
+  Loop Variable: j
+
+LOOP: Loop over i
+  Lines: 881-903
+  Loop Variable: i
+
+LOOP: Loop over IS
+  Lines: 904-908
+  Loop Variable: IS
+
+SECTION_HEADER: Unnamed
+  Lines: 911-915
+
+FILE_IO: File I/O Operations
+  Lines: 916-922
+
+SECTION_HEADER: Unnamed
+  Lines: 925-929
+
+ALLOCATION: Memory Allocation
+  Lines: 930-978
+
+LOOP: Loop over AGE
+  Lines: 979-987
+  Loop Variable: AGE
+
+LOOP: Loop over AGE
+  Lines: 988-997
+  Loop Variable: AGE
+
+LOGIC_BLOCK: update some variables
+  Lines: 998-1001
+
+LOGIC_BLOCK: Update Social Security Expense
+  Lines: 1002-1005
+
+LOOP: Loop over AGE
+  Lines: 1006-1006
+  Loop Variable: AGE
+
+LOOP: Loop over IA
+  Lines: 1007-1007
+  Loop Variable: IA
+
+LOOP: Loop over IR
+  Lines: 1008-1008
+  Loop Variable: IR
+
+LOOP: Loop over IS
+  Lines: 1009-1025
+  Loop Variable: IS
+
+LOGIC_BLOCK: Government Budget Balance
+  Lines: 1026-1029
+
+SECTION_HEADER: Unnamed
+  Lines: 1030-1040
+
+LOOP: Loop over AGE
+  Lines: 1041-1041
+  Loop Variable: AGE
+
+LOOP: Loop over IA
+  Lines: 1042-1042
+  Loop Variable: IA
+
+LOOP: Loop over IR
+  Lines: 1043-1043
+  Loop Variable: IR
+
+LOOP: Loop over IS
+  Lines: 1044-1077
+  Loop Variable: IS
+
+LOOP: Loop over AGE
+  Lines: 1078-1078
+  Loop Variable: AGE
+
+LOOP: Loop over IA
+  Lines: 1079-1079
+  Loop Variable: IA
+
+LOOP: Loop over IR
+  Lines: 1080-1080
+  Loop Variable: IR
+
+LOOP: Loop over IS
+  Lines: 1081-1122
+  Loop Variable: IS
+
+ALLOCATION: Memory Allocation
+  Lines: 1123-1123
+
+LOOP: Loop over AGE
+  Lines: 1124-1124
+  Loop Variable: AGE
+
+LOOP: Loop over IA
+  Lines: 1125-1125
+  Loop Variable: IA
+
+LOOP: Loop over IR
+  Lines: 1126-1126
+  Loop Variable: IR
+
+LOOP: Loop over IS
+  Lines: 1127-1137
+  Loop Variable: IS
+
+LOOP: Loop over AGE
+  Lines: 1138-1138
+  Loop Variable: AGE
+
+LOOP: Loop over IA
+  Lines: 1139-1139
+  Loop Variable: IA
+
+LOOP: Loop over IR
+  Lines: 1140-1140
+  Loop Variable: IR
+
+LOOP: Loop over IS
+  Lines: 1141-1156
+  Loop Variable: IS
+
+LOOP: Loop over IS
+  Lines: 1157-1169
+  Loop Variable: IS
+
+FILE_IO: File I/O Operations
+  Lines: 1170-1220
+
+SECTION_HEADER: Unnamed
+  Lines: 1223-1225
+
+LOOP: Loop over AGE
+  Lines: 1226-1226
+  Loop Variable: AGE
+
+LOOP: Loop over IA
+  Lines: 1227-1227
+  Loop Variable: IA
+
+LOOP: Loop over IR
+  Lines: 1228-1228
+  Loop Variable: IR
+
+LOOP: Loop over IS
+  Lines: 1229-1235
+  Loop Variable: IS
+
+LOOP: Loop over AGE
+  Lines: 1236-1236
+  Loop Variable: AGE
+
+LOOP: Loop over IA
+  Lines: 1237-1237
+  Loop Variable: IA
+
+LOOP: Loop over IR
+  Lines: 1238-1238
+  Loop Variable: IR
+
+LOOP: Loop over IS
+  Lines: 1239-1245
+  Loop Variable: IS
+
+SECTION_HEADER: Unnamed
+  Lines: 1248-1255
+
+SECTION_HEADER: Unnamed
+  Lines: 1258-1265
+
+LOGIC_BLOCK: Asset demand
+  Lines: 1266-1339
+
+SECTION_HEADER: Unnamed
+  Lines: 1342-1343
+
+FILE_IO: File I/O Operations
+  Lines: 1344-1407
+
+ALLOCATION: Memory Allocation
+  Lines: 1408-1418
+
+FILE_IO: File I/O Operations
+  Lines: 1419-1470
+
+ALLOCATION: Memory Allocation
+  Lines: 1471-1472
+
+FILE_IO: File I/O Operations
+  Lines: 1473-1502
+
+ALLOCATION: Memory Allocation
+  Lines: 1503-1504
+
+FILE_IO: File I/O Operations
+  Lines: 1505-1531
+
+ALLOCATION: Memory Allocation
+  Lines: 1532-1533
+
+FILE_IO: File I/O Operations
+  Lines: 1534-1552
+
+LOOP: Loop over AGE
+  Lines: 1553-1553
+  Loop Variable: AGE
+
+LOOP: Loop over IA
+  Lines: 1554-1554
+  Loop Variable: IA
+
+LOOP: Loop over IR
+  Lines: 1555-1555
+  Loop Variable: IR
+
+LOOP: Loop over IS
+  Lines: 1556-1566
+  Loop Variable: IS
+
+SECTION_HEADER: Unnamed
+  Lines: 1569-1573
+
+ALLOCATION: Memory Allocation
+  Lines: 1574-1582
+
+SECTION_HEADER: Unnamed
+  Lines: 1585-1592
+
+SECTION_HEADER: Unnamed
+  Lines: 1595-1602
+
+SECTION_HEADER: Unnamed
+  Lines: 1605-1612
+
+SECTION_HEADER: Unnamed
+  Lines: 1615-1622
+
+SECTION_HEADER: Unnamed
+  Lines: 1625-1632
+
+SECTION_HEADER: Unnamed
+  Lines: 1635-1642
+
+SECTION_HEADER: Unnamed
+  Lines: 1645-1653
+
+SECTION_HEADER: Unnamed
+  Lines: 1656-1663
+
+SECTION_HEADER: Unnamed
+  Lines: 1666-1674
+
+SECTION_HEADER: Unnamed
+  Lines: 1677-1684
+
+SECTION_HEADER: Unnamed
+  Lines: 1687-1706
+
+SECTION_HEADER: Unnamed
+  Lines: 1709-1716
+
+SECTION_HEADER: Unnamed
+  Lines: 1719-1726
+
+LOGIC_BLOCK: !  Age distribution of working age population
+  Lines: 1729-1738
+
+LOOP: Loop over AGE
+  Lines: 1739-1750
+  Loop Variable: AGE
+
+LOOP: Loop over AGE
+  Lines: 1751-1766
+  Loop Variable: AGE
+
+SECTION_HEADER: Unnamed
+  Lines: 1769-1776
+
+SECTION_HEADER: Unnamed
+  Lines: 1779-1786
+
+SECTION_HEADER: Unnamed
+  Lines: 1789-1796
+
+SECTION_HEADER: Unnamed
+  Lines: 1799-1806
+
+SECTION_HEADER: Unnamed
+  Lines: 1809-1816
+
+SECTION_HEADER: Unnamed
+  Lines: 1817-1820
+
+FILE_IO: File I/O Operations
+  Lines: 1821-1847
+
+LOOP: Loop over i
+  Lines: 1848-1848
+  Loop Variable: i
+
+FILE_IO: File I/O Operations
+  Lines: 1849-1860
+
+LOOP: Loop over ig
+  Lines: 1861-1862
+  Loop Variable: ig
+
+LOOP: Loop over i
+  Lines: 1863-1863
+  Loop Variable: i
+
+FILE_IO: File I/O Operations
+  Lines: 1864-2138
+
+SECTION_HEADER: Unnamed
+  Lines: 2141-2142
+
+FILE_IO: File I/O Operations
+  Lines: 2143-2235
+
+LOOP: Loop over i
+  Lines: 2236-2236
+  Loop Variable: i
+
+FILE_IO: File I/O Operations
+  Lines: 2237-2247
+
+LOOP: Loop over ig
+  Lines: 2248-2248
+  Loop Variable: ig
+
+LOOP: Loop over i
+  Lines: 2249-2249
+  Loop Variable: i
+
+FILE_IO: File I/O Operations
+  Lines: 2250-2261
+
+SECTION_HEADER: Unnamed
+  Lines: 2264-2265
+
+Subroutines with Dependencies:
+------------------------------------------------------------
+
+SRCHFIVE01 (SUBROUTINE)
+  Lines: 2270-2498
+  Arguments: None
+  Global Dependencies: RETAGE, LEIMIN, TAU_S, BSIGMA, CMIN, C0, PREC, TAU_C, C1, C2, TY_MAX
+
+N_SRCHFIVE01 (SUBROUTINE)
+  Lines: 2499-2723
+  Arguments: None
+  Global Dependencies: RETAGE, LEIMIN, TAU_S, BSIGMA, CMIN, C0, PREC, TAU_C, C1, C2, TY_MAX
+
+A_SRCHFIVE01 (SUBROUTINE)
+  Lines: 2724-2950
+  Arguments: None
+  Global Dependencies: RETAGE, LEIMIN, TAU_S, BSIGMA, CMIN, C0, PREC, TAU_C, C1, C2, TY_MAX
+
+BRACKET01 (SUBROUTINE)
+  Lines: 2951-3091
+  Arguments: AGE, IA, IR, IS, WAGEZ
+  Global Dependencies: PREC, RETAGE
+
+check_BRACKET01 (SUBROUTINE)
+  Lines: 3092-3247
+  Arguments: AGE, IA, IR, IS, WAGEZ
+  Global Dependencies: PREC
+
+DECRULE01 (SUBROUTINE)
+  Lines: 3248-3334
+  Arguments: None
+  Global Dependencies: PREC, RETAGE
+
+INVAR01 (SUBROUTINE)
+  Lines: 3335-3545
+  Arguments: None
+  Global Dependencies: RETAGE
+
+PROFILE01 (SUBROUTINE)
+  Lines: 3546-3656
+  Arguments: None
+  Global Dependencies: RETAGE, TAU_S, TAU_C, TY_MAX
+
+compute_distributions (SUBROUTINE)
+  Lines: 3657-3746
+  Arguments: None
+  Global Dependencies: RETAGE
+
+compute_gini (SUBROUTINE)
+  Lines: 3747-3894
+  Arguments: None
+  Global Dependencies: RETAGE, TAU_C, TY_MAX
+
+age_wealth_gini (SUBROUTINE)
+  Lines: 3895-3986
+  Arguments: None
+  Global Dependencies: RETAGE, TAU_C
+
+sorting (SUBROUTINE)
+  Lines: 3987-4019
+  Arguments: n, a
+  Global Dependencies: PREC
+
+wealthshare (SUBROUTINE)
+  Lines: 4020-4312
+  Arguments: None
+  Global Dependencies: RETAGE
+
+wageshare (SUBROUTINE)
+  Lines: 4313-4474
+  Arguments: None
+  Global Dependencies: RETAGE
+
+totalincomeshare (SUBROUTINE)
+  Lines: 4475-4677
+  Arguments: None
+  Global Dependencies: RETAGE, TAU_C
+
+consumptionshare (SUBROUTINE)
+  Lines: 4678-4857
+  Arguments: None
+  Global Dependencies: RETAGE, TAU_S, TAU_C, TY_MAX
+
+skewness (SUBROUTINE)
+  Lines: 4858-4925
+  Arguments: None
+  Global Dependencies: RETAGE
+
+AGE_PARTITION (SUBROUTINE)
+  Lines: 4926-5076
+  Arguments: None
+  Global Dependencies: RETAGE, TAU_C
+
+avg_return (SUBROUTINE)
+  Lines: 5077-5160
+  Arguments: None
+  Global Dependencies: RETAGE
+
+avg_return_wealthgroups (SUBROUTINE)
+  Lines: 5161-5628
+  Arguments: None
+  Global Dependencies: None
+
+avg_return_incomegroups (SUBROUTINE)
+  Lines: 5629-6194
+  Arguments: None
+  Global Dependencies: None
+
+income_partition (SUBROUTINE)
+  Lines: 6195-6431
+  Arguments: None
+  Global Dependencies: RETAGE, TAU_C, TY_MAX
+
+income_partition_sort_by_wealth (SUBROUTINE)
+  Lines: 6432-6677
+  Arguments: None
+  Global Dependencies: RETAGE, TAU_C, TY_MAX
+
+top_shares_age_partition (SUBROUTINE)
+  Lines: 6678-6804
+  Arguments: None
+  Global Dependencies: RETAGE
+
+bequest (SUBROUTINE)
+  Lines: 6805-6945
+  Arguments: None
+  Global Dependencies: RETAGE
+
+bequest_exemption (SUBROUTINE)
+  Lines: 6946-7008
+  Arguments: None
+  Global Dependencies: RETAGE
+
+joint_dist (SUBROUTINE)
+  Lines: 7009-7121
+  Arguments: None
+  Global Dependencies: RETAGE
+
+tax_moment (SUBROUTINE)
+  Lines: 7122-7217
+  Arguments: None
+  Global Dependencies: RETAGE, FLAT_TRANSF_RATE, TAU_C, TY_MAX, MEDICARE_RATE
+
+check_kmaxbinding (SUBROUTINE)
+  Lines: 7218-7250
+  Arguments: None
+  Global Dependencies: RETAGE
+
+beq_distribution (SUBROUTINE)
+  Lines: 7251-7757
+  Arguments: None
+  Global Dependencies: RETAGE, PDF_PARENT_KID, PREC, ABILITY_PERSISTENCE
+
+Calidiff (SUBROUTINE)
+  Lines: 7758-7772
+  Arguments: None
+  Global Dependencies: None
+
+correlation (SUBROUTINE)
+  Lines: 7773-7912
+  Arguments: None
+  Global Dependencies: RETAGE, TAU_C
+
+earnings_growth_moments (SUBROUTINE)
+  Lines: 7913-8038
+  Arguments: None
+  Global Dependencies: RETAGE
+
+INTERGENERATIONAL (SUBROUTINE)
+  Lines: 8039-8460
+  Arguments: None
+  Global Dependencies: PDF_PARENT_KID, PREC
+
+search (FUNCTION)
+  Lines: 8461-8490
+  Arguments: X, Y, Z, W
+  Global Dependencies: PREC
+
+utility (FUNCTION)
+  Lines: 8491-8501
+  Arguments: cons, lei
+  Global Dependencies: SIGMA, PREC, CHI, THETA
+
+beq_aftertax (FUNCTION)
+  Lines: 8504-8510
+  Arguments: beq
+  Global Dependencies: BEQTAX_RATE2, PREC, BEQTAX_RATE1
+
+SSORT_INT (SUBROUTINE)
+  Lines: 8543-8851
+  Arguments: X, Y, N, KFLAG
+  Global Dependencies: PREC
+
+matinv3 (FUNCTION)
+  Lines: 8852-8876
+  Arguments: A
+  Global Dependencies: PREC
+
+matinv4 (FUNCTION)
+  Lines: 8877-8911
+  Arguments: A
+  Global Dependencies: PREC
+
+M66INV (SUBROUTINE)
+  Lines: 8912-10468
+  Arguments: A, AINV, OK_FLAG
+  Global Dependencies: None

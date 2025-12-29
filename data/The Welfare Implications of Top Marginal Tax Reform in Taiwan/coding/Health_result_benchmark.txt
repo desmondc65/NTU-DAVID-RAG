@@ -1,0 +1,737 @@
+ PARAMETER VALUES for Health_GE_5period_endosur_MD_benchmark.f90
+ ------------------------------------------------------
+
+
+ 	Initial Bequest:   3.99999991E-02
+ 	Initial SS benefit:  0.266587377    
+ 	Initial SS benefit:  0.156058073    
+ 	Initial med tax rate:           0
+ 	Initial EHI premium:   3.46653983E-02
+
+ 	Convergence tolerance for bequests:   9.99999978E-03
+ 	Convergence tolerance for SS benefits:   4.99999989E-03
+ 	Convergence tolerance for SS tax rate:   0.00000000    
+ 	Convergence tolerance for med tax rate:   4.99999989E-03
+ 	Convergence tolerance for EHI premium:   4.99999989E-03
+ 	Convergence gradient for bequests:  0.349999994    
+ 	Convergence gradient for SS tax rate:  0.617999971    
+ 	Convergence gradient for SS tax rate:  0.617999971    
+ 	Convergence gradient for med tax rate:  0.617999971    
+ 	Convergence gradient for EHI premium:  0.699999988    
+ 	Maximum number of iterations for convergence:          50
+
+ 	Capital exponent in production function:  0.340000004    
+ 	Multiplicative constant in production function:   1.77999997    
+ 	Annual growth rate of per capita output:   0.00000000    
+ 	Annual Depreciation rate:   9.04999971E-02
+ 	Depreciation rate of capital (5 years):  0.377680361    
+
+   Annual subjective discount factor:  0.912000000    
+   subjective discount factor ( 5 years):  0.63091987371444702     
+   Risk aversion parameter:   1.50000000    
+   Constant term in utility function:   2.29999995    
+   Share of consumption in the consumption-leisure composition:  0.342000008    
+   Elasticity of substitution b/w consumption-leisure and health:  -9.69999981    
+
+   Productivity of health accumulation technology:  0.980000019    
+ 	Return to Scale in health investment:  0.800000012    
+
+   Intercept of depreciation rate of health status (a0):  -4.30000019    
+   Coefficent for age (a1):  0.310000002    
+ 	Coefficent for age^2 (a2):   4.00000019E-03
+
+   Intercept of sur. prob. function (c0):  -5.49048424    
+   Coefficent for age (c1):  0.149994999    
+ 	Coefficent for age^2 (c2):   1.61671005E-02
+ 	Coefficent for health (c3): -0.170000002    
+
+   Scale factor of sick time:   0.00000000    
+   Elasticity of sick time to health status:   1.39999998    
+
+   Social security replacement ratio:   1.1233867028879927E-318
+   Subsidy rate of med (Medicaid + Medicare):  0.800000012    
+
+   Maximum age allowed:          15
+   Retirement age:           9
+ 	Population growth rate:   0.00000000    
+
+   Maximum permissible asset:   8000.00000    
+   Minimum permissible asset:   1.00000005E-03
+   Maximum permissible med expenditure:           0
+   Number of points on health state grid:           0
+   Number of points on asset grid:         129
+ ------------------------------------------------------
+
+ ITERATION RESULTS
+
+ Iteration           1
+ Initial bequests =   3.9999999105930328E-002
+ Ending bequest =   1.2228232054661487E-004
+ Relative change in bequests =  0.99694294191800414     
+
+ Iteration           2
+ Initial bequests =   2.6042797276642875E-002
+ Ending bequest =   2.9981437683128196E-003
+ Relative change in bequests =  0.88487627744190989     
+
+ Iteration           3
+ Initial bequests =   1.7977167909948355E-002
+ Ending bequest =   2.9936981244405598E-003
+ Relative change in bequests =  0.83347220544211065     
+
+ Iteration           4
+ Initial bequests =   1.2732953038567713E-002
+ Ending bequest =   3.1175656235388470E-003
+ Relative change in bequests =  0.75515769090674889     
+
+ Iteration           5
+ Initial bequests =   9.3675671211482132E-003
+ Ending bequest =   3.1829570415977618E-003
+ Relative change in bequests =  0.66021518709890847     
+
+ Iteration           6
+ Initial bequests =   7.2029533509934485E-003
+ Ending bequest =   3.2026877327989553E-003
+ Relative change in bequests =  0.55536464326022150     
+
+ Iteration           7
+ Initial bequests =   5.8028601938040787E-003
+ Ending bequest =   3.2044205536247449E-003
+ Relative change in bequests =  0.44778601472318436     
+
+ Iteration           8
+ Initial bequests =   4.8934061622905086E-003
+ Ending bequest =   3.2022273154748049E-003
+ Relative change in bequests =  0.34560361243835430     
+
+ Iteration           9
+ Initial bequests =   4.3014934301503554E-003
+ Ending bequest =   3.2021637008053426E-003
+ Relative change in bequests =  0.25556931498244473     
+
+ Iteration          10
+ Initial bequests =   3.9167279032376228E-003
+ Ending bequest =   3.2021934046084248E-003
+ Relative change in bequests =  0.18243148778309407     
+
+ Iteration          11
+ Initial bequests =   3.6666407162487735E-003
+ Ending bequest =   3.2011217762484903E-003
+ Relative change in bequests =  0.12696060945849671     
+
+ Iteration          12
+ Initial bequests =   3.5037089807489746E-003
+ Ending bequest =   3.2011181324992149E-003
+ Relative change in bequests =   8.6363008432588470E-002
+
+ Iteration          13
+ Initial bequests =   3.3978020812464762E-003
+ Ending bequest =   3.2011238411504854E-003
+ Relative change in bequests =   5.7883960099241537E-002
+
+ Iteration          14
+ Initial bequests =   3.3289645971227803E-003
+ Ending bequest =   3.2011264568124120E-003
+ Relative change in bequests =   3.8401772257013071E-002
+
+ Iteration          15
+ Initial bequests =   3.2842211495652499E-003
+ Ending bequest =   3.2011380285999636E-003
+ Relative change in bequests =   2.5297663336795822E-002
+
+ Iteration          16
+ Initial bequests =   3.2551419598451960E-003
+ Ending bequest =   3.2011388547119393E-003
+ Relative change in bequests =   1.6590092167846609E-002
+
+ Iteration          17
+ Initial bequests =   3.2362407763596493E-003
+ Ending bequest =   3.2011634997534039E-003
+ Relative change in bequests =   1.0838895814699788E-002
+
+ Iteration          18
+ Initial bequests =   3.2239636333090496E-003
+ Ending bequest =   3.2011674050936518E-003
+ Relative change in bequests =   7.0708701487429467E-003
+
+ ITERATION RESULTS
+
+ Iteration           1
+ Initial bequests =   3.9999999105930328E-002
+ Ending bequest =   3.3054885704295847E-004
+ Relative change in bequests =  0.99173627838921752     
+
+ Iteration           2
+ Initial bequests =   2.6115690563175229E-002
+ Ending bequest =   7.5190558497628904E-003
+ Relative change in bequests =  0.71208665412948202     
+
+ Iteration           3
+ Initial bequests =   1.9606867746017262E-002
+ Ending bequest =   7.3277706507664840E-003
+ Relative change in bequests =  0.62626510538609759     
+
+ Iteration           4
+ Initial bequests =   1.5309183251538417E-002
+ Ending bequest =   7.5294787637616651E-003
+ Relative change in bequests =  0.50817240606189562     
+
+ Iteration           5
+ Initial bequests =   1.2586286270937991E-002
+ Ending bequest =   7.6214058089994928E-003
+ Relative change in bequests =  0.39446746681763589     
+
+ Iteration           6
+ Initial bequests =   1.0848577763751949E-002
+ Ending bequest =   7.6542691829473986E-003
+ Relative change in bequests =  0.29444491714643045     
+
+ Iteration           7
+ Initial bequests =   9.7305694561971075E-003
+ Ending bequest =   7.7106216929458925E-003
+ Relative change in bequests =  0.20758782642107046     
+
+ Iteration           8
+ Initial bequests =   9.0235874611054416E-003
+ Ending bequest =   7.7120532558405640E-003
+ Relative change in bequests =  0.14534509815724744     
+
+ Iteration           9
+ Initial bequests =   8.5645502281562255E-003
+ Ending bequest =   7.7036860285787431E-003
+ Relative change in bequests =  0.10051481708255555     
+
+ Iteration          10
+ Initial bequests =   8.2632475081917695E-003
+ Ending bequest =   7.7064668306916651E-003
+ Relative change in bequests =   6.7380370362637679E-002
+
+ Iteration          11
+ Initial bequests =   8.0683740281214389E-003
+ Ending bequest =   7.6898394690054443E-003
+ Relative change in bequests =   4.6915841754070112E-002
+
+ Iteration          12
+ Initial bequests =   7.9358866942307992E-003
+ Ending bequest =   7.6923426985712941E-003
+ Relative change in bequests =   3.0688945677180064E-002
+
+ Iteration          13
+ Initial bequests =   7.8506460606937549E-003
+ Ending bequest =   7.6898474094580678E-003
+ Relative change in bequests =   2.0482218914538285E-002
+
+ Iteration          14
+ Initial bequests =   7.7943662997522140E-003
+ Ending bequest =   7.6885877241169428E-003
+ Relative change in bequests =   1.3571157880870176E-002
+
+ Iteration          15
+ Initial bequests =   7.7573435666201413E-003
+ Ending bequest =   7.6917275028289241E-003
+ Relative change in bequests =   8.4585738955231041E-003
+
+ ITERATION RESULTS
+
+ Iteration           1
+ Initial bequests =   3.9999999105930328E-002
+ Ending bequest =   8.5694809396668335E-004
+ Relative change in bequests =  0.97857629717197581     
+
+ Iteration           2
+ Initial bequests =   2.6299930292960950E-002
+ Ending bequest =   1.1804680758457486E-002
+ Relative change in bequests =  0.55115163321870275     
+
+ Iteration           3
+ Initial bequests =   2.1226592258484157E-002
+ Ending bequest =   1.2550864980462512E-002
+ Relative change in bequests =  0.40871974042625719     
+
+ Iteration           4
+ Initial bequests =   1.8190087130286199E-002
+ Ending bequest =   1.2908579498067526E-002
+ Relative change in bequests =  0.29035087047082081     
+
+ Iteration           5
+ Initial bequests =   1.6341558948383062E-002
+ Ending bequest =   1.3059487462733832E-002
+ Relative change in bequests =  0.20084200632363652     
+
+ Iteration           6
+ Initial bequests =   1.5192833460952094E-002
+ Ending bequest =   1.3084112452692481E-002
+ Relative change in bequests =  0.13879708572330160     
+
+ Iteration           7
+ Initial bequests =   1.4454780667848464E-002
+ Ending bequest =   1.3084390119674306E-002
+ Relative change in bequests =   9.4805350538614233E-002
+
+ Iteration           8
+ Initial bequests =   1.3975143553369639E-002
+ Ending bequest =   1.3089688958957221E-002
+ Relative change in bequests =   6.3359248585244041E-002
+
+ Iteration           9
+ Initial bequests =   1.3665234034111280E-002
+ Ending bequest =   1.3080414931528223E-002
+ Relative change in bequests =   4.2796127832368351E-002
+
+ Iteration          10
+ Initial bequests =   1.3460546944437293E-002
+ Ending bequest =   1.3079916453281500E-002
+ Relative change in bequests =   2.8277490708733227E-002
+
+ Iteration          11
+ Initial bequests =   1.3327325873645940E-002
+ Ending bequest =   1.3080468669463895E-002
+ Relative change in bequests =   1.8522635862772054E-002
+
+ Iteration          12
+ Initial bequests =   1.3240925456468345E-002
+ Ending bequest =   1.3080153335050762E-002
+ Relative change in bequests =   1.2142060760491900E-002
+
+ Iteration          13
+ Initial bequests =   1.3184654820320139E-002
+ Ending bequest =   1.3078650571743141E-002
+ Relative change in bequests =   8.0399714684698462E-003
+
+ ITERATION RESULTS
+
+ Iteration           1
+ Initial bequests =   3.9999999105930328E-002
+ Ending bequest =   1.7849252212381538E-003
+ Relative change in bequests =  0.95537686847164149     
+
+ Iteration           2
+ Initial bequests =   2.6624722281974787E-002
+ Ending bequest =   1.4311630094530977E-002
+ Relative change in bequests =  0.46246838021592812     
+
+ Iteration           3
+ Initial bequests =   2.2315139296282645E-002
+ Ending bequest =   1.5946927739669124E-002
+ Relative change in bequests =  0.28537628522329528     
+
+ Iteration           4
+ Initial bequests =   2.0086264624382438E-002
+ Ending bequest =   1.6427753911341863E-002
+ Relative change in bequests =  0.18213992404538767     
+
+ Iteration           5
+ Initial bequests =   1.8805785298007326E-002
+ Ending bequest =   1.6508128985991664E-002
+ Relative change in bequests =  0.12217816356007867     
+
+ Iteration           6
+ Initial bequests =   1.8001605042040868E-002
+ Ending bequest =   1.6528099602083533E-002
+ Relative change in bequests =   8.1854114481242995E-002
+
+ Iteration           7
+ Initial bequests =   1.7485877610348942E-002
+ Ending bequest =   1.6531913641156901E-002
+ Relative change in bequests =   5.4556253363425219E-002
+
+ Iteration           8
+ Initial bequests =   1.7151989705698034E-002
+ Ending bequest =   1.6547248309065919E-002
+ Relative change in bequests =   3.5257798483356993E-002
+
+ Iteration           9
+ Initial bequests =   1.6940329709312207E-002
+ Ending bequest =   1.6549199661782164E-002
+ Relative change in bequests =   2.3088691556873046E-002
+
+ Iteration          10
+ Initial bequests =   1.6803433690146842E-002
+ Ending bequest =   1.6548348313508862E-002
+ Relative change in bequests =   1.5180550674446749E-002
+
+ Iteration          11
+ Initial bequests =   1.6714153309062629E-002
+ Ending bequest =   1.6545473726980366E-002
+ Relative change in bequests =   1.0092020754099585E-002
+
+ Iteration          12
+ Initial bequests =   1.6655114958218659E-002
+ Ending bequest =   1.6545481599280244E-002
+ Relative change in bequests =   6.5825639278650075E-003
+
+ ITERATION RESULTS
+
+ Iteration           1
+ Initial bequests =   3.9999999105930328E-002
+ Ending bequest =   1.2355651783087834E-003
+ Relative change in bequests =  0.96911086985185446     
+
+ Iteration           2
+ Initial bequests =   2.6432446270223949E-002
+ Ending bequest =   1.2971933650775239E-002
+ Relative change in bequests =  0.50924203086764341     
+
+ Iteration           3
+ Initial bequests =   2.1721266145899521E-002
+ Ending bequest =   1.4176959821496374E-002
+ Relative change in bequests =  0.34732350654555832     
+
+ Iteration           4
+ Initial bequests =   1.9080758329981812E-002
+ Ending bequest =   1.4519594364622603E-002
+ Relative change in bequests =  0.23904521437139112     
+
+ Iteration           5
+ Initial bequests =   1.7484350400641835E-002
+ Ending bequest =   1.4706435406875268E-002
+ Relative change in bequests =  0.15888008019243266     
+
+ Iteration           6
+ Initial bequests =   1.6512079648306952E-002
+ Ending bequest =   1.4720562053795929E-002
+ Relative change in bequests =  0.10849739297949150     
+
+ Iteration           7
+ Initial bequests =   1.5885048008808050E-002
+ Ending bequest =   1.4722917306325536E-002
+ Relative change in bequests =   7.3158778106186886E-002
+
+ Iteration           8
+ Initial bequests =   1.5478301796454687E-002
+ Ending bequest =   1.4730033362654729E-002
+ Relative change in bequests =   4.8343057503333405E-002
+
+ Iteration           9
+ Initial bequests =   1.5216407387795389E-002
+ Ending bequest =   1.4730913921124222E-002
+ Relative change in bequests =   3.1905919334189646E-002
+
+ Iteration          10
+ Initial bequests =   1.5046484223869968E-002
+ Ending bequest =   1.4728047057810324E-002
+ Relative change in bequests =   2.1163559627734911E-002
+
+ Iteration          11
+ Initial bequests =   1.4935030769226953E-002
+ Ending bequest =   1.4726080373209697E-002
+ Relative change in bequests =   1.3990623738639409E-002
+
+ Iteration          12
+ Initial bequests =   1.4861897686767753E-002
+ Ending bequest =   1.4726252610609138E-002
+ Relative change in bequests =   9.1270360634621746E-003
+
+ ITERATION RESULTS
+
+ Iteration           1
+ Initial bequests =   3.9999999105930328E-002
+ Ending bequest =   1.4409950135659772E-003
+ Relative change in bequests =  0.96397512385563189     
+
+ Iteration           2
+ Initial bequests =   2.6504346711339510E-002
+ Ending bequest =   1.3732725028801069E-002
+ Relative change in bequests =  0.48186894857794338     
+
+ Iteration           3
+ Initial bequests =   2.2034278408684767E-002
+ Ending bequest =   1.5073351647521395E-002
+ Relative change in bequests =  0.31591353399708960     
+
+ Iteration           4
+ Initial bequests =   1.9597953427095274E-002
+ Ending bequest =   1.5375195520173107E-002
+ Relative change in bequests =  0.21546933064367660     
+
+ Iteration           5
+ Initial bequests =   1.8119987600777588E-002
+ Ending bequest =   1.5472609545901973E-002
+ Relative change in bequests =  0.14610264163547260     
+
+ Iteration           6
+ Initial bequests =   1.7193404757333015E-002
+ Ending bequest =   1.5530149434847212E-002
+ Relative change in bequests =   9.6737984474914523E-002
+
+ Iteration           7
+ Initial bequests =   1.6611264891973367E-002
+ Ending bequest =   1.5531373442473424E-002
+ Relative change in bequests =   6.5009585755372051E-002
+
+ Iteration           8
+ Initial bequests =   1.6233302396030769E-002
+ Ending bequest =   1.5534788975449371E-002
+ Relative change in bequests =   4.3029656168555822E-002
+
+ Iteration           9
+ Initial bequests =   1.5988822219200633E-002
+ Ending bequest =   1.5537440010489989E-002
+ Relative change in bequests =   2.8231110617302959E-002
+
+ Iteration          10
+ Initial bequests =   1.5830837972338321E-002
+ Ending bequest =   1.5536070462337639E-002
+ Relative change in bequests =   1.8619829886184019E-002
+
+ Iteration          11
+ Initial bequests =   1.5727668873799297E-002
+ Ending bequest =   1.5535386365220449E-002
+ Relative change in bequests =   1.2225747510438170E-002
+
+ Iteration          12
+ Initial bequests =   1.5660369528221734E-002
+ Ending bequest =   1.5535391134718879E-002
+ Relative change in bequests =   7.9805520091738476E-003
+
+ ITERATION RESULTS
+
+ Iteration           1
+ Initial bequests =   3.9999999105930328E-002
+ Ending bequest =   1.5887649459072461E-003
+ Relative change in bequests =  0.96028087546452723     
+
+ Iteration           2
+ Initial bequests =   2.6556066186778176E-002
+ Ending bequest =   1.3969036594100146E-002
+ Relative change in bequests =  0.47397944801571940     
+
+ Iteration           3
+ Initial bequests =   2.2150605112932962E-002
+ Ending bequest =   1.5476532098942605E-002
+ Relative change in bequests =  0.30130432012864511     
+
+ Iteration           4
+ Initial bequests =   1.9814678937677438E-002
+ Ending bequest =   1.5923862730663423E-002
+ Relative change in bequests =  0.19636029527663265     
+
+ Iteration           5
+ Initial bequests =   1.8452892697890154E-002
+ Ending bequest =   1.5982806214372005E-002
+ Relative change in bequests =  0.13385903901129664     
+
+ Iteration           6
+ Initial bequests =   1.7588361893442608E-002
+ Ending bequest =   1.6009055178635871E-002
+ Relative change in bequests =   8.9792712043043829E-002
+
+ Iteration           7
+ Initial bequests =   1.7035604028499622E-002
+ Ending bequest =   1.6036003588208451E-002
+ Relative change in bequests =   5.8677135170487366E-002
+
+ Iteration           8
+ Initial bequests =   1.6685743372655232E-002
+ Ending bequest =   1.6035777621295284E-002
+ Relative change in bequests =   3.8953358975010927E-002
+
+ Iteration           9
+ Initial bequests =   1.6458254866279446E-002
+ Ending bequest =   1.6036060922110736E-002
+ Relative change in bequests =   2.5652412579521010E-002
+
+ Iteration          10
+ Initial bequests =   1.6310486497842652E-002
+ Ending bequest =   1.6032295918995985E-002
+ Relative change in bequests =   1.7055933854791008E-002
+
+ Iteration          11
+ Initial bequests =   1.6213119310814088E-002
+ Ending bequest =   1.6031527881944077E-002
+ Relative change in bequests =   1.1200277095900352E-002
+
+ Iteration          12
+ Initial bequests =   1.6149561828603345E-002
+ Ending bequest =   1.6032233554059042E-002
+ Relative change in bequests =   7.2651057526834876E-003
+
+ ITERATION RESULTS
+
+ Iteration           1
+ Initial bequests =   3.9999999105930328E-002
+ Ending bequest =   1.6247312197950803E-003
+ Relative change in bequests =  0.95938171859723365     
+
+ Iteration           2
+ Initial bequests =   2.6568654382424544E-002
+ Ending bequest =   1.4178978622368660E-002
+ Relative change in bequests =  0.46632680683489153     
+
+ Iteration           3
+ Initial bequests =   2.2232267148445603E-002
+ Ending bequest =   1.5690600915825238E-002
+ Relative change in bequests =  0.29424197671525976     
+
+ Iteration           4
+ Initial bequests =   1.9942683343446652E-002
+ Ending bequest =   1.6123836475233830E-002
+ Relative change in bequests =  0.19149112496276635     
+
+ Iteration           5
+ Initial bequests =   1.8606086367995989E-002
+ Ending bequest =   1.6223861075430383E-002
+ Relative change in bequests =  0.12803473258423817     
+
+ Iteration           6
+ Initial bequests =   1.7772306975292612E-002
+ Ending bequest =   1.6262117481516954E-002
+ Relative change in bequests =   8.4974308393116940E-002
+
+ Iteration           7
+ Initial bequests =   1.7243740131816541E-002
+ Ending bequest =   1.6289055098059613E-002
+ Relative change in bequests =   5.5364151075057801E-002
+
+ Iteration           8
+ Initial bequests =   1.6909599861788478E-002
+ Ending bequest =   1.6282219585293207E-002
+ Relative change in bequests =   3.7102017884704415E-002
+
+ Iteration           9
+ Initial bequests =   1.6690016264809263E-002
+ Ending bequest =   1.6283135992176703E-002
+ Relative change in bequests =   2.4378662439680409E-002
+
+ Iteration          10
+ Initial bequests =   1.6547607674411817E-002
+ Ending bequest =   1.6288428992545036E-002
+ Relative change in bequests =   1.5662607366958441E-002
+
+ Iteration          11
+ Initial bequests =   1.6456894644146128E-002
+ Ending bequest =   1.6288629669713228E-002
+ Relative change in bequests =   1.0224588421531500E-002
+
+ Iteration          12
+ Initial bequests =   1.6398001413643871E-002
+ Ending bequest =   1.6288633547884748E-002
+ Relative change in bequests =   6.6695850915175709E-003
+
+ ITERATION RESULTS
+
+ Iteration           1
+ Initial bequests =   3.9999999105930328E-002
+ Ending bequest =   1.6078503652208265E-003
+ Relative change in bequests =  0.95980373997102286     
+
+ Iteration           2
+ Initial bequests =   2.6562746083424172E-002
+ Ending bequest =   1.4099901781954610E-002
+ Relative change in bequests =  0.46918508584647778     
+
+ Iteration           3
+ Initial bequests =   2.2200749860562644E-002
+ Ending bequest =   1.5606041980708968E-002
+ Relative change in bequests =  0.29704887993754203     
+
+ Iteration           4
+ Initial bequests =   1.9892601480287476E-002
+ Ending bequest =   1.6049479207824950E-002
+ Relative change in bequests =  0.19319354868044072     
+
+ Iteration           5
+ Initial bequests =   1.8547508114986663E-002
+ Ending bequest =   1.6152173418419118E-002
+ Relative change in bequests =  0.12914590368245099     
+
+ Iteration           6
+ Initial bequests =   1.7709140432706515E-002
+ Ending bequest =   1.6184311363831836E-002
+ Relative change in bequests =   8.6104070080020065E-002
+
+ Iteration           7
+ Initial bequests =   1.7175449739915555E-002
+ Ending bequest =   1.6197285153679981E-002
+ Relative change in bequests =   5.6951323024883038E-002
+
+ Iteration           8
+ Initial bequests =   1.6833091628695129E-002
+ Ending bequest =   1.6205111586579148E-002
+ Relative change in bequests =   3.7306280745568597E-002
+
+ Iteration           9
+ Initial bequests =   1.6613298116032363E-002
+ Ending bequest =   1.6200863276307358E-002
+ Relative change in bequests =   2.4825584711983935E-002
+
+ Iteration          10
+ Initial bequests =   1.6468945429472047E-002
+ Ending bequest =   1.6202091311824377E-002
+ Relative change in bequests =   1.6203473306197265E-002
+
+ Iteration          11
+ Initial bequests =   1.6375545999073118E-002
+ Ending bequest =   1.6202170243601450E-002
+ Relative change in bequests =   1.0587479372075968E-002
+
+ Iteration          12
+ Initial bequests =   1.6314863997662132E-002
+ Ending bequest =   1.6202691891976064E-002
+ Relative change in bequests =   6.8754545365589375E-003
+
+ ITERATION RESULTS
+
+ Iteration           1
+ Initial bequests =   3.9999999105930328E-002
+ Ending bequest =   1.6059123853815640E-003
+ Relative change in bequests =  0.95985218946808748     
+
+ Iteration           2
+ Initial bequests =   2.6562067790491983E-002
+ Ending bequest =   1.4012915442673603E-002
+ Relative change in bequests =  0.47244636399544193     
+
+ Iteration           3
+ Initial bequests =   2.2169863751943020E-002
+ Ending bequest =   1.5541980198494646E-002
+ Relative change in bequests =  0.29895914686744479     
+
+ Iteration           4
+ Initial bequests =   1.9850103887027928E-002
+ Ending bequest =   1.5972946217465877E-002
+ Relative change in bequests =  0.19532178227519398     
+
+ Iteration           5
+ Initial bequests =   1.8493098134211676E-002
+ Ending bequest =   1.6049742986575515E-002
+ Relative change in bequests =  0.13212254268612936     
+
+ Iteration           6
+ Initial bequests =   1.7637923295965280E-002
+ Ending bequest =   1.6099033405556556E-002
+ Relative change in bequests =   8.7248927472133239E-002
+
+ Iteration           7
+ Initial bequests =   1.7099311317843650E-002
+ Ending bequest =   1.6101042313959906E-002
+ Relative change in bequests =   5.8380655532133605E-002
+
+ Iteration           8
+ Initial bequests =   1.6749916662835297E-002
+ Ending bequest =   1.6132256876658146E-002
+ Relative change in bequests =   3.6875394583163142E-002
+
+ Iteration           9
+ Initial bequests =   1.6533735242168418E-002
+ Ending bequest =   1.6133992114436488E-002
+ Relative change in bequests =   2.4177424028927624E-002
+
+ Iteration          10
+ Initial bequests =   1.6393824657101187E-002
+ Ending bequest =   1.6137843884440714E-002
+ Relative change in bequests =   1.5614463251538559E-002
+
+ Iteration          11
+ Initial bequests =   1.6304230899621738E-002
+ Ending bequest =   1.6132166258216431E-002
+ Relative change in bequests =   1.0553373689604632E-002
+
+ Iteration          12
+ Initial bequests =   1.6244007790251518E-002
+ Ending bequest =   1.6131949511737582E-002
+ Relative change in bequests =   6.8984378708058193E-003
+
+ FINAL RESULTS
+ *****************************************************
+
