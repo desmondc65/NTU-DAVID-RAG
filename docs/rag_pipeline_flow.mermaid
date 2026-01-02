@@ -1,0 +1,86 @@
+%%{init: {'theme': 'base', 'themeVariables': { 'fontSize': '24px', 'fontFamily': 'arial', 'clusterBkg': '#fafafa', 'clusterBorder': '#333'}}}%%
+graph TD
+    %% Define Styles
+    classDef orange fill:#ffe6cc,stroke:#d79b00,stroke-width:2px,color:black;
+    classDef purple fill:#e1d5e7,stroke:#9673a6,stroke-width:2px,color:black;
+    classDef green fill:#d5e8d4,stroke:#82b366,stroke-width:2px,color:black;
+    classDef blue fill:#dae8fc,stroke:#6c8ebf,stroke-width:2px,color:black;
+    classDef white fill:#ffffff,stroke:#333,stroke-width:2px,color:black;
+    classDef grey fill:#f5f5f5,stroke:#666666,stroke-width:1px,color:black,stroke-dasharray: 5 5;
+
+    %% --- PHASE 3: RETRIEVAL ---
+    subgraph P3 [Phase 3: Hybrid Retrieval & Generation]
+        direction TB
+        Query((User Query)):::orange
+        MetaFilter[Metadata Filter<br/>Year, Author, Univ]:::purple
+        HybSearch[Hybrid Search<br/>Keyword + Semantic]:::purple
+        Rerank[Cross-Encoder Reranker<br/>bge-reranker]:::green
+        Context[Context Assembly]:::purple
+        MultiLLM[Multimodal LLM<br/>Gemini 1.5 Pro / GPT-4o]:::green
+        Final((Final Answer)):::orange
+
+        Query --> MetaFilter
+        Query --> HybSearch
+        MetaFilter -.-> HybSearch
+        HybSearch -- Top 50 Candidates --> Rerank
+        Rerank -- Top K Results --> Context
+        Context -- Prompt + Text + Images --> MultiLLM
+        MultiLLM --> Final
+    end
+
+    %% --- PHASE 1: INGESTION ---
+    subgraph P1 [Phase 1: Ingestion - Deep Parsing]
+        direction TB
+        Thesis[Thesis PDF Corpus<br/>100+ Docs]:::orange
+        
+        subgraph TE [Text & Code Extraction]
+            Router{{Content Router}}:::white
+            PreProc[Pre-processing Tool<br/>Marker / Nougat]:::purple
+            MD[Markdown Output]:::white
+            BlockCheck{{Block Type?}}:::white
+            CodeSum[Code Summarization<br/>LLM creates summary]:::green
+            TextChunk[Text Chunking<br/>500 tokens]:::purple
+
+            Router -- Pages --> PreProc
+            PreProc --> MD --> BlockCheck
+            BlockCheck -- Code --> CodeSum
+            BlockCheck -- Text --> TextChunk
+        end
+
+        subgraph VE [Visual Extraction]
+            ImgCrop[Image Cropping<br/>PyMuPDF / Unstructured]:::purple
+            VLM[VLM Captioning<br/>Gemini 1.5 / GPT-4o]:::green
+            ImgCap[Image Caption]:::white
+            
+            ImgCrop --> VLM --> ImgCap
+        end
+
+        Thesis --> Router
+        Router -- Figures/Charts --> ImgCrop
+    end
+
+    %% --- PHASE 2: STORAGE ---
+    subgraph P2 [Phase 2: Multi-Vector Storage]
+        direction TB
+        DocStore[(Doc Store<br/>Raw Content)]:::blue
+        Embed[Embedding Model<br/>text-embedding-3 / CLIP]:::green
+        VecDB[(Vector Database<br/>Qdrant/Weaviate<br/>Stores: Embeddings + Metadata)]:::blue
+
+        Embed --> VecDB
+    end
+
+    %% --- CROSS PHASE CONNECTIONS ---
+    
+    %% Ingestion to Storage
+    ImgCap -. Ref ID points to<br/>RAW IMAGE .-> DocStore
+    ImgCap -- Ref ID --> Embed
+    
+    CodeSum -. Ref ID points to<br/>RAW CODE .-> DocStore
+    CodeSum -- Ref ID --> Embed
+    
+    TextChunk -- Ref ID --> Embed
+    TextChunk -- Ref ID --> DocStore
+
+    %% Retrieval to Storage
+    Context -- Retrieve Raw Code & Images --> DocStore
+    HybSearch <--> VecDB
