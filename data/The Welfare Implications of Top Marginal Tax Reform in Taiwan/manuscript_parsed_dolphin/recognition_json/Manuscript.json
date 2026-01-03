@@ -1,0 +1,3584 @@
+{
+  "source_file": "/home/desmond/Documents/econs_rag/NTU-DAVID-RAG/data/The Welfare Implications of Top Marginal Tax Reform in Taiwan/Manuscript.pdf",
+  "total_pages": 33,
+  "pages": [
+    {
+      "page_number": 1,
+      "elements": [
+        {
+          "label": "sec_0",
+          "bbox": [
+            88,
+            130,
+            602,
+            201
+          ],
+          "text": "The Welfare Implications of Top Marginal Tax\nReform in Taiwan $^∗$",
+          "reading_order": 0,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            169,
+            227,
+            524,
+            252
+          ],
+          "text": "Xiao Yan Jiang † , David Leung ‡ , Ming-Jen Lin §",
+          "reading_order": 1,
+          "tags": [
+            "author"
+          ]
+        },
+        {
+          "label": "sec_1",
+          "bbox": [
+            316,
+            305,
+            375,
+            323
+          ],
+          "text": "Abstract",
+          "reading_order": 2,
+          "tags": [
+            "paper_abstract"
+          ]
+        },
+        {
+          "label": "para",
+          "bbox": [
+            100,
+            336,
+            592,
+            605
+          ],
+          "text": "This paper examines the effects of top marginal tax reform on household behavior\nand economic outcomes in Taiwan. We empirically estimate the structure of Taiwan's\nprogressive income tax system using data from the Household Income and Expenditure\nSurveys. Subsequently, we conduct a quantitative analysis of the 2017 tax reform, which\nreduced the top marginal tax rate from 45 % to 40 % , to evaluate its economic impacts. By\nemploying a life cycle model with heterogeneous households, our results indicate that while\nthe reform stimulated economic activity, it also increased the top 1 % of income and wealth\nshares by 1.8 % and 4.4 % , respectively. We find that an optimal top marginal tax rate of\n69 % significantly reduces inequality and enhances welfare through improved redistribution\nand economic security. These findings have practical implications for policymakers and\neconomists, providing crucial insights for designing equitable and efficient income tax\npolicies.",
+          "reading_order": 3,
+          "tags": [
+            "paper_abstract"
+          ]
+        },
+        {
+          "label": "para",
+          "bbox": [
+            101,
+            637,
+            281,
+            654
+          ],
+          "text": "JEL Codes: D31, E62, H21, H24",
+          "reading_order": 4,
+          "tags": [
+            "meta_num"
+          ]
+        },
+        {
+          "label": "para",
+          "bbox": [
+            101,
+            662,
+            532,
+            702
+          ],
+          "text": "Keywords: Wealth and Income Inequality, Progressive Taxation, Heterogeneous\nHouseholds",
+          "reading_order": 5,
+          "tags": [
+            "paper_keywords"
+          ]
+        },
+        {
+          "label": "fnote",
+          "bbox": [
+            75,
+            760,
+            621,
+            789
+          ],
+          "text": "We gratefully acknowledge the valuable comments and suggestions provided by the two anonymous reviewers,\nwhich greatly contributed to the revision and improvement of this paper.",
+          "reading_order": 6,
+          "tags": []
+        },
+        {
+          "label": "fnote",
+          "bbox": [
+            84,
+            789,
+            591,
+            802
+          ],
+          "text": "1 Department of Mathematics and Statistics, Memorial University of Newfoundland, xiaoyanj@mun.ca",
+          "reading_order": 7,
+          "tags": [
+            "author_affili",
+            "author_mail"
+          ]
+        },
+        {
+          "label": "fnote",
+          "bbox": [
+            85,
+            802,
+            599,
+            814
+          ],
+          "text": "† Corresponding author. Department of Economics, National Taiwan University. davidleung@ntu.edu.tw",
+          "reading_order": 8,
+          "tags": [
+            "author_affili",
+            "author_mail"
+          ]
+        },
+        {
+          "label": "fnote",
+          "bbox": [
+            84,
+            814,
+            455,
+            828
+          ],
+          "text": "$^{\\S}$ Department of Economics, National Taiwan University. mjin@ntu.edu.tw",
+          "reading_order": 9,
+          "tags": [
+            "author_affili",
+            "author_mail"
+          ]
+        }
+      ]
+    },
+    {
+      "page_number": 2,
+      "elements": [
+        {
+          "label": "sec_1",
+          "bbox": [
+            67,
+            65,
+            219,
+            90
+          ],
+          "text": "1 Introduction",
+          "reading_order": 0,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            108,
+            624,
+            323
+          ],
+          "text": "Income inequality in Taiwan has been increasing for the past 17 years. The share of pre-tax\nincome for the top 1 % increased from 17 % in 2001 to 19 % in 2017 ( Lee et al. , 2022 ) . This\ntrend coincided with a reduction in the top marginal tax rate from 45 % to 40 % in 2017. These\ndevelopments raise important questions about the impacts of Taiwan's 2017 top marginal tax rate\nreduction on the economy and household behavior, as well as the optimal top marginal tax rate\nto maximize welfare. This paper assesses whether the reform, lowering the top marginal tax rates\nfor high-income earners, improves welfare within a dynamic general equilibrium macroeconomic\nmodel. Our model considers households facing uninsurable idiosyncratic labor productivity\nshocks and making labor supply and intertemporal savings decisions.",
+          "reading_order": 1,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            330,
+            624,
+            519
+          ],
+          "text": "To ensure that our model accurately captures the highly concentrated income distribution,\nespecially at the top 1 % , we calibrate our model using a labor productivity process featuring\n\"superstar\" states, as outlined in Castaneda et al. ( 2003 ) . This calibration method allows\nhouseholds with a low probability to potentially earn exceptionally high wages, reflecting real-\nworld opportunities in entrepreneurship, entertainment, or sports. Through this approach, our\nmodel closely matches the data for the top 1 % in terms of key economic characteristics. Recent\nstudies by Chu et al. ( 2023 ) and Lee et al. ( 2022 ) have reported a growing concentration of labor\nearnings and income at the top of the distribution.",
+          "reading_order": 2,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            525,
+            624,
+            787
+          ],
+          "text": "The study by Brüggemann and Yoo ( 2015 ) examines the steady-state effects of increasing the\ntop marginal tax rate, looking at both aggregate and distributional consequences. The results\nindicate significant negative overall effects but positive distributional impacts, leading to net\nwelfare gains. Similarly, recent research has also investigated the role of the top marginal tax\nrate in the context of income inequality and risk. Kindermann and Krueger ( 2022 ) argue that\nhigh marginal tax rates on top earners can serve as an effective tool for social insurance, even\nin the presence of idiosyncratic income risk. Their life cycle model incorporates varying labor\nproductivity among households. It demonstrates how such tax structures can contribute to\nconsumption smoothing over a lifetime, particularly for households experiencing income shocks\nduring their working years. This finding implies that an optimal tax policy should consider not\nonly revenue generation but also its redistributive and insurance effects.",
+          "reading_order": 3,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            88,
+            795,
+            623,
+            812
+          ],
+          "text": "This paper aims to enrich the existing literature by exploring the distinct effects of income",
+          "reading_order": 4,
+          "tags": []
+        },
+        {
+          "label": "foot",
+          "bbox": [
+            338,
+            845,
+            350,
+            861
+          ],
+          "text": "1",
+          "reading_order": 5,
+          "tags": [
+            "page_num"
+          ]
+        }
+      ]
+    },
+    {
+      "page_number": 3,
+      "elements": [
+        {
+          "label": "half_para",
+          "bbox": [
+            67,
+            71,
+            624,
+            187
+          ],
+          "text": "tax systems on single and married households in Taiwan. Our study uses data from the 2014\nto 2021 Household Income and Expenditure Surveys to accurately model tax functions that\ncapture the characteristics of Taiwan's progressive income tax framework. These estimated tax\nfunctions serve as practical instruments for researchers delving into Taiwan's macroeconomics\nand public finance, strengthening the applicability of their research.",
+          "reading_order": 0,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            194,
+            624,
+            430
+          ],
+          "text": "In addition, we examine a specific tax reform implemented in Taiwan in 2017, reducing the\ntop marginal tax rate from 45 % to 40 % . We analyze the reform's impact on economic decisions\nusing a life cycle model with varying household types. Our model considers both intensive\nand extensive labor supply margins, providing a more comprehensive understanding of how\nhouseholds responded to the tax change. Our findings suggest that the reduction of the top\nmarginal tax rate from 45 % to 40 % slightly increases economic output and capital, encouraging\nhigher-income earners to invest or save more. However, this reform also exacerbated income\nand wealth inequality, as indicated by the rise in the top 1 % income and wealth shares. By\nquantifying the effects on labor supply, savings, and consumption decisions, our study provides\nvaluable information on the economic implications of such a tax reform.",
+          "reading_order": 1,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            437,
+            623,
+            627
+          ],
+          "text": "Extending on this analysis, we find that a top marginal tax rate of 69 % maximizes welfare\nwithin the framework of our model. Comparing our results to the 79 % optimal marginal tax\nrate for the top 1 % of U.S. earners as found by Kindermann and Krueger ( 2022 ) , we have\nvalidated our results in line with the existing literature. This rate effectively reduces inequality,\nimproves redistribution and insurance effects, and decreases income and wealth concentration\nat the top. In addition, it reduces the Gini coefficient of income, wealth, and consumption. It\nimproves welfare for low- and middle-income groups by lowering their tax burden and increasing\ndisposable income through decreased pension contributions.",
+          "reading_order": 2,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            634,
+            624,
+            825
+          ],
+          "text": "In summary, this paper aims to bridge the gap between theoretical and empirical studies on\ntax policy by addressing two key research questions. First, how does Taiwan's income tax system\naffect married and single households differently? Second, what are the economic and behavioral\neffects of Taiwan's 2017 top marginal tax rate reform, and what is the optimal top marginal tax\nrate for maximizing social welfare? To answer these questions, we begin by empirically estimating\nthe tax functions that represent Taiwan's progressive income tax system. Subsequently, we assess\nthe behavioral effects of the recent tax reform on married and single households, employing a life\ncycle model with both intensive and extensive labor supply margins. Finally, we compute the",
+          "reading_order": 3,
+          "tags": []
+        },
+        {
+          "label": "foot",
+          "bbox": [
+            338,
+            845,
+            351,
+            862
+          ],
+          "text": "2",
+          "reading_order": 4,
+          "tags": [
+            "page_num"
+          ]
+        }
+      ]
+    },
+    {
+      "page_number": 4,
+      "elements": [
+        {
+          "label": "half_para",
+          "bbox": [
+            66,
+            72,
+            623,
+            114
+          ],
+          "text": "optimal top marginal tax rate within our framework. Our findings contribute to the literature on\noptimal taxation and inform policy discussions surrounding tax reform in Taiwan and beyond.",
+          "reading_order": 0,
+          "tags": []
+        },
+        {
+          "label": "sec_1",
+          "bbox": [
+            67,
+            147,
+            295,
+            171
+          ],
+          "text": "2 The Model Economy",
+          "reading_order": 1,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            191,
+            624,
+            331
+          ],
+          "text": "For the analysis, we use an overlapping generations life cycle model within a general equilibrium\nframework. This model allows us to simulate individuals' economic behaviors and interactions at\ndifferent stages of their lives, capturing the dynamics of labor supply, savings, and consumption\ndecisions over time. By incorporating single and married households into this framework, we\ncan assess the differential impacts of tax policies on diverse demographic groups and determine\nthe top marginal tax rate that maximizes social welfare.",
+          "reading_order": 2,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            338,
+            624,
+            502
+          ],
+          "text": "Our model builds on the dynamic general equilibrium framework established in prior studies\nlike Kindermann and Krueger ( 2022 ) and Castaneda et al. ( 2003 ) . However, we extend this\nfoundation with novel features tailored to Taiwan's tax system. Unlike the simplified tax\nfunctions used in prior research, we employ a parametric approximation calibrated to Taiwan's\nprogressive income tax system using household-level data from the Household Income and\nExpenditure Surveys (2014-2021). This approach allows us to capture redistributive effects\nacross income brackets more realistically.",
+          "reading_order": 3,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            509,
+            624,
+            649
+          ],
+          "text": "Furthermore, we distinguish between single and married households to account for differences\nin income levels, labor supply behavior, and risk-sharing mechanisms. Married households,\ntypically dual earners with higher incomes, face greater exposure to top marginal tax rates while\nbenefiting from intra-household risk-sharing. These distinctions enable a meaningful analysis of\ntax progressivity's effects across household types, offering insights relevant to Taiwan's policy\ncontext.",
+          "reading_order": 4,
+          "tags": []
+        },
+        {
+          "label": "sec_2",
+          "bbox": [
+            67,
+            678,
+            212,
+            699
+          ],
+          "text": "2.1 Environment",
+          "reading_order": 5,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            715,
+            624,
+            830
+          ],
+          "text": "The model features an economy with $J$ overlapping generations of households, where age is\nindexed by $j \\in J$ . The population consists of three household types: married couples, single\nmales, and single females. The total populations of men and women are normalized to 1. At\nthe beginning of the economy, a fixed proportion $\\varphi$ of men and women are married, while the\nremaining $1-\\varphi$ are single, and marital status is assumed to remain unchanged throughout their",
+          "reading_order": 6,
+          "tags": []
+        },
+        {
+          "label": "foot",
+          "bbox": [
+            338,
+            846,
+            351,
+            862
+          ],
+          "text": "3",
+          "reading_order": 7,
+          "tags": [
+            "page_num"
+          ]
+        }
+      ]
+    },
+    {
+      "page_number": 5,
+      "elements": [
+        {
+          "label": "half_para",
+          "bbox": [
+            66,
+            71,
+            623,
+            211
+          ],
+          "text": "lifetimes. All households begin their working lives at age 25, retire at age $J_r = 65$ , and receive\nsocial security benefits until the maximum age of $J = 99$ . During the working phase, survival\nis guaranteed, but retired households face age- and gender-specific survival probabilities, $s_{g,j}$ .\nFor single individuals and married couples who both pass away at the same age, they leave\naccidental bequests. These bequests are collected by the government at the end of the period\nand are uniformly distributed to all working-age individuals with the amount $b$ .",
+          "reading_order": 0,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            218,
+            623,
+            383
+          ],
+          "text": "Households derive income from both labor and capital. A worker's labor endowment is\nrepresented by $z \\varepsilon_{g,j}$ , where $z$ is a stochastic productivity component governed by a first-order\nMarkov process, $F_z(z'|z)$ , and $\\varepsilon_{g,j}$ is a deterministic factor reflecting gender- and age-specific\nhuman capital accumulation, such as gains from work experience. Labor income is calculated\nas $w z \\varepsilon_{g,j} n$ , where $w$ represents the wage per skill unit, and $n \\in [0,1]$ denotes hours worked.\nCapital income, on the other hand, is derived as $r k$ , where $k$ represents the household's asset\nholdings, and $r$ is the rate of return on those assets.",
+          "reading_order": 1,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            390,
+            623,
+            627
+          ],
+          "text": "Retired households no longer earn labor income but receive pension benefits, $SS(\\tilde{e})$ , which\nare based on their average lifetime earnings, $\\tilde{e}$ , in addition to capital income. The total household\nincome is denoted by $y$ and is subject to taxation. The tax structure includes both income taxes\nand transfers, with after-tax disposable income represented by $y^d$ . Additionally, consumption\nis taxed at a sales tax rate $\\tau_c$ . Participation in the social insurance system is mandatory, with\neach individual required to pay premiums $\\pi$ . These premiums are calculated as a percentage\n(premium rate $t$ ) of earnings for the working-age group. Moreover, the government provides\nsocial in-kind transfers of $Tr$ to all households. Revenue generated from taxes and premiums\nis allocated by the government to finance public expenditures, $G$ , pension payments, and other\ntransfers.",
+          "reading_order": 2,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            635,
+            623,
+            726
+          ],
+          "text": "Production in the economy is carried out by a representative firm that utilizes aggregate\ncapital, $K$ , and total effective labor, $N$ . The firm's output is governed by a Cobb-Douglas\nproduction function, $Y = \\Psi K^{\\alpha} Y^{1-\\alpha}$ . Operating in a competitive market, the firm hires labor\nand capital to maximize profits,",
+          "reading_order": 3,
+          "tags": []
+        }
+      ]
+    },
+    {
+      "page_number": 6,
+      "elements": [
+        {
+          "label": "sec_2",
+          "bbox": [
+            67,
+            69,
+            512,
+            90
+          ],
+          "text": "2.2 The single household consumption-savings problem",
+          "reading_order": 0,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            103,
+            624,
+            294
+          ],
+          "text": "A worker's labor endowment, which is gender-specific, is represented by $xz_{g,j}$ . Here, $z$ is a\nstochastic component that signifies productivity levels, while $\\varepsilon_{g,j}$ is a deterministic component\nthat accounts for age-dependent skill variations for males and females, such as work experience.\nWith this endowment, a worker generates a labor income of $wzz_{g,j}n$ , where $w$ is the market wage\nper skill unit and $n \\in [0,1]$ represents hours worked. The income from savings is denoted by\n$rk$ . All incomes are subject to a progressive tax system specific to the household type, and it is\nassumed that married households are taxed on joint income. $^1$ The disposable income for single\nand married households, after all taxes and transfers, is denoted by $y_S^d$ and $y_M^t$ , respectively.",
+          "reading_order": 1,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            299,
+            624,
+            440
+          ],
+          "text": "Agents value consumption and leisure. The agent's problem is choosing labor supply,\nconsumption, and savings to maximize the expected present value of their lifetime utility. At the\nstart of each period $j$ , agents are informed of their labor productivity $z$ for that period before\nthey make their decisions. The future utility is discounted with a constant factor $\\beta \\in (0,1)$ .\nFormally, this can be represented by the Bellman equation for a single worker's problem, which\nis as follows:",
+          "reading_order": 2,
+          "tags": []
+        },
+        {
+          "label": "equ",
+          "bbox": [
+            165,
+            470,
+            522,
+            496
+          ],
+          "text": "$$V ^ { S } ( j , k , z , \\overline { e } , g ) = \\operatorname* { m a x } _ { c , \\underline { { z } } , \\underline { { u } } } \\left[ u ( c , n ) + \\beta \\mathbb { E } \\left[ V ^ { S } ( j + 1 , k ^ { \\prime } , z ^ { \\prime } , \\underline { { e } } ^ { \\prime } , g ) | \\underline { { s } } \\right] \\right] .$$",
+          "reading_order": 3,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            87,
+            508,
+            149,
+            526
+          ],
+          "text": "$$\n subject to \n$$",
+          "reading_order": 4,
+          "tags": []
+        },
+        {
+          "label": "equ",
+          "bbox": [
+            171,
+            542,
+            521,
+            563
+          ],
+          "text": "$$(1+\\tau_{c})c+k^{\\prime}+\\pi(wz\\varepsilon_{g,j}n)=k+y_{S}^{\\prime}(wz\\varepsilon_{g,j}n+rk)+Tr+b$$",
+          "reading_order": 5,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            579,
+            624,
+            671
+          ],
+          "text": "The expectation is taken over the future values of labor productivity $z^t$ given the processes\n$F_z$ . The social security benefits $SS(\\tilde{e})$ are linked to their realized average annual earnings $\\tilde{e}$ ,\nwhich is a state variable in the value function. The average historical earnings $\\tilde{e}$ for a single\nhousehold evolve according to",
+          "reading_order": 6,
+          "tags": []
+        },
+        {
+          "label": "equ",
+          "bbox": [
+            286,
+            685,
+            405,
+            707
+          ],
+          "text": "$$\\vec { e } ^ { \\prime } = [ ( j - 1 ) \\vec { e } + e ] / j$$",
+          "reading_order": 7,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            724,
+            624,
+            767
+          ],
+          "text": "The term $e$ represents the current-period labor income, which is used to update the average\nhistorical earnings $\\bar{e}$ where $\\tilde{e}'$ denotes the updated average earnings for the next period, $j$ is",
+          "reading_order": 8,
+          "tags": []
+        },
+        {
+          "label": "fnote",
+          "bbox": [
+            67,
+            786,
+            624,
+            830
+          ],
+          "text": "$^{1}$Despite the option for married households to be taxed on separate income, data from the Statistics of\nComprehensive Income Tax indicates that only 12 % of married couples choose this option, leading to the\nassumption that all married households are taxed on joint filing.",
+          "reading_order": 9,
+          "tags": []
+        },
+        {
+          "label": "foot",
+          "bbox": [
+            339,
+            847,
+            350,
+            862
+          ],
+          "text": "5",
+          "reading_order": 10,
+          "tags": [
+            "page_num"
+          ]
+        }
+      ]
+    },
+    {
+      "page_number": 7,
+      "elements": [
+        {
+          "label": "half_para",
+          "bbox": [
+            67,
+            71,
+            623,
+            137
+          ],
+          "text": "the number of periods over which historical earnings are averaged, and $c$ is the current period's\nlabor income. This formulation ensures that $\\bar{e}$ reflects a weighted average of past and current\nearnings.",
+          "reading_order": 0,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            68,
+            144,
+            623,
+            185
+          ],
+          "text": "Since retirees do not engage in work, the Bellman equation for a single retiree's problem is\nrepresented as follows:",
+          "reading_order": 1,
+          "tags": []
+        },
+        {
+          "label": "equ",
+          "bbox": [
+            193,
+            216,
+            495,
+            242
+          ],
+          "text": "$$R ^ { S } ( j , k , \\vec { e } , g ) = \\underset { c , k ^ { \\prime } } {  v  } | u ( c , 0 ) + \\beta _ { S , j } R ^ { S } ( j + 1 , k ^ { \\prime } , \\vec { e } , g ) |$$",
+          "reading_order": 2,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            87,
+            254,
+            150,
+            272
+          ],
+          "text": "subject to",
+          "reading_order": 3,
+          "tags": []
+        },
+        {
+          "label": "equ",
+          "bbox": [
+            224,
+            287,
+            465,
+            309
+          ],
+          "text": "$$(1+\\tau_{c})c+k^{\\prime}=k+y_{S}^{d}(SS(\\overline{\\epsilon})+rk)+Tr$$",
+          "reading_order": 4,
+          "tags": []
+        },
+        {
+          "label": "sec_2",
+          "bbox": [
+            67,
+            337,
+            531,
+            358
+          ],
+          "text": "2.3 The married household consumption-savings problem",
+          "reading_order": 5,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            371,
+            624,
+            488
+          ],
+          "text": "Following the approach of Nishiyama ( 2010 ); Kaygusuz ( 2015 ); Fehr et al. ( 2017 ) , married\nhouseholds make collective decisions to maximize a joint utility function that both spouses are\nequally weighted. This utility function of married couples, $U$ , depends on joint consumption, $c$ ,\nhours worked by both the husband, $n_m \\in [0,1]$ and the wife $n_f \\in [0,1]$ . The functional form of\nthis utility function is defined as follows: $^2$",
+          "reading_order": 6,
+          "tags": []
+        },
+        {
+          "label": "equ",
+          "bbox": [
+            233,
+            515,
+            456,
+            533
+          ],
+          "text": "$$U\\left(c, n_{m}, n_{f}\\right)=u\\left(c / \\eta, n_{m}\\right)+u\\left(c / \\eta, n_{f}\\right)$$",
+          "reading_order": 7,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            560,
+            623,
+            601
+          ],
+          "text": "where $\\eta$ is the equivalence scale in consumption. The Bellman equation for a working-age married\nhousehold problem is:",
+          "reading_order": 8,
+          "tags": []
+        },
+        {
+          "label": "equ",
+          "bbox": [
+            108,
+            626,
+            579,
+            655
+          ],
+          "text": "$$V ^ { M } ( j , k , z _ { m } , z _ { f } , \\overline { c } ) = \\operatorname* { m a x } _ { c ^ { \\prime } : k ^ { \\prime } , n _ { f } } \\{ U ( c , n _ { m } , n _ { f } ) + \\beta \\mathbb { E } \\left[ V ^ { M } ( j + 1 , k ^ { \\prime } , z _ { m } ^ { \\prime } , z _ { f } ^ { \\prime } , \\overline { c } ) | z _ { m } , z _ { f } \\right] \\}$$",
+          "reading_order": 9,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            87,
+            674,
+            150,
+            691
+          ],
+          "text": "subject to",
+          "reading_order": 10,
+          "tags": []
+        },
+        {
+          "label": "equ",
+          "bbox": [
+            68,
+            710,
+            622,
+            729
+          ],
+          "text": "$$(1+\\tau_{c})c+k^{\\prime}+\\pi(wz_{m}\\varepsilon_{m_{j}}n_{m}+wz_{f}\\varepsilon_{f_{j}}n_{f})=k+y_{M}^{d}(wz_{m}\\varepsilon_{m_{j}}n_{m}+wz_{f}\\varepsilon_{f_{j}}n_{f}+rk)+2(Tr+b)$$",
+          "reading_order": 11,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            68,
+            744,
+            623,
+            762
+          ],
+          "text": "For simplicity, the average historical earnings $\\tilde{e}$ for married household are assumed to be pooled:",
+          "reading_order": 12,
+          "tags": []
+        },
+        {
+          "label": "equ",
+          "bbox": [
+            254,
+            780,
+            435,
+            800
+          ],
+          "text": "$$\\tilde{e}^{\\prime}=\\left[(j-1) \\tilde{e}+\\left(e_{m}+e_{f}\\right) / 2\\right] / j$$",
+          "reading_order": 13,
+          "tags": []
+        },
+        {
+          "label": "fnote",
+          "bbox": [
+            88,
+            813,
+            445,
+            830
+          ],
+          "text": "$^{2}$The detailed functional form and calibration are discussed in Section 3.",
+          "reading_order": 14,
+          "tags": []
+        },
+        {
+          "label": "foot",
+          "bbox": [
+            339,
+            847,
+            350,
+            861
+          ],
+          "text": "6",
+          "reading_order": 15,
+          "tags": [
+            "page_num"
+          ]
+        }
+      ]
+    },
+    {
+      "page_number": 8,
+      "elements": [
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            70,
+            512,
+            89
+          ],
+          "text": "The Bellman equation for a retired married household's problem is given by",
+          "reading_order": 0,
+          "tags": []
+        },
+        {
+          "label": "equ",
+          "bbox": [
+            88,
+            93,
+            613,
+            140
+          ],
+          "text": "$$\\begin{array} { r } { R ^ { M } ( j , k , \\vec { e } ) = \\underset { c , e } { \\operatorname* { m a x } } ( U ( c , 0 , 0 ) + \\beta s _ { m _ { j } } s _ { f _ { j } } R ^ { M } ( j + 1 , k ^ { \\prime } , \\vec { e } ^ { \\prime } ) + \\beta s _ { m _ { j } } ( 1 - s _ { f _ { j } } ) R ^ { S } ( j + 1 , k ^ { \\prime } , \\vec { e } ^ { \\prime } , m ) } \\\\ { + \\beta s _ { f _ { j } } ( 1 - s _ { m _ { j } } ) R ^ { S } ( j + 1 , k ^ { \\prime } , \\vec { e } ^ { \\prime } , f ) ) } \\end{array}$$",
+          "reading_order": 1,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            87,
+            145,
+            150,
+            163
+          ],
+          "text": "subject to",
+          "reading_order": 2,
+          "tags": []
+        },
+        {
+          "label": "equ",
+          "bbox": [
+            216,
+            178,
+            475,
+            200
+          ],
+          "text": "$$(1+\\tau_{c})c+k^{\\prime}=k+y_{M}^{d}(2SS(\\overline{e})+rk)+2Tr$$",
+          "reading_order": 3,
+          "tags": []
+        },
+        {
+          "label": "sec_2",
+          "bbox": [
+            67,
+            227,
+            290,
+            249
+          ],
+          "text": "2.4 Stationary equilibrium",
+          "reading_order": 4,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            66,
+            261,
+            625,
+            404
+          ],
+          "text": "Let $\\omega^M = \\{j, k, z_m, z_f, \\bar{\\epsilon}\\} \\in \\Omega^M$ be a generic state vector of married households and $\\omega^S =$\n$\\{j, k, z_g, \\bar{\\ell}, g\\} \\in \\Omega^S$ be a generic state vector of single households. The stationary equilibrium\nof the economy is given by a consumption function, $c^M(\\omega^M)$ and $c^S(\\omega^S)$ , a saving function,\n$k^{M}(\\omega^M)$ and $k^{S}(\\omega^S)$ , labor supply, $n_m^M(\\omega^M), n_f^M(\\omega^M)$ and $n^S(\\omega^S)$ , a value function, $V^M(\\omega^M)$ ,\n$V^S(\\omega^S)$ , $R^M(\\omega^M)$ and $R^S(\\omega^S)$ , a wage rate, w , an interest rate r , and a distribution of married\nhouseholds $\\Gamma^M(\\omega^M)$ and single households $\\Gamma^S(\\omega^S)$ over the state space, such that",
+          "reading_order": 5,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            83,
+            419,
+            631,
+            488
+          ],
+          "text": "1. The value functions $V^M(\\omega^M), V^S(\\omega^S), R^M(\\omega^M), R^S(\\omega^S)$ and policy functions $c^M(\\omega^M), c^S(\\omega^S),$\n$k^M(\\omega^M), k^S(\\omega^S), n_m^M(\\omega^M), n_l^M(\\omega^M), n_S(\\omega^S)$ solve the consumers' optimization problem\ngiven the factor prices and initial conditions.",
+          "reading_order": 6,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            84,
+            517,
+            348,
+            536
+          ],
+          "text": "2. Firms maximize profits with factor prices:",
+          "reading_order": 7,
+          "tags": []
+        },
+        {
+          "label": "equ",
+          "bbox": [
+            307,
+            555,
+            418,
+            573
+          ],
+          "text": "$$r=\\alpha \\Psi(K / N)^{\\alpha-1}-\\delta$$",
+          "reading_order": 8,
+          "tags": []
+        },
+        {
+          "label": "equ",
+          "bbox": [
+            305,
+            580,
+            417,
+            597
+          ],
+          "text": "$$w=(1-\\alpha) \\Psi(K / N)^{\\alpha}$$",
+          "reading_order": 9,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            85,
+            631,
+            223,
+            648
+          ],
+          "text": "3. Factor markets clear",
+          "reading_order": 10,
+          "tags": []
+        },
+        {
+          "label": "equ",
+          "bbox": [
+            216,
+            661,
+            460,
+            690
+          ],
+          "text": "$$K = \\int \\, k ^ { M } ( \\omega ^ { M } ) d t \\, \\tau ^ { A } ( \\omega ^ { M } ) + \\int \\, k ^ { S } ( \\omega ^ { S } ) d t \\, \\tau ^ { A } ( \\omega ^ { S } ) ,$$",
+          "reading_order": 11,
+          "tags": []
+        },
+        {
+          "label": "equ",
+          "bbox": [
+            216,
+            692,
+            507,
+            749
+          ],
+          "text": "$$\\begin{array} { r } { \\mathcal { N } = \\int \\left[ z _ { m } \\varepsilon _ { m } n _ { m } ^ { S } \\delta \\ell ^ { ( M ) } + z _ { f } \\varepsilon _ { f } n _ { f } ^ { M } \\delta \\ell ^ { ( M ) } \\right] d M ^ { ( M ) } } \\\\ { + \\int z _ { m } \\varepsilon _ { m } n _ { m } ^ { S } \\delta \\ell ^ { ( S ) } d S ^ { ( S ) } + \\int z _ { f } \\varepsilon _ { f } n _ { f } ^ { S } \\delta \\ell ^ { ( S ) } d D ^ { S } \\delta \\ell ^ { ( S ) } } \\end{array}$$",
+          "reading_order": 12,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            84,
+            787,
+            573,
+            807
+          ],
+          "text": "$\\Gamma^S(\\omega^S)$ and $\\Gamma^M(\\omega^M)$ are consistent with the policy functions and are stationary.",
+          "reading_order": 13,
+          "tags": []
+        }
+      ]
+    },
+    {
+      "page_number": 9,
+      "elements": [
+        {
+          "label": "para",
+          "bbox": [
+            84,
+            71,
+            299,
+            90
+          ],
+          "text": "5. The government budget balances:",
+          "reading_order": 0,
+          "tags": []
+        },
+        {
+          "label": "equ",
+          "bbox": [
+            100,
+            100,
+            631,
+            230
+          ],
+          "text": "$$\\begin{array} { r l } { G + 2 \\int _ { j \\geq J _ { r } } S S ( \\overline { { e } } ) d \\Gamma ^ { M } ( \\omega ^ { M } ) + \\int _ { j \\geq J _ { r } } S S ( \\overline { { e } } ) d \\Gamma ^ { S } ( \\omega ^ { S } ) = \\tau _ { e } } & { \\bigg [ \\int e ^ { M } ( \\omega ^ { M } ) d \\Gamma ^ { M } ( \\omega ^ { M } ) + \\int e ^ { S } ( \\omega ^ { S } ) d \\Gamma ^ { S } ( \\omega ^ { S } ) \\bigg ] } \\\\ & { \\quad+ \\int \\left[ y ( \\omega ^ { M } ) - y _ { M } ^ { l } ( y ( \\omega ^ { M } ) ) \\right] d \\Gamma ^ { M } ( \\omega ^ { M } ) } \\\\ & { \\quad+ \\int \\left[ y ( \\omega ^ { S } ) - y _ { S } ^ { l } ( y ( \\omega ^ { S } ) ) \\right] d \\Gamma ^ { S } ( \\omega ^ { S } ) } \\\\ & { \\quad+ \\int _ { j < J _ { r } } \\pi ( \\omega ^ { M } ) d \\Gamma ^ { M } ( \\omega ^ { M } ) + \\int _ { j < J _ { r } } \\pi ( \\omega ^ { S } ) d \\Gamma ^ { S } ( \\omega ^ { S } ) } \\end{array}$$",
+          "reading_order": 1,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            66,
+            247,
+            624,
+            339
+          ],
+          "text": "The government budget ensures that revenue sources fully balance total expenditures. The\nleft-hand side of the equation represents government expenditures spending on public goods and\nsocial security payments, while the right-hand side includes revenues from consumption taxes,\nincome taxes on single and married households, and social insurance premiums.",
+          "reading_order": 2,
+          "tags": []
+        },
+        {
+          "label": "sec_2",
+          "bbox": [
+            67,
+            367,
+            311,
+            388
+          ],
+          "text": "2.5 Measuring Social Welfare",
+          "reading_order": 3,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            403,
+            624,
+            543
+          ],
+          "text": "Our method for evaluating welfare is described below. First, we determine the equilibrium path\nresulting from a tax reform. Subsequently, we calculate a steady-state welfare measure. This\nmeasure determines the uniform percentage increase in consumption — constant over time and\nacross various states — that a household born into the old steady state would need, prior to any\nknowledge of existing conditions, to be indifferent about being born into the new steady state\nshaped by the new policy.",
+          "reading_order": 4,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            549,
+            624,
+            618
+          ],
+          "text": "The expected lifetime utility of a newborn household, denoted by $\\mathcal{W}^N$ , represents the ex-ante\nwelfare (under the veil of ignorance) of individuals entering the economy. It is evaluated at the\nlong-run steady state and aggregates across all possible initial household types:",
+          "reading_order": 5,
+          "tags": []
+        },
+        {
+          "label": "equ",
+          "bbox": [
+            83,
+            633,
+            607,
+            699
+          ],
+          "text": "$$\\begin{array} { r l } { \\mathcal { W } ^ { N } } & { = \\underbrace { \\sum _ { g = m , f } \\int V ^ { S } ( 1 , k , z , \\overline { e } , g ) d \\Gamma ^ { S } ( 1 , k , z , \\overline { e } , g ) } _ {  s i ngle ~ h o u s e h o l d s  } + \\underbrace { \\int V ^ { M } ( 1 , k , z _ { m } , f , \\overline { e } ) d \\Gamma ^ { M } ( 1 , k , z _ { m } , f , \\overline { e } ) } _ {  m a r i e d ~ h o u s e h o l d s  } } \\end{array}$$",
+          "reading_order": 6,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            715,
+            624,
+            758
+          ],
+          "text": "We also compute the steady-state utilitarian social welfare measure, $\\mathcal{W}^U$ , which aggregates the\nlifetime utility of all households in the economy, weighted by their population share:",
+          "reading_order": 7,
+          "tags": []
+        }
+      ]
+    },
+    {
+      "page_number": 10,
+      "elements": [
+        {
+          "label": "equ",
+          "bbox": [
+            114,
+            106,
+            574,
+            223
+          ],
+          "text": "$$\\begin{array} { r l } { \\mathcal { W } ^ { U } = } & { \\underbrace { \\sum _ { g = m , f } \\left[ \\int V ^ { S } ( j , k , z , \\tilde { e } , g ) d \\Gamma ( j , k , z , \\tilde { e } , g ) + \\int R ^ { S } ( j , k , \\tilde { e } , g ) d \\Gamma ( j , k , \\tilde { e } , g ) \\right] } _ {  s i n g l e ~ h o u s e h o l d s  } } \\\\ { + } & { \\underbrace { \\int V ^ { M } ( j , k , z _ { m } , z _ { f } , \\tilde { e } ) d \\Gamma ( j , k , z _ { m } , z _ { f } , \\tilde { e } ) + \\int R ^ { M } ( j , k , \\tilde { e } ) d \\Gamma ( j , k , \\tilde { e } ) } _ {  m a r r i e d ~ h o u s e h o l d s  } } \\end{array}$$",
+          "reading_order": 0,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            66,
+            238,
+            623,
+            331
+          ],
+          "text": "The differences between the perspectives of newborns and utilitarians stem from their\nconsideration of different time horizons. Newborns experience the long-term effects of policy\nchanges throughout their lives, while the utilitarian perspective focuses on the immediate impact\non the current population.",
+          "reading_order": 1,
+          "tags": []
+        },
+        {
+          "label": "sec_1",
+          "bbox": [
+            67,
+            364,
+            333,
+            388
+          ],
+          "text": "3 Calibration of the Model",
+          "reading_order": 2,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            66,
+            406,
+            624,
+            523
+          ],
+          "text": "In order to determine the model parameters, we begin by selecting preset parameters that are\nexogenous to the model. After that, we calibrate the remaining parameters so that the stationary\nequilibrium of the model economy matches the data. In the following, we describe our calibration\nstrategy and highlight the key assumptions. We provide a detailed list of the parameter values\nand target moments in the Appendix.",
+          "reading_order": 3,
+          "tags": []
+        },
+        {
+          "label": "fig",
+          "text": "![Figure](figures/Manuscript_page_010_figure_004.png)",
+          "figure_path": "figures/Manuscript_page_010_figure_004.png",
+          "bbox": [
+            164,
+            555,
+            550,
+            769
+          ],
+          "reading_order": 4,
+          "tags": []
+        },
+        {
+          "label": "anno",
+          "bbox": [
+            201,
+            776,
+            488,
+            795
+          ],
+          "text": "Source: Ministry of Interior and authors' calculation",
+          "reading_order": 5,
+          "tags": []
+        },
+        {
+          "label": "cap",
+          "bbox": [
+            218,
+            801,
+            470,
+            821
+          ],
+          "text": "Figure 1: Conditional Survival Probability",
+          "reading_order": 6,
+          "tags": []
+        },
+        {
+          "label": "foot",
+          "bbox": [
+            338,
+            847,
+            351,
+            863
+          ],
+          "text": "9",
+          "reading_order": 7,
+          "tags": [
+            "page_num"
+          ]
+        }
+      ]
+    },
+    {
+      "page_number": 11,
+      "elements": [
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            71,
+            623,
+            310
+          ],
+          "text": "The model period is five years, starting at ages 25 to 29. Retirement is mandatory at age\n65 ( $J_{c}=9$ ), and people are assumed to pass away after ages 95-99 ( $J=15$ ). By considering\nthe heterogeneous household structures, individuals are classified based on their marital status $t$\n(either single, denoted by S , or married, denoted by M ) and their gender (either male or female,\nrepresented as $g \\in (m,f)$ ). The survival rates for male and female retirees at the end of each\nyear of age, denoted $s_{m,j}$ and $s_{f,j}$ , are obtained from the life table of the 2009-2011 period from\nthe Ministry of Interior. Survival rates in the last period are assumed to be zero. The age profile\nof survival probabilities for males and females is shown in Figure 1 . Upon entering the economy,\nhouseholds are assumed to be either married or single. Marriages and divorces are not explicitly\nmodeled. However, married couples become single once their partners pass away after age 65.",
+          "reading_order": 0,
+          "tags": []
+        },
+        {
+          "label": "sec_2",
+          "bbox": [
+            68,
+            339,
+            417,
+            360
+          ],
+          "text": "3.1 Preferences and production technology",
+          "reading_order": 1,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            374,
+            623,
+            491
+          ],
+          "text": "Preferences are described by a discount rate, $\\beta$ , the gender-specific Frisch elasticity of labor\nsupply, $\\sigma_g$ , the equivalent scale in consumption $\\eta$ and the disutility of work, $\\theta_g$ . $\\beta$ is set to 0.912\nso that the capital-to-income ratio is 2.1 given an annual depreciation rate of 9.05 % . We set $\\sigma_m$\n= 1.47 and $\\sigma_f$ = 1.04, which implies a Frisch elasticity of 0.68 for males and 0.96 for females,\nrespectively, reported by Blundell et al. ( 2016 ) .",
+          "reading_order": 2,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            497,
+            623,
+            637
+          ],
+          "text": "We account for gender differences in the disutility of work, $\\theta_g$ , and allow the fixed cost of\nwork, $\\phi_g^*$ , to vary based on both gender and marital status. The parameters governing the\ndisutility of working are identified by the data of working hours per person by gender from the\nMinistry of Labor. The fixed cost of working can be interpreted as the time cost associated with\nchildcare, housework, and other similar responsibilities. Using the OECD equivalence scale $^3$ , the\nequivalent scale in consumption $\\eta$ for married households is set to 1.7.",
+          "reading_order": 3,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            68,
+            643,
+            621,
+            686
+          ],
+          "text": "Individuals have preferences over stochastic streams of consumption $c_j$ and leisure $1-n_{j,t}$\nwhich they value according to the standard discounted expected utility function:",
+          "reading_order": 4,
+          "tags": []
+        },
+        {
+          "label": "equ",
+          "bbox": [
+            285,
+            703,
+            404,
+            749
+          ],
+          "text": "$$E \\left[ \\sum _ { j = 1 } ^ { J } \\beta ^ { j - 1 } u ( c _ { j } , n _ { j } ) \\right]$$",
+          "reading_order": 5,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            73,
+            768,
+            568,
+            786
+          ],
+          "text": "The functional form of an individual utility $u$ is assumed to be additively separable: $^4$",
+          "reading_order": 6,
+          "tags": []
+        },
+        {
+          "label": "fnote",
+          "bbox": [
+            87,
+            813,
+            524,
+            830
+          ],
+          "text": "$^{3}$The OECD scale assigns a weight of 1.0 to the first adult, 0.7 to each additional adult.",
+          "reading_order": 7,
+          "tags": []
+        },
+        {
+          "label": "foot",
+          "bbox": [
+            338,
+            847,
+            354,
+            863
+          ],
+          "text": "10",
+          "reading_order": 8,
+          "tags": [
+            "page_num"
+          ]
+        }
+      ]
+    },
+    {
+      "page_number": 12,
+      "elements": [
+        {
+          "label": "equ",
+          "bbox": [
+            244,
+            69,
+            447,
+            105
+          ],
+          "text": "$$u ( c , n ) = \\log c - \\theta _ { q } ^ { - \\frac { 1 + \\sigma } { 2 } } + \\frac { 1 } { 1 + \\sigma _ { q } } \\cdot \\rho _ { p } ^ { - \\frac { 1 } { 2 } } \\ln \\left( \\frac { 1 } { 1 + \\sigma _ { q } } \\right) .$$",
+          "reading_order": 0,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            122,
+            624,
+            311
+          ],
+          "text": "This utility function captures the trade-off between consumption and labor supply, accounting\nfor diminishing returns to consumption and the increasing burden of work as hours rise. The\ndisutility of labor $\\theta_g$ highlights that working longer hours becomes increasingly costly in terms of\neffort and lost leisure, with gender-specific parameters capturing differences in labor preferences.\nThe fixed cost of participation $\\phi_g^i$ introduces a threshold effect, where individuals only choose to\nwork if their potential earnings outweigh entry costs, such as childcare or transportation. Agents\ncan smooth consumption over time and privately insure against labor income shocks by saving\na risk-free asset $k$ , with no borrowing allowed ( $k \\geq 0$ ).",
+          "reading_order": 1,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            68,
+            319,
+            623,
+            385
+          ],
+          "text": "The total factor productivity, $\\Psi$ , of the production function is set at 1.78 to normalize the\nequilibrium wage rate, $w$ , to unity. The capital's share in output, $\\alpha$ , is set to 0.34 as provided\nby Directorate General Budget, Accounting Statistics (DGBAS).",
+          "reading_order": 2,
+          "tags": []
+        },
+        {
+          "label": "sec_2",
+          "bbox": [
+            68,
+            414,
+            323,
+            435
+          ],
+          "text": "3.2 Labor productivity process",
+          "reading_order": 3,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            68,
+            450,
+            623,
+            541
+          ],
+          "text": "The stochastic component of labor productivity takes five values from $z_1$ to $z_5$ . Four of these\nare ordinary states and the remaining one is an extraordinary state that generates exceptionally\nhigh earnings levels. The ordinary levels $z_1$ to $z_4$ and the transition probabilities are taken from\nCheng et al. ( 2020 ) .",
+          "reading_order": 4,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            68,
+            548,
+            623,
+            663
+          ],
+          "text": "Idiosyncratic fluctuations in labor income risk over the life cycle are captured by a 5-by-5\ntransition matrix $A=[A_{ij}]$ with $i,j\\in\\{1,2,3,4\\}$ and $\\sum_j A_{ij}=1-\\lambda_{in}$ , as well as by $\\lambda_{in}$ which\nrepresents the probability of entering an extraordinary state of productivity. It is assumed that\nthe stochastic labor productivity process $\\Pi$ is identical to all genders and is summarized by the\nmatrix in Table 1 .",
+          "reading_order": 5,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            671,
+            623,
+            738
+          ],
+          "text": "The following additional assumptions are explicit in the formulation of the matrix. The\nprobability of reaching an extraordinary status, $\\lambda_{\\rm in}$ , is independent of one's current productivity\nstate and age. Likewise, if a household loses its extraordinary status, then it is equally likely to",
+          "reading_order": 6,
+          "tags": []
+        },
+        {
+          "label": "fnote",
+          "bbox": [
+            68,
+            759,
+            623,
+            830
+          ],
+          "text": "4 The rationale for this choice, as explained in Castaneda et al. ( 2003 ) , is that households in the model face\nlarge and temporary productivity fluctuations, leading to significant changes in earnings. Using non-separable\npreferences, would result in unrealistically large variations in hours worked due to these substantial productivity\nshocks. In contrast, additively separable preferences offer greater flexibility by allowing independent curvatures\nfor consumption and leisure, avoiding extreme labor supply fluctuations and ensuring more realistic outcomes.",
+          "reading_order": 7,
+          "tags": []
+        },
+        {
+          "label": "foot",
+          "bbox": [
+            336,
+            847,
+            353,
+            862
+          ],
+          "text": "11",
+          "reading_order": 8,
+          "tags": [
+            "page_num"
+          ]
+        }
+      ]
+    },
+    {
+      "page_number": 13,
+      "elements": [
+        {
+          "label": "cap",
+          "bbox": [
+            162,
+            70,
+            529,
+            88
+          ],
+          "text": "Table 1: Transition Matrix for the Labor Productivity Process",
+          "reading_order": 0,
+          "tags": []
+        },
+        {
+          "label": "tab",
+          "bbox": [
+            234,
+            101,
+            456,
+            197
+          ],
+          "text": "<table><tr><td></td><td>z1</td><td>z2</td><td>z3</td><td>z4</td><td>z5</td></tr><tr><td>z1</td><td>$\\tilde{A}_{11}$</td><td>$\\tilde{A}_{12}$</td><td>$\\tilde{A}_{13}$</td><td>$\\tilde{A}_{14}$</td><td>$\\lambda_{lm}$</td></tr><tr><td>z2</td><td>$\\tilde{A}_{21}$</td><td>$\\tilde{A}_{22}$</td><td>$\\tilde{A}_{23}$</td><td>$\\tilde{A}_{24}$</td><td>$\\lambda_{lm}$</td></tr><tr><td>z3</td><td>$\\tilde{A}_{31}$</td><td>$\\tilde{A}_{32}$</td><td>$\\tilde{A}_{33}$</td><td>$\\tilde{A}_{34}$</td><td>$\\lambda_{lm}$</td></tr><tr><td>z4</td><td>$\\tilde{A}_{41}$</td><td>$\\tilde{A}_{42}$</td><td>$\\tilde{A}_{43}$</td><td>$\\tilde{A}_{44}$</td><td>$\\lambda_{lm}$</td></tr><tr><td>z5</td><td>$\\lambda_{out}$</td><td>$\\lambda_{out}$</td><td>$\\lambda_{out}$</td><td>$\\lambda_{out}$</td><td>$\\lambda_{stay}$</td></tr></table>",
+          "reading_order": 1,
+          "tags": []
+        },
+        {
+          "label": "half_para",
+          "bbox": [
+            68,
+            219,
+            461,
+            239
+          ],
+          "text": "transition to any ordinary productivity state with probability $\\lambda_{out}$ . $^5$",
+          "reading_order": 2,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            245,
+            624,
+            410
+          ],
+          "text": "Our working assumption is that the values of the ordinary states and the transitions among\nthem can be inferred from the Panel Study of Family Dynamics (PSFD) data, whereas the\ntransitions to, from, and among extraordinary states cannot. The extraordinary productivity\nlevels $z_5$ and the transition probabilities $\\lambda_{in}, \\lambda_{stay}$ are pinned down by targeting moments on\nthe marginal distribution of income, specifically, the top 1 and 10 percent shares, as well as the\nGini coefficient for income as reported by Chu et al. ( 2023 ) . The calibrated transition matrix is\nsummarized in the Appendix in Table 10 .",
+          "reading_order": 3,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            416,
+            623,
+            483
+          ],
+          "text": "The stochastic process for labor productivity is combined with a deterministic age profile\nof wages for male and female workers separately. We calibrate this profile using data from the\nMinistry of Labor and the result is illustrated in Figure 2 .",
+          "reading_order": 4,
+          "tags": []
+        },
+        {
+          "label": "fig",
+          "text": "![Figure](figures/Manuscript_page_013_figure_005.png)",
+          "figure_path": "figures/Manuscript_page_013_figure_005.png",
+          "bbox": [
+            162,
+            501,
+            528,
+            708
+          ],
+          "reading_order": 5,
+          "tags": []
+        },
+        {
+          "label": "anno",
+          "bbox": [
+            206,
+            718,
+            484,
+            735
+          ],
+          "text": "Source: Ministry of Labor and authors' calculation",
+          "reading_order": 6,
+          "tags": []
+        },
+        {
+          "label": "cap",
+          "bbox": [
+            204,
+            743,
+            483,
+            760
+          ],
+          "text": "Figure 2: Age-Specific Labor Efficiency Profile.",
+          "reading_order": 7,
+          "tags": []
+        },
+        {
+          "label": "fnote",
+          "bbox": [
+            68,
+            800,
+            623,
+            830
+          ],
+          "text": "$^{5}$The effect of these assumptions on our quantitative analysis is negligible, as mentioned in Kaymak and\nPochie ( 2016 ) and Kaymak et al. ( 2022 ) .",
+          "reading_order": 8,
+          "tags": []
+        },
+        {
+          "label": "foot",
+          "bbox": [
+            338,
+            846,
+            354,
+            862
+          ],
+          "text": "12",
+          "reading_order": 9,
+          "tags": [
+            "page_num"
+          ]
+        }
+      ]
+    },
+    {
+      "page_number": 14,
+      "elements": [
+        {
+          "label": "sec_2",
+          "bbox": [
+            68,
+            69,
+            303,
+            88
+          ],
+          "text": "3.3 Tax and transfer system",
+          "reading_order": 0,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            104,
+            624,
+            220
+          ],
+          "text": "The tax system consists of personal income taxes levied on capital and labor earnings and a\nsales tax. The tax receipts are used to support exogenous government expenditures, transfers\nto households, and pensions. Consumption is taxed at a flat rate, denoted $\\tau_e$ , which is set to\n5 % of consumption. Personal income taxes are applied to earnings, capital income, and pension\nincome, if any. Taxable personal income is given by:",
+          "reading_order": 1,
+          "tags": []
+        },
+        {
+          "label": "equ",
+          "bbox": [
+            253,
+            247,
+            438,
+            265
+          ],
+          "text": "$$y_{f}=z w \\epsilon_{j} h+r k \\quad\\forall j<J_{r}$$",
+          "reading_order": 2,
+          "tags": []
+        },
+        {
+          "label": "equ",
+          "bbox": [
+            252,
+            274,
+            437,
+            293
+          ],
+          "text": "$$y_{f}=S S(\\overline{e})+r k \\quad\\forall j \\geq J_{r}$$",
+          "reading_order": 3,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            320,
+            624,
+            410
+          ],
+          "text": "The functional form used for the progressivity tax system in this paper is proposed by\nBenabou ( 2002 ) . As demonstrated by Guner et al. ( 2014 ) , Heathcote et al. ( 2017 ) , and Bakus\net al. ( 2015 ) , this functional form provides a good approximation of the actual tax and transfer\nsystem in the United States.",
+          "reading_order": 4,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            68,
+            418,
+            623,
+            459
+          ],
+          "text": "Total disposable income is obtained after applying personal income taxes and adding lump-\nsum transfers from the government:",
+          "reading_order": 5,
+          "tags": []
+        },
+        {
+          "label": "equ",
+          "bbox": [
+            100,
+            485,
+            593,
+            507
+          ],
+          "text": "$$y^{d}=\\lambda_{i}\\min\\{y_{b},y_{f}\\}^{1-\\tau_{i}}+(1-\\tau_{max})\\max\\{0,y_{f}-y_{b}\\}+Tr-\\pi(y_{f})\\quad for \\ i\\in\\{S,M\\}$$",
+          "reading_order": 6,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            532,
+            624,
+            722
+          ],
+          "text": "The first two terms above represent our formulation of the current Taiwan's income tax system,\nwhich can be approximated by a log-linear form for income levels outside the top of the income\ndistribution, is augmented by a flat rate for the top income tax bracket. Different tax systems\nare applied to married and single households, with parameters $\\lambda$ and $\\tau$ specific to each household\ntype. The power parameter $0 \\leq \\tau \\leq 1$ controls the degree of progressivity of the tax system,\nwhile $\\lambda$ determines the level of tax rates. The application of this functional form offers the\nadvantage of having a single parameter, $\\tau$ , to measure the degree of tax progressivity, which is\nnot influenced by the level of tax rates, $\\lambda$ .",
+          "reading_order": 7,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            728,
+            624,
+            795
+          ],
+          "text": "The second term in the maximum operator imposes a cap on the marginal tax rate, $\\tau_{max}$ set\nto 45%, as reported by the Ministry of Finance. $y_b$ denotes the critical level of taxable income at\nwhich the top marginal tax rate is reached: $\\lambda(1-\\tau)y_b^{-\\gamma}=1-\\tau_{max}$ . $^6$ We empirically estimate",
+          "reading_order": 8,
+          "tags": []
+        },
+        {
+          "label": "fnote",
+          "bbox": [
+            85,
+            814,
+            623,
+            830
+          ],
+          "text": "$^{6}$For 2017, this threshold is set at NT\\$10,310,001, as the Ministry of Finance reported. Given that the average",
+          "reading_order": 9,
+          "tags": []
+        },
+        {
+          "label": "foot",
+          "bbox": [
+            336,
+            847,
+            354,
+            862
+          ],
+          "text": "13",
+          "reading_order": 10,
+          "tags": [
+            "page_num"
+          ]
+        }
+      ]
+    },
+    {
+      "page_number": 15,
+      "elements": [
+        {
+          "label": "half_para",
+          "bbox": [
+            67,
+            71,
+            583,
+            89
+          ],
+          "text": "the progressivity of the income tax system for single and married households $\\tau_S$ and $\\tau_M$ .",
+          "reading_order": 0,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            96,
+            624,
+            211
+          ],
+          "text": "Tax revenue finances exogenous expenditures, pension payments, and transfers. The\ngovernment consumption $G$ is set at 4.4 % of GDP to yield a sum of expenditure and transfers\nof 17 % of GDP, as observed in the data from DGBAS. In addition, the government makes social\nin-kind transfers to all households. In the data, these transfers represent 9.2 % of GDP in the\nform of health insurance benefits and other social services. We set $Tr$ accordingly.",
+          "reading_order": 1,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            218,
+            624,
+            309
+          ],
+          "text": "In addition, every individual is required to pay insurance premiums $\\pi(y_t)$ to contribute to the\nsocial insurance system, which offers public pension, health insurance, and transfer benefits to all\ncitizens. The payment amount varies according to the levels of income, allowing the government\nto set the insurance premium tax rate of $t$ to balance the government budget.",
+          "reading_order": 2,
+          "tags": []
+        },
+        {
+          "label": "sec_2",
+          "bbox": [
+            67,
+            339,
+            451,
+            359
+          ],
+          "text": "3.4 How progressive is the Taiwan tax system?",
+          "reading_order": 3,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            374,
+            623,
+            416
+          ],
+          "text": "To construct income tax functions for married and single individuals, we estimate the effective\ntaxes paid as a function of reported income and marital status.",
+          "reading_order": 4,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            422,
+            624,
+            538
+          ],
+          "text": "The progressivity of the current tax system is estimated using household-level data from\nthe Household Income and Expenditure Survey (HIES) conducted by the Survey Research\nData Archive (SRDA) of the Academia Sinica for the years 2014-2021. Approximately 16,000\nhouseholds were surveyed each year as part of the interview sample. The initial sample used in\nthis study comprised a total of 131,641 records from the sample periods.",
+          "reading_order": 5,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            66,
+            545,
+            624,
+            760
+          ],
+          "text": "According to \"Explanation of Classification Codes for Household Organization Type and\nMarital Status,\" household types were classified into seven groups: single-person households,\ntwo-person married households, single-parent households, core households, two-generation\nhouseholds (grandparents and grandchildren), three-generation households (grandparents,\nparents, and children living together), and other unclassified households. For simplicity, we\nmainly focus on analyzing two primary types: single-person households, which included single\nindividuals with the economic head being male or female, excluding single-parent households\nand married households, which included two-person married households and core households,\nwith the economic head being of the parental generation. After excluding households with",
+          "reading_order": 6,
+          "tags": []
+        },
+        {
+          "label": "foot",
+          "bbox": [
+            67,
+            786,
+            623,
+            830
+          ],
+          "text": "income for the same year is NT$788,031 ( Lee et al. , 2022 ) , we express this threshold in the context of our model\nas multiples of average income. Thus, the top marginal tax rate is applied to incomes at least 13 times the\naverage income, reflecting the steep progression in the tax system.",
+          "reading_order": 7,
+          "tags": []
+        },
+        {
+          "label": "foot",
+          "bbox": [
+            336,
+            846,
+            354,
+            862
+          ],
+          "text": "14",
+          "reading_order": 8,
+          "tags": [
+            "page_num"
+          ]
+        }
+      ]
+    },
+    {
+      "page_number": 16,
+      "elements": [
+        {
+          "label": "half_para",
+          "bbox": [
+            67,
+            72,
+            623,
+            187
+          ],
+          "text": "missing tax data, the sample consisted of around 17 thousand single-person households and 60\nthousand married households. In addition to household status, we also analyzed the economic\nhead category, gender, income, and tax payments of the samples. We removed households with\ntax amounts less than or equal to zero. Our measure of pre-tax income is gross earnings, as\nreported by the household, plus the payroll tax.",
+          "reading_order": 0,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            194,
+            623,
+            260
+          ],
+          "text": "Our paper employs the procedure proposed by Heathcote et al. ( 2017 ) to estimate tax\nprogressivity. We assume that the relationship between pre-tax income $y$ , and post-tax income\n$y^a$ , for each individual $i$ is given by the following tax function:",
+          "reading_order": 1,
+          "tags": []
+        },
+        {
+          "label": "equ",
+          "bbox": [
+            311,
+            285,
+            377,
+            305
+          ],
+          "text": "$$y_{i}^{d}=\\lambda y_{i}^{1-\\tau}$$",
+          "reading_order": 2,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            333,
+            623,
+            474
+          ],
+          "text": "where $\\lambda$ is the mean level of taxation and $\\tau$ is the progressivity parameter. The progressivity\nparameter can be estimated using pretax and after-tax income microdata. We partition the\nsample into income brackets and for each of these, we calculate the total income taxes paid, the\ntotal income earned, and the number of returns. Hence, we find the mean pretax income and\nthe disposable income (after-tax income) corresponding to every income bracket. To compute\n$\\tau$ , we run the following regression using OLS:",
+          "reading_order": 3,
+          "tags": []
+        },
+        {
+          "label": "equ",
+          "bbox": [
+            248,
+            503,
+            442,
+            522
+          ],
+          "text": "$$\\log y_{i}^{d}=\\log \\lambda+(1-\\tau) \\log y_{i}+\\epsilon_{i}$$",
+          "reading_order": 4,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            539,
+            623,
+            753
+          ],
+          "text": "Table 2 presents the estimated progressivity parameters for single and married households\nin Taiwan, alongside the $R^2$ values, which indicate the goodness of fit for these estimates. For\nsingle households, the estimated progressivity parameter is 0.027, with a standard error of 0.0071,\nsuggesting a modest increase in tax rates with rising income levels. For married households, the\nprogressivity parameter is slightly higher at 0.041, with a standard error of 0.0180, indicating a\nmore progressive tax system that places a relatively higher tax burden on higher-income earners\nwithin this group. The $R^2$ values for both single and married households are 0.99, demonstrating\nan excellent fit of the estimated tax functions to the observed data. This high value $R^2$ indicates\na reliable representation of the progressivity of Taiwan's tax system for these types of households.",
+          "reading_order": 5,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            760,
+            623,
+            827
+          ],
+          "text": "Figure 3 visually confirms this by plotting the observed log disposable income (circles)\nover the regression line (solid). To support our estimated progressivities, we compare these\nestimates with those for the United States as reported by Guner et al. ( 2014 ) . In the U.S.,",
+          "reading_order": 6,
+          "tags": []
+        },
+        {
+          "label": "foot",
+          "bbox": [
+            337,
+            847,
+            353,
+            863
+          ],
+          "text": "15",
+          "reading_order": 7,
+          "tags": [
+            "page_num"
+          ]
+        }
+      ]
+    },
+    {
+      "page_number": 17,
+      "elements": [
+        {
+          "label": "cap",
+          "bbox": [
+            245,
+            70,
+            445,
+            87
+          ],
+          "text": "Table 2: Tax function parameters",
+          "reading_order": 0,
+          "tags": []
+        },
+        {
+          "label": "tab",
+          "bbox": [
+            233,
+            96,
+            456,
+            149
+          ],
+          "text": "<table><tr><td></td><td>Progressivity ($\\tau$)</td><td>$R^{2}$</td></tr><tr><td rowspan=\"2\">Single Married</td><td>0.027 (0.0071)</td><td>0.99</td></tr><tr><td>0.041 (0.0180)</td><td>0.99</td></tr></table>",
+          "reading_order": 1,
+          "tags": []
+        },
+        {
+          "label": "anno",
+          "bbox": [
+            100,
+            155,
+            589,
+            172
+          ],
+          "text": "Note: Values in parentheses are standard errors of the estimated progressivity parameters.",
+          "reading_order": 2,
+          "tags": []
+        },
+        {
+          "label": "half_para",
+          "bbox": [
+            67,
+            193,
+            624,
+            334
+          ],
+          "text": "the progressivity parameter for single households without children is 0.036, and for married\nhouseholds without children, it is 0.058. This comparison shows that Taiwan's estimated tax\nprogressivity is consistent with existing literature. It suggests that Taiwan's tax progressivity is\nslightly lower than that of the U.S. but within a similar range. This alignment with established\nestimates demonstrates the reliability of our model and its applicability in understanding tax\nreform contexts.",
+          "reading_order": 3,
+          "tags": []
+        },
+        {
+          "label": "fig",
+          "text": "![Figure](figures/Manuscript_page_017_figure_004.png)",
+          "figure_path": "figures/Manuscript_page_017_figure_004.png",
+          "bbox": [
+            80,
+            351,
+            627,
+            564
+          ],
+          "reading_order": 4,
+          "tags": []
+        },
+        {
+          "label": "cap",
+          "bbox": [
+            187,
+            582,
+            502,
+            600
+          ],
+          "text": "Figure 3: The progressivity of the Taiwan tax system",
+          "reading_order": 5,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            627,
+            624,
+            743
+          ],
+          "text": "It is important to note that household survey data may not accurately capture the top 1 %\nearners, which could limit the suitability of our estimates for the entire population. However,\nto address this issue, we only applied the estimated tax function outside the highest income\nbracket, to which most of the top 1 % of earners belong. The top marginal tax rate was capped\nfor individuals in the top income bracket.",
+          "reading_order": 6,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            748,
+            624,
+            815
+          ],
+          "text": "To ensure the reliability of our estimates of the tax function, we calibrated the parameter $\\lambda$ to\nmatch the average tax rate observed in the data for single and married households. Furthermore,\nwe validated our estimated tax function by comparing it to the average income tax rate for",
+          "reading_order": 7,
+          "tags": []
+        },
+        {
+          "label": "foot",
+          "bbox": [
+            337,
+            847,
+            354,
+            863
+          ],
+          "text": "16",
+          "reading_order": 8,
+          "tags": [
+            "page_num"
+          ]
+        }
+      ]
+    },
+    {
+      "page_number": 18,
+      "elements": [
+        {
+          "label": "half_para",
+          "bbox": [
+            67,
+            71,
+            624,
+            186
+          ],
+          "text": "the entire population, finding a close alignment: the data indicated a rate of 14 % , while\nour estimated function yielded 13.2 % . This alignment, along with our consideration of data\nlimitations, reinforces the validity of our approach. Thus, despite the potential limitations of\nhousehold survey data, our methodology effectively captures the progressivity of the tax system\nfor the broader population, excluding the top 1 % income bracket.",
+          "reading_order": 0,
+          "tags": []
+        },
+        {
+          "label": "sec_2",
+          "bbox": [
+            68,
+            216,
+            232,
+            236
+          ],
+          "text": "3.5 Pension system",
+          "reading_order": 1,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            251,
+            623,
+            294
+          ],
+          "text": "Individuals receive public pension benefits $SS(\\hat{c})$ once they reach the full retirement age $J_{r}$ . We\nmodel the formula of pension benefits to depend on past employment and earnings history:",
+          "reading_order": 2,
+          "tags": []
+        },
+        {
+          "label": "equ",
+          "bbox": [
+            311,
+            322,
+            379,
+            337
+          ],
+          "text": "$$S S ( \\overline { e } ) = \\psi \\overline { e }$$",
+          "reading_order": 3,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            366,
+            624,
+            457
+          ],
+          "text": "where $\\psi$ is the replacement rate of pension benefits relative to each individual's average past\nearnings $\\tilde{e}$ . Since the model is based on households, which may contain non-working spouses\nor survivors, we calibrate the replacement rate $\\psi$ to match the ratio of pension expenditures to\nGDP in the data, which is 3.6 % Lee et al. ( 2022 ) .",
+          "reading_order": 4,
+          "tags": []
+        },
+        {
+          "label": "sec_1",
+          "bbox": [
+            68,
+            492,
+            342,
+            515
+          ],
+          "text": "4 The Benchmark Economy",
+          "reading_order": 5,
+          "tags": []
+        },
+        {
+          "label": "sec_2",
+          "bbox": [
+            68,
+            538,
+            267,
+            558
+          ],
+          "text": "4.1 Model Performance",
+          "reading_order": 6,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            575,
+            624,
+            689
+          ],
+          "text": "In this section, we assess the fit of the benchmark model and evaluate its reliability for\nquantitative experiments. We examine the model's performance across several dimensions not\ndirectly targeted by the calibration. Ensuring that the model aligns with the observed data\nguarantees a realistic capture of these behaviors and is vital for a comprehensive analysis and\npolicy recommendations.",
+          "reading_order": 7,
+          "tags": []
+        },
+        {
+          "label": "cap",
+          "bbox": [
+            211,
+            702,
+            480,
+            719
+          ],
+          "text": "Table 3: Summary of Non-Targeted Moments",
+          "reading_order": 8,
+          "tags": []
+        },
+        {
+          "label": "tab",
+          "bbox": [
+            69,
+            730,
+            621,
+            814
+          ],
+          "text": "<table><tr><td>Moment</td><td>Source</td><td>Data Value</td><td>Model Fit</td></tr><tr><td>Top 1% income threshold relative to average</td><td>$\\text{Lee et al. (2022)}$</td><td>7.0</td><td>7.0</td></tr><tr><td>Total Tax revenue / GDP</td><td>Ministry of Finance</td><td>13.2%</td><td>16.6%</td></tr><tr><td>Population average income tax rate</td><td>$\\text{Lee et al. (2022)}$</td><td>14%</td><td>13.2%</td></tr><tr><td>Gender Wage Gap</td><td>Ministry of Labor</td><td>0.84</td><td>0.84</td></tr></table>",
+          "reading_order": 9,
+          "tags": []
+        },
+        {
+          "label": "foot",
+          "bbox": [
+            337,
+            846,
+            354,
+            862
+          ],
+          "text": "17",
+          "reading_order": 10,
+          "tags": [
+            "page_num"
+          ]
+        }
+      ]
+    },
+    {
+      "page_number": 19,
+      "elements": [
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            71,
+            624,
+            309
+          ],
+          "text": "The performance of the model in capturing the characteristics of the benchmark economy, as\nsummarized in Table 3 , presents an overview of its effectiveness in various economic indicators.\nFor instance, the model accurately replicates the income threshold for the top 1 % relative\nto the average, predicting a value of 7.0, which perfectly matches the observed data. This\nalignment is especially important because the reform specifically targets income levels above\nNTD $ 10,310,001, which falls between the top 1 % threshold of NTD $ 5,533,975 and the top\n0.1 % threshold of NTD $ 20,391,656 ( Lee et al. , 2022 ) . The model's ability to replicate these\nthresholds demonstrates its accuracy in evaluating tax policies for the intended income group.\nThis strengthens its effectiveness in analyzing the distributional impacts of tax reforms on\naffluent households.",
+          "reading_order": 0,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            316,
+            623,
+            481
+          ],
+          "text": "Our model demonstrates strong performance in capturing key aspects of the tax system,\nwhich is crucial for evaluating the distributional effects of tax reforms. Specifically, it accurately\nsimulates the average income tax rate for the entire population, with a close match of 13.2 %\ncompared to the observed 14 % reported by Lee et al. ( 2022 ) . Although the model slightly\noverestimates total tax revenue as a percentage of GDP at 16.6 % , compared to the actual 13.2 %\nreported by the Ministry of Finance, it still effectively represents the current tax structure. This\nenhances its reliability in proposing and analyzing the top marginal tax rate reforms.",
+          "reading_order": 1,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            488,
+            623,
+            627
+          ],
+          "text": "Furthermore, the model's accurate representation of the gender wage gap highlights its ability\nto capture Taiwan's labor market disparities. This is particularly relevant for top marginal\ntax reforms, which can disproportionately affect higher-earning men. Considering this crucial\nelement, the model allows for a more comprehensive examination of how tax burdens can be\nbiased against one gender. This insight directly informs the design of tax reforms that promote\neconomic equity and ensure policies are fair.",
+          "reading_order": 2,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            634,
+            623,
+            825
+          ],
+          "text": "The model's ability to replicate the wealth distribution in Taiwan is demonstrated in Table\n4 , which compares the wealth shares predicted by the model between quintiles and the top\npercentiles with the observed data. Notice that we do not explicitly target on any wealth\ndistribution moments. However, our model can closely align with the data for most wealth\nbrackets, particularly in the top wealth distribution. By accurately capturing the wealth\nconcentration at the upper end of the distribution, the model ensures a robust framework\nfor analyzing how tax reforms impact wealth inequality and redistribution among affluent\nhouseholds.",
+          "reading_order": 3,
+          "tags": []
+        },
+        {
+          "label": "foot",
+          "bbox": [
+            336,
+            846,
+            354,
+            863
+          ],
+          "text": "18",
+          "reading_order": 4,
+          "tags": [
+            "page_num"
+          ]
+        }
+      ]
+    },
+    {
+      "page_number": 20,
+      "elements": [
+        {
+          "label": "cap",
+          "bbox": [
+            188,
+            69,
+            503,
+            87
+          ],
+          "text": "Table 4: Wealth Distribution in Benchmark Economy",
+          "reading_order": 0,
+          "tags": []
+        },
+        {
+          "label": "tab",
+          "bbox": [
+            139,
+            113,
+            548,
+            181
+          ],
+          "text": "<table><tr><td rowspan=\"2\"></td><td colspan=\"6\">Quintiles</td><td colspan=\"4\">Top (%)</td></tr><tr><td>1st</td><td>2nd</td><td>3rd</td><td>4th</td><td>5th</td><td></td><td>90-95</td><td>95-99</td><td>99-100</td><td>Gini</td></tr><tr><td>Data</td><td>0.0</td><td>1.8</td><td>8.0</td><td>17.0</td><td>73.2</td><td></td><td>13.0</td><td>20.3</td><td>23.9</td><td>0.73</td></tr><tr><td>Model</td><td>0.0</td><td>0.5</td><td>7.7</td><td>21.5</td><td>70.4</td><td></td><td>13.4</td><td>15.5</td><td>21.6</td><td>0.69</td></tr></table>",
+          "reading_order": 1,
+          "tags": []
+        },
+        {
+          "label": "anno",
+          "bbox": [
+            247,
+            193,
+            442,
+            209
+          ],
+          "text": "Source: World Inequality Database",
+          "reading_order": 2,
+          "tags": []
+        },
+        {
+          "label": "sec_1",
+          "bbox": [
+            67,
+            225,
+            303,
+            250
+          ],
+          "text": "5 Quantitative Analysis",
+          "reading_order": 3,
+          "tags": []
+        },
+        {
+          "label": "sec_2",
+          "bbox": [
+            68,
+            272,
+            296,
+            292
+          ],
+          "text": "5.1 Tax Reform Evaluation",
+          "reading_order": 4,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            307,
+            624,
+            448
+          ],
+          "text": "To study the impacts of top marginal tax reform using the life cycle general equilibrium\nframework, we compare the stationary equilibrium in the benchmark economy (initial steady\nstate) with an alternative economy with the same set of parameters but different top marginal\ntax rates. We also assume that other parameters are the same as those in the benchmark, and\nthe government's consumption $G$ is fixed at the benchmark level. The government changes the\ninsurance premium tax rate $t$ to satisfy the government budget constraint.",
+          "reading_order": 5,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            455,
+            624,
+            546
+          ],
+          "text": "The Taiwan government reduced the top marginal tax rate from 45 % to 40 % at the income\nthreshold NT $ 10,310,001 in the year 2017. The tax reform results are summarized in the Table\n5 . We compare the effects of the reforms as the changes relative to the benchmark economy\nbecause we emphasize the differences across different steady states.",
+          "reading_order": 6,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            553,
+            624,
+            694
+          ],
+          "text": "The analysis of the effects of Taiwan's reduction in the top marginal tax rate from 45 % to 40 %\nreveals several critical dynamics across the economic spectrum. The slight increase in overall\noutput (0.35 % ) and capital stock (0.52 % ) suggests that the tax cut has stimulated economic\nactivity. Typically, lower tax liabilities encourage higher income earners to increase their\ninvestments and engage more actively in productive activities, leading to improved economic\noutput and capital accumulation.",
+          "reading_order": 7,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            700,
+            624,
+            791
+          ],
+          "text": "At the same time, the financial markets have reacted by decreasing interest rates by 0.33 % due\nto the increased capital accumulation. On the other hand, the market wage rate has increased\nslightly by 0.1 % as a result of higher labor demand and improved productivity stemming from\nincreased capital investment.",
+          "reading_order": 8,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            87,
+            798,
+            623,
+            816
+          ],
+          "text": "From a fiscal perspective, the reduction in the top marginal tax rate necessitated adjustments",
+          "reading_order": 9,
+          "tags": []
+        },
+        {
+          "label": "foot",
+          "bbox": [
+            336,
+            847,
+            354,
+            863
+          ],
+          "text": "19",
+          "reading_order": 10,
+          "tags": [
+            "page_num"
+          ]
+        }
+      ]
+    },
+    {
+      "page_number": 21,
+      "elements": [
+        {
+          "label": "cap",
+          "bbox": [
+            211,
+            69,
+            479,
+            87
+          ],
+          "text": "Table 5: Effects of Top Marginal Tax Reform",
+          "reading_order": 0,
+          "tags": []
+        },
+        {
+          "label": "tab",
+          "bbox": [
+            206,
+            97,
+            484,
+            491
+          ],
+          "text": "<table><tr><td></td><td>Reform</td></tr><tr><td>Output</td><td>0.35%</td></tr><tr><td>Capital</td><td>0.52%</td></tr><tr><td>Interest</td><td>-0.33%</td></tr><tr><td>Wage</td><td>0.10%</td></tr><tr><td>Income Gini</td><td>0.49%</td></tr><tr><td>Top 1% income share</td><td>1.81%</td></tr><tr><td>Top 1% wealth share</td><td>4.42%</td></tr><tr><td>Top 1% relative income threshold</td><td>0.29%</td></tr><tr><td>Total tax revenue/GDP</td><td>-0.41%</td></tr><tr><td>Average tax rate</td><td>-4.01%</td></tr><tr><td>Mean hours worked</td><td></td></tr><tr><td>Single male</td><td>0.12%</td></tr><tr><td>Single female</td><td>-0.25%</td></tr><tr><td>Married male</td><td>-0.03%</td></tr><tr><td>Married female</td><td>-0.16%</td></tr><tr><td>Labor Participation</td><td></td></tr><tr><td>Single female</td><td>-0.31%</td></tr><tr><td>Married female</td><td>-0.25%</td></tr><tr><td>Single male</td><td>0.22%</td></tr><tr><td>Married male</td><td>-0.02%</td></tr><tr><td>Lifetime consumption change</td><td></td></tr><tr><td>Newborn</td><td>-0.12%</td></tr><tr><td>Utilitarian</td><td>-0.10%</td></tr></table>",
+          "reading_order": 1,
+          "tags": []
+        },
+        {
+          "label": "half_para",
+          "bbox": [
+            67,
+            515,
+            624,
+            630
+          ],
+          "text": "in other areas to balance the government's budget. Notably, the insurance premium tax rate\nincreased significantly by 33.2 % . Despite these efforts, total tax revenue as a percentage of\nGDP decreased by 0.41 % , reflecting the challenges of maintaining fiscal sustainability following\ntax cuts. Moreover, the average tax rate across the economy decreased by 4.01 % , indicating a\nsubstantial reduction in the overall tax burden.",
+          "reading_order": 2,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            637,
+            624,
+            801
+          ],
+          "text": "The tax reforms also had notable implications for income and wealth distribution. The slight\nincrease in the income Gini coefficient (0.49 % ) combined with the much larger increases in the\ntop 1 % income (1.81 % ) and wealth shares (4.42 % ) point to the widening of economic disparities.\nSuch increases highlight the concentration of tax reform benefits at the higher end of the income\nspectrum, potentially exacerbating wealth inequality. Moreover, the relative income threshold\nfor the top 1 % increased by 0.29 % , indicating upward shifts in the income distribution among\nhigh earners.",
+          "reading_order": 3,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            87,
+            808,
+            623,
+            827
+          ],
+          "text": "The effects of the labor market are relatively stable, with minor changes in mean hours",
+          "reading_order": 4,
+          "tags": []
+        },
+        {
+          "label": "foot",
+          "bbox": [
+            336,
+            847,
+            354,
+            863
+          ],
+          "text": "20",
+          "reading_order": 5,
+          "tags": [
+            "page_num"
+          ]
+        }
+      ]
+    },
+    {
+      "page_number": 22,
+      "elements": [
+        {
+          "label": "half_para",
+          "bbox": [
+            67,
+            72,
+            624,
+            260
+          ],
+          "text": "worked in different demographics. The labor participation rate for married females decreases\nby 0.25 % , likely influenced by the secondary earner effect, where changes in marginal tax rates\nmake additional labor supply less attractive for married women, who often serve as secondary\nearners. The change is negligible for married males at -0.02 % , reflecting their relatively inelastic\nlabor supply, as they are typically primary earners in households. These variations show how tax\nreforms interact with gender roles and household decision making, highlighting the importance\nof considering demographic-specific responses when evaluating the labor market implications of\ntax policy changes.",
+          "reading_order": 0,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            267,
+            624,
+            529
+          ],
+          "text": "Despite these shifts in the labor market, the lifetime consumption changes for newborns\nand all living households are slightly negative. This is attributed to the tax burden shifting\nfrom high-income earners to low-income earners after the top marginal tax rate was reduced.\nThe substantial increase in the insurance premium tax rate, which affects all income brackets,\ncan disproportionately harm low-income groups who spend a larger portion of their income on\nmandatory expenses like insurance. This redistribution of tax burden can lead to increased\nfinancial strain on these groups, potentially reducing overall welfare. While high-income\nindividuals may benefit from lower income tax rates, leading to increased savings and investment,\nlow-income individuals facing higher relative tax burdens reduce their consumption and savings.\nThis decrease in consumption leads to a contraction in demand for goods and services, offsetting\nsome of the economic gains from increased investment at the top.",
+          "reading_order": 1,
+          "tags": []
+        },
+        {
+          "label": "sec_2",
+          "bbox": [
+            68,
+            558,
+            367,
+            581
+          ],
+          "text": "5.2 Optimal Top Marginal Tax Rate",
+          "reading_order": 2,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            595,
+            624,
+            736
+          ],
+          "text": "Having thoroughly examined the implications of the decreased top marginal tax reform, we now\nturn to our analysis of socially optimal rates. We begin by explaining how we measure social\nwelfare. We compute the steady-state welfare measure that determines the uniform percentage\nincrease in consumption (consistent over time and across states) required for a household born\ninto the old steady state to be equally satisfied with being born into the new steady state under\nthe new policy without knowing their productivity levels.",
+          "reading_order": 3,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            742,
+            623,
+            809
+          ],
+          "text": "In Figure 4 , we have plotted two welfare measures against the top marginal tax rate $\\tau_{max}$ . The\ngraph shows the percentage change in lifetime consumption for newborn households $W^N$ and for\nall living households (Utilitarian) $W^U$ . We find that the measure for newborn households peaks",
+          "reading_order": 4,
+          "tags": []
+        },
+        {
+          "label": "foot",
+          "bbox": [
+            335,
+            846,
+            353,
+            863
+          ],
+          "text": "21",
+          "reading_order": 5,
+          "tags": [
+            "page_num"
+          ]
+        }
+      ]
+    },
+    {
+      "page_number": 23,
+      "elements": [
+        {
+          "label": "fig",
+          "text": "![Figure](figures/Manuscript_page_023_figure_000.png)",
+          "figure_path": "figures/Manuscript_page_023_figure_000.png",
+          "bbox": [
+            138,
+            72,
+            552,
+            396
+          ],
+          "reading_order": 0,
+          "tags": []
+        },
+        {
+          "label": "cap",
+          "bbox": [
+            202,
+            404,
+            487,
+            422
+          ],
+          "text": "Figure 4: Welfare Measures as Functions of $\\tau_{max}$",
+          "reading_order": 1,
+          "tags": []
+        },
+        {
+          "label": "half_para",
+          "bbox": [
+            67,
+            446,
+            624,
+            561
+          ],
+          "text": "at a top marginal tax rate of 69 % , with a corresponding maximum percentage change in lifetime\nconsumption of 0.30 % . On the other hand, the utilitarian measure reaches its optimal point at a\ntop marginal tax rate of 68 % , achieving a maximum percentage change in lifetime consumption\nof 0.31 % . When comparing our results to the 79 % marginal tax rate for the U.S. top 1 % earners\nas found by Kindermann and Krueger ( 2022 ) , we find consistency with the existing literature.",
+          "reading_order": 2,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            568,
+            624,
+            659
+          ],
+          "text": "Table 6 provides a comprehensive analysis of the steady-state outcomes when the top\nmarginal tax rate is optimized to 69 % , with values reported as percentages relative to the\nbenchmark economy. This analysis uncovers several important insights into the economic\nimplications and underlying mechanisms of this higher tax rate.",
+          "reading_order": 3,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            665,
+            624,
+            781
+          ],
+          "text": "A key channel through which the 69 % top marginal tax rate improves welfare is the\nredistribution of the tax burden. By imposing a higher tax on the top income group, the\ngovernment can reduce the tax burden on lower- and middle-income groups by reducing the\ninsurance premium tax rate. This can increase their disposable income, improve their ability to\nconsume and save, and ultimately enhance their overall welfare.",
+          "reading_order": 4,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            87,
+            788,
+            624,
+            806
+          ],
+          "text": "The welfare gains also come from improved insurance against not reaching the very top of",
+          "reading_order": 5,
+          "tags": []
+        },
+        {
+          "label": "foot",
+          "bbox": [
+            336,
+            847,
+            354,
+            863
+          ],
+          "text": "22",
+          "reading_order": 6,
+          "tags": [
+            "page_num"
+          ]
+        }
+      ]
+    },
+    {
+      "page_number": 24,
+      "elements": [
+        {
+          "label": "cap",
+          "bbox": [
+            194,
+            69,
+            498,
+            87
+          ],
+          "text": "Table 6: Effects of Optimal Top Marginal Tax Rate",
+          "reading_order": 0,
+          "tags": []
+        },
+        {
+          "label": "tab",
+          "bbox": [
+            197,
+            97,
+            494,
+            508
+          ],
+          "text": "<table><tr><td></td><td>Optimal</td></tr><tr><td>Top marginal tax rate</td><td>69%</td></tr><tr><td>Output</td><td>-2.90%</td></tr><tr><td>Capital</td><td>-4.17%</td></tr><tr><td>Interest</td><td>2.23%</td></tr><tr><td>Wage</td><td>-0.66%</td></tr><tr><td>Income Gini</td><td>-2.96%</td></tr><tr><td>Top 1% income share</td><td>-11.43%</td></tr><tr><td>Top 1% wealth share</td><td>-34.26%</td></tr><tr><td>Top 1% relative income threshold</td><td>-1.51%</td></tr><tr><td>Total tax revenue/GDP</td><td>1.57%</td></tr><tr><td>Average tax rate</td><td>13.99%</td></tr><tr><td>Mean hours worked</td><td></td></tr><tr><td>Single male</td><td>-0.76%</td></tr><tr><td>Single female</td><td>-0.86%</td></tr><tr><td>Married male</td><td>-0.12%</td></tr><tr><td>Married female</td><td>-0.14%</td></tr><tr><td>Labor Participation</td><td></td></tr><tr><td>Single female</td><td>-1.30%</td></tr><tr><td>Married female</td><td>-0.24%</td></tr><tr><td>Single male</td><td>-0.73%</td></tr><tr><td>Married male</td><td>0.0%</td></tr><tr><td>Lifetime consumption change</td><td></td></tr><tr><td>Newborn</td><td>0.30%</td></tr><tr><td>Utilitarian</td><td>0.31%</td></tr></table>",
+          "reading_order": 1,
+          "tags": []
+        },
+        {
+          "label": "half_para",
+          "bbox": [
+            67,
+            530,
+            624,
+            623
+          ],
+          "text": "the earnings ladder. In a progressive tax system, higher taxes on top earners provide insurance\nfor those who do not reach the highest income state. This system helps mitigate the risks and\nuncertainties associated with income inequality. This protection can increase their economic\nsecurity and stability, contributing to welfare.",
+          "reading_order": 2,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            629,
+            624,
+            794
+          ],
+          "text": "The data in the table provides quantitative support for these mechanisms. The notable\ndecrease in income (-11.43 % ) and wealth (-34.26 % ) shares for the top 1 % , along with a\nsignificantly reduced income Gini coefficient (-2.96 % ), indicates the effectiveness of the higher\ntax rate in mitigating economic inequality. Furthermore, the modest increases in lifetime\nconsumption for newborns (0.30 % ) and all living households (0.31 % ) suggest that the tax\nreform's redistributive impact has positively influenced consumption and living standards,\nparticularly for lower-income groups.",
+          "reading_order": 3,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            88,
+            800,
+            623,
+            820
+          ],
+          "text": "To sum up, having an optimal top marginal tax rate of 69% is crucial in redistributing the tax",
+          "reading_order": 4,
+          "tags": []
+        },
+        {
+          "label": "foot",
+          "bbox": [
+            336,
+            847,
+            354,
+            863
+          ],
+          "text": "23",
+          "reading_order": 5,
+          "tags": [
+            "page_num"
+          ]
+        }
+      ]
+    },
+    {
+      "page_number": 25,
+      "elements": [
+        {
+          "label": "half_para",
+          "bbox": [
+            66,
+            71,
+            624,
+            236
+          ],
+          "text": "burden to improve welfare across different income groups. This policy promotes greater equity\nand economic security by imposing heavier taxes on the top income group and reducing the\ntax burden on lower and middle income groups through lower insurance premium contributions.\nThe increased insurance coverage against income disparities and the redistribution across diverse\nhouseholds determine the welfare gains from this tax reform. These findings highlight the\nimportance of progressive taxation in achieving a fair and inclusive economy, where the benefits\nof economic growth and prosperity are more evenly distributed among all members of society.",
+          "reading_order": 0,
+          "tags": []
+        },
+        {
+          "label": "sec_1",
+          "bbox": [
+            67,
+            270,
+            616,
+            293
+          ],
+          "text": "6 Welfare implications from the reform and optimal cases",
+          "reading_order": 1,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            66,
+            312,
+            624,
+            527
+          ],
+          "text": "Understanding the welfare implications of different top marginal tax rates requires a\ncomprehensive and thorough examination of their impacts on various aspects of the economy,\nincluding efficiency, consumption insurance, and redistribution. The following analysis explores\nhow these tax rates influence the overall economic environment and individual behaviors across\ndifferent demographic groups, highlighting the trade-offs and benefits of each policy approach.\nBy comparing scenarios with lower (reform) and higher (optimal) top marginal tax rates against\na benchmark, we can assess the consequences of these policies on aggregate consumption,\nconsumption risk, and the distribution of wealth, income, and consumption. This analysis\nexplains why a high top marginal tax rate is favorable to Taiwan's economy.",
+          "reading_order": 2,
+          "tags": []
+        },
+        {
+          "label": "sec_2",
+          "bbox": [
+            67,
+            557,
+            188,
+            578
+          ],
+          "text": "6.1 Efficiency",
+          "reading_order": 3,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            66,
+            592,
+            624,
+            830
+          ],
+          "text": "Analyzing life cycle consumption patterns at various top marginal tax rates provides valuable\ninsights into the efficiency implications across different age groups and the overall economy.\nFigure 5 presents the average consumption paths over the life cycle for singles and married\nhouseholds across the benchmark, reform, and optimal tax scenarios. In a reform scenario\nwhere the top marginal tax rate decreases from 45 % to 40 % , there is an increase in aggregate\nconsumption. This suggests an immediate efficiency improvement, likely stemming from a\nrise in disposable income due to reduced tax burdens, particularly benefiting older individuals\n(singles aged 55-64 and couples aged 45-64). However, younger individuals generally experienced\ndecreased consumption, suggesting a relative loss in efficiency due to increased contributions to\nthe pension fund.",
+          "reading_order": 4,
+          "tags": []
+        },
+        {
+          "label": "foot",
+          "bbox": [
+            335,
+            846,
+            354,
+            862
+          ],
+          "text": "24",
+          "reading_order": 5,
+          "tags": [
+            "page_num"
+          ]
+        }
+      ]
+    },
+    {
+      "page_number": 26,
+      "elements": [
+        {
+          "label": "fig",
+          "text": "![Figure](figures/Manuscript_page_026_figure_000.png)",
+          "figure_path": "figures/Manuscript_page_026_figure_000.png",
+          "bbox": [
+            82,
+            81,
+            620,
+            260
+          ],
+          "reading_order": 0,
+          "tags": []
+        },
+        {
+          "label": "cap",
+          "bbox": [
+            197,
+            268,
+            494,
+            286
+          ],
+          "text": "Figure 5: Average consumption over the life cycles",
+          "reading_order": 1,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            312,
+            624,
+            476
+          ],
+          "text": "In contrast, in the optimal scenario where the top marginal tax rate increased to 69 % , there is\na decrease in aggregate consumption, indicating an overall efficiency loss. However, younger age\ngroups (singles and couples aged 25-44) experienced higher consumption levels, suggesting an\nefficiency gain through reduced pension fund contribution and redistributive measures. On the\nother hand, older households, particularly those aged 45-64, experienced decreased consumption.\nThis decline, concentrated among high-income earners, is attributed to higher tax burdens that\nreduce disposable income.",
+          "reading_order": 2,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            483,
+            623,
+            599
+          ],
+          "text": "The changes in the top marginal tax rate have varying effects on different age groups and\noverall economic efficiency. Lowering the rate initially increases consumption, especially for\nolder individuals, but it also raises pension contributions for younger ones. On the other hand,\na higher rate reduces overall consumption but benefits younger groups through redistribution.\nThis shows the trade-off between equity and efficiency in tax policy.",
+          "reading_order": 3,
+          "tags": []
+        },
+        {
+          "label": "sec_2",
+          "bbox": [
+            67,
+            628,
+            298,
+            649
+          ],
+          "text": "6.2 Consumption Insurance",
+          "reading_order": 4,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            663,
+            624,
+            830
+          ],
+          "text": "Examining consumption variance across different life stages under various top marginal tax\nrates provides insights into the impact of consumption insurance and economic risks. We use\nthe variance of log consumption to be a key measure of consumption insurance, as it reflects the\nstability of consumption levels across individuals; a lower variance indicates better consumption\nsmoothing, where individuals maintain consistent living standards despite income fluctuations.\nFigure 6 illustrates the variance of log consumption over the life cycle for single and married\nhouseholds under different tax regimes. The left panel shows single households, while the right",
+          "reading_order": 5,
+          "tags": []
+        },
+        {
+          "label": "foot",
+          "bbox": [
+            336,
+            847,
+            354,
+            863
+          ],
+          "text": "25",
+          "reading_order": 6,
+          "tags": [
+            "page_num"
+          ]
+        }
+      ]
+    },
+    {
+      "page_number": 27,
+      "elements": [
+        {
+          "label": "half_para",
+          "bbox": [
+            66,
+            72,
+            623,
+            114
+          ],
+          "text": "panel displays married households. The plots reveal how changes in the top marginal tax rate\naffect consumption volatility across age groups.",
+          "reading_order": 0,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            66,
+            120,
+            624,
+            261
+          ],
+          "text": "In the reform scenario where the top tax rate decreased from 45 % to 40 % , the variance of log\nconsumption increased for single individuals and couples, especially among older singles (aged 55-\n64) and older couples (aged 60-64). However, married households generally have lower variance\ndue to enhanced risk-sharing capabilities. The reduced support due to the lower top marginal\ntax rate increases the income risk exposure for the top earners, leading to less consumption\nsmoothing.",
+          "reading_order": 1,
+          "tags": []
+        },
+        {
+          "label": "fig",
+          "text": "![Figure](figures/Manuscript_page_027_figure_002.png)",
+          "figure_path": "figures/Manuscript_page_027_figure_002.png",
+          "bbox": [
+            84,
+            288,
+            621,
+            473
+          ],
+          "reading_order": 2,
+          "tags": []
+        },
+        {
+          "label": "cap",
+          "bbox": [
+            177,
+            477,
+            514,
+            496
+          ],
+          "text": "Figure 6: Variance of log consumption over the life cycles",
+          "reading_order": 3,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            66,
+            517,
+            624,
+            757
+          ],
+          "text": "When the top marginal tax rate is increased to 69 % in the optimal scenario, we see a reduction\nin the variation of log consumption among most age groups, indicating an improved consumption\ninsurance. Married households experience a more significant decrease, demonstrating their\nincreased ability to share risks. The higher tax rate allows for broader funding of public insurance\nand redistributive programs, providing better economic stability and defense against income\nfluctuations. This is particularly beneficial for older individuals, who are more susceptible to\nincome instability as they approach retirement. The decrease in consumption variance suggests\nthat higher taxes can strengthen economic security by enabling the government to offer improved\npublic insurance. Married households benefit from a more significant reduction in consumption\nvariability due to their advantage in sharing risks.",
+          "reading_order": 4,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            763,
+            623,
+            831
+          ],
+          "text": "The analysis indicates a strong connection between the top marginal tax rates and\nconsumption insurance. Lower tax rates amplify consumption risk, especially for older\nindividuals, due to fewer government safety nets. In contrast, higher tax rates improve",
+          "reading_order": 5,
+          "tags": []
+        },
+        {
+          "label": "foot",
+          "bbox": [
+            336,
+            847,
+            354,
+            863
+          ],
+          "text": "26",
+          "reading_order": 6,
+          "tags": [
+            "page_num"
+          ]
+        }
+      ]
+    },
+    {
+      "page_number": 28,
+      "elements": [
+        {
+          "label": "half_para",
+          "bbox": [
+            67,
+            71,
+            624,
+            162
+          ],
+          "text": "consumption smoothing by better public insurance programs. This key finding suggests a\nsignificant trade-off between individual risk-taking and the government's role in providing\neconomic security. Married couples with built-in risk sharing abilities benefit more from the\nhigher tax rates.",
+          "reading_order": 0,
+          "tags": []
+        },
+        {
+          "label": "sec_2",
+          "bbox": [
+            68,
+            192,
+            225,
+            212
+          ],
+          "text": "6.3  Redistribution",
+          "reading_order": 1,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            227,
+            625,
+            368
+          ],
+          "text": "Figure 7 shows the changes in wealth, income, and consumption shares among the top 1 % and\ntop 0.1 % under different tax scenarios, which reveals the substantial redistributive effects of\nvarying top marginal tax rates. Under the benchmark scenario, with a top marginal tax rate of\n0.45, the top 1 % held 21.6 % of wealth, 19.2 % of income, and 12.3 % of consumption. For the top\n0.1 % , these shares were 4.3 % , 4.1 % , and 2.0 % , respectively. These figures indicate a substantial\nconcentration of economic resources among the wealthiest individuals.",
+          "reading_order": 2,
+          "tags": []
+        },
+        {
+          "label": "fig",
+          "text": "![Figure](figures/Manuscript_page_028_figure_003.png)",
+          "figure_path": "figures/Manuscript_page_028_figure_003.png",
+          "bbox": [
+            83,
+            389,
+            613,
+            535
+          ],
+          "reading_order": 3,
+          "tags": []
+        },
+        {
+          "label": "cap",
+          "bbox": [
+            174,
+            541,
+            516,
+            559
+          ],
+          "text": "Figure 7: Top shares of Wealth, Income and Consumption",
+          "reading_order": 4,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            584,
+            625,
+            823
+          ],
+          "text": "In the reform scenario, reducing the top marginal tax rate to 0.4 has a pronounced impact\non the wealth, income, and consumption distribution, particularly favoring the highest income\nbrackets. For the top 1 % earners, the reform leads to a substantial increase in wealth share,\nrising from its baseline level to 22.6 % , a relative growth of 4.4 % . This trend is accompanied\nby more modest but still significant increases in income and consumption shares, growing by\n1.8 % and 5.8 % , respectively, to reach 20.1 % and 13 % . An even more concentrated impact is\nobserved among the top 0.1 % . Their wealth share increases to 4.7 % (a 9.1 % increase), income\nshare to 4.1 % (a 2.0 % increase), and consumption share to 2.2 % (an 7.8 % increase). These\nfindings collectively indicate a pronounced shift in resource allocation towards the wealthiest\nsegments of society. The tax cut disproportionately benefits these high-income groups, enabling",
+          "reading_order": 5,
+          "tags": []
+        }
+      ]
+    },
+    {
+      "page_number": 29,
+      "elements": [
+        {
+          "label": "half_para",
+          "bbox": [
+            67,
+            71,
+            623,
+            138
+          ],
+          "text": "them to accumulate wealth faster, boost their earnings, and increase their spending relative to\nthe broader population. This pattern suggests weakening the tax system's redistributive role,\npotentially exacerbating existing economic inequality.",
+          "reading_order": 0,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            144,
+            624,
+            310
+          ],
+          "text": "The optimal scenario, with a top marginal tax rate of 69 % , demonstrates a pronounced shift\nin wealth, income, and consumption distribution away from the highest income brackets. The\nwealth share of the top 1 % decreases to 14.2 % , marking a 34.3 % reduction. Their income share\nfalls to 17.5 % , reflecting a 11.4 % reduction, and their consumption share drops to 8.6 % , showing\na 30.4 % reduction. An equally significant impact is observed among the top 0.1 % . Their wealth\nshare decreases dramatically by 21.9 % to 3.4 % , while their income and consumption shares also\nfall, dropping by 9.5 % to 3.7 % and 32.2 % to 1.4 % , respectively.",
+          "reading_order": 1,
+          "tags": []
+        },
+        {
+          "label": "fig",
+          "text": "![Figure](figures/Manuscript_page_029_figure_002.png)",
+          "figure_path": "figures/Manuscript_page_029_figure_002.png",
+          "bbox": [
+            214,
+            325,
+            477,
+            462
+          ],
+          "reading_order": 2,
+          "tags": []
+        },
+        {
+          "label": "cap",
+          "bbox": [
+            157,
+            475,
+            533,
+            494
+          ],
+          "text": "Figure 8: Gini Coefficients of Wealth, Income and Consumption",
+          "reading_order": 3,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            517,
+            625,
+            708
+          ],
+          "text": "Figure 8 shows the changes in the Gini coefficients, a key measure of economic inequality,\nacross the different scenarios, demonstrating the redistributive impact of varying the top\nmarginal tax rates. With a lower tax rate, the reform scenario increases inequality across all\nmeasured dimensions, suggesting that the tax cuts primarily benefit the wealthy. In contrast,\nwith a higher tax rate, the optimal scenario significantly reduces inequality, indicating that\nprogressive taxation can be an effective tool for achieving a more equitable distribution of\neconomic resources. The decreased Gini coefficients in the optimal case highlight the role of\nhigher taxes in promoting social equity.",
+          "reading_order": 4,
+          "tags": []
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            714,
+            624,
+            831
+          ],
+          "text": "The contrast between the reform and optimal scenarios emphasizes the critical role of\nprogressive taxation in addressing economic inequality. Although lower top marginal tax rates\namplify wealth concentration among the highest earners, higher rates effectively redistribute\nincome and wealth, fostering a more equitable society. The optimal scenario demonstrates that\ngovernments can significantly mitigate economic disparities and enhance social welfare by shifting",
+          "reading_order": 5,
+          "tags": []
+        },
+        {
+          "label": "foot",
+          "bbox": [
+            336,
+            847,
+            354,
+            863
+          ],
+          "text": "28",
+          "reading_order": 6,
+          "tags": [
+            "page_num"
+          ]
+        }
+      ]
+    },
+    {
+      "page_number": 30,
+      "elements": [
+        {
+          "label": "half_para",
+          "bbox": [
+            67,
+            71,
+            397,
+            89
+          ],
+          "text": "resources from the wealthiest to the broader population.",
+          "reading_order": 0,
+          "tags": []
+        },
+        {
+          "label": "sec_1",
+          "bbox": [
+            67,
+            123,
+            204,
+            147
+          ],
+          "text": "7 Conclusion",
+          "reading_order": 1,
+          "tags": [
+            "paper_conclusion"
+          ]
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            166,
+            624,
+            307
+          ],
+          "text": "This paper examines the effects of the top marginal tax reforms in Taiwan, focusing on reducing\nthe top marginal tax rate from 45 % to 40 % in 2017. It aims to determine the optimal top\nmarginal tax rate within a dynamic general compensation framework. We empirically estimate\ntax functions that capture Taiwan's progressive income tax structure by utilizing microdata from\nthe Household Income and Expenditure Surveys spanning from 2014 to 2021. Furthermore, we\nintend to analyze the behavioral responses of different household types to these tax changes.",
+          "reading_order": 2,
+          "tags": [
+            "paper_conclusion"
+          ]
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            313,
+            624,
+            454
+          ],
+          "text": "Our findings highlight several important dynamics. The reduction of the top marginal tax\nrate from 45 % to 40 % resulted in slight increases in economic output and capital, suggesting\nthat lower tax liabilities for high-income earners encourage investment and productive activities.\nHowever, the reform also led to an increase in income and wealth inequality, as seen in the rise\nin the top 1 % income and wealth shares. This results in the concentration of benefits among\nhigh-income earners exacerbating economic disparities.",
+          "reading_order": 3,
+          "tags": [
+            "paper_conclusion"
+          ]
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            461,
+            624,
+            699
+          ],
+          "text": "In contrast, our analysis of the optimal top marginal tax rate, set at 69 % , demonstrates\nsignificant welfare gains through improved redistribution and insurance effects. The higher\ntax rate effectively reduces income and wealth concentration at the top, leading to substantial\ndecreases in the top 1 % income share and wealth share and a reduction in the income Gini\ncoefficient. These redistributive effects enhance the welfare of low and middle-income groups\nby lessening their relative tax burden and increasing their disposable income by reducing their\ninsurance contributions. The benefits of having a high top marginal tax rate include providing\neconomic security to those who do not achieve high income levels. This ensures that the\nadvantages of economic growth are more equitably distributed across society, leading to an\noverall increase in welfare.",
+          "reading_order": 4,
+          "tags": [
+            "paper_conclusion"
+          ]
+        },
+        {
+          "label": "para",
+          "bbox": [
+            67,
+            706,
+            624,
+            797
+          ],
+          "text": "In conclusion, reducing the top marginal tax rate encourages economic activity and\ninvestment among the wealthy, but it also widens economic inequality. Conversely, raising the\ntop marginal tax rate promotes significant welfare gains through redistribution and enhanced\neconomic security, supporting a more equitable and inclusive economy.",
+          "reading_order": 5,
+          "tags": [
+            "paper_conclusion"
+          ]
+        }
+      ]
+    },
+    {
+      "page_number": 31,
+      "elements": [
+        {
+          "label": "sec_1",
+          "bbox": [
+            68,
+            66,
+            162,
+            90
+          ],
+          "text": "Appendix",
+          "reading_order": 0,
+          "tags": []
+        },
+        {
+          "label": "sec_2",
+          "bbox": [
+            68,
+            113,
+            223,
+            132
+          ],
+          "text": "Calibration Results",
+          "reading_order": 1,
+          "tags": []
+        },
+        {
+          "label": "cap",
+          "bbox": [
+            188,
+            151,
+            504,
+            169
+          ],
+          "text": "Table 7: Calibration of the Model: Preset Parameters",
+          "reading_order": 2,
+          "tags": []
+        },
+        {
+          "label": "tab",
+          "bbox": [
+            70,
+            194,
+            621,
+            492
+          ],
+          "text": "<table><tr><td>Parameter</td><td>Description</td><td>Value</td><td>Source</td></tr><tr><td colspan=\"4\">Demographics</td></tr><tr><td>J</td><td>Maximum life span</td><td>15</td><td>corresponds to age 99</td></tr><tr><td>J_{r}</td><td>Mandatory retirement age</td><td>9</td><td>corresponds to age 65</td></tr><tr><td>$\\{s_{m}, s_{r}\\}_{J_{r}}$</td><td>Survival probability</td><td></td><td>Ministry of Interior</td></tr><tr><td>$\\kappa$</td><td>Share of married households</td><td>51.1%</td><td>Ministry of Interior</td></tr><tr><td colspan=\"4\">Preferences</td></tr><tr><td>$\\sigma_{m}, \\sigma_{f}$</td><td>Inverse Frisch elasticity</td><td>1.47, 1.04</td><td>Blundell et al. (2016)</td></tr><tr><td>$\\eta$</td><td>Equivalent scale</td><td>1.7</td><td>Heathcote et al. (2010)</td></tr><tr><td colspan=\"4\">Technology</td></tr><tr><td>$\\alpha$</td><td>Capital share</td><td>0.34</td><td>DGBAS</td></tr><tr><td>$\\delta$</td><td>Depreciation rate of capital</td><td>0.0905</td><td>Liao (2011)</td></tr><tr><td colspan=\"4\">Labor Productivity</td></tr><tr><td>$\\{s_{j}^{m}, s_{j}^{r}\\}_{j=1}^{J-1}$</td><td>Gender age-efficiency profile</td><td></td><td>Ministry of Labor</td></tr><tr><td colspan=\"4\">Taxes and transfers</td></tr><tr><td>$\\tau_{c}$</td><td>Consumption tax rate</td><td>5.0%</td><td>Cheng et al. (2020)</td></tr><tr><td>$\\tau_{S}, \\tau_{M}$</td><td>Tax progressivity for single and married households</td><td>0.027, 0.041</td><td>Own estimation with SRDA</td></tr><tr><td>y_{h}</td><td>Taxable Income Threshold for top marginal tax rate</td><td>13.0</td><td>Lee et al. (2022)</td></tr></table>",
+          "reading_order": 3,
+          "tags": []
+        },
+        {
+          "label": "cap",
+          "bbox": [
+            152,
+            554,
+            538,
+            573
+          ],
+          "text": "Table 8: Calibration of the Model: Jointly Calibrated Parameters",
+          "reading_order": 4,
+          "tags": []
+        },
+        {
+          "label": "tab",
+          "bbox": [
+            107,
+            597,
+            583,
+            762
+          ],
+          "text": "<table><tr><td>Parameter</td><td>Description</td><td>Value</td></tr><tr><td>$\\beta$</td><td>Annual discount rate</td><td>0.912</td></tr><tr><td>$\\lambda_{S}, \\lambda_{M}$</td><td>Level of taxes for single and married households</td><td>0.94, 0.945</td></tr><tr><td>$\\phi_{m}^{S}, \\phi_{m}^{M}$</td><td>Labor participation cost for single and married men</td><td>0.47, 0.32</td></tr><tr><td>$\\phi_{r}^{S}, \\phi_{r}^{M}$</td><td>Labor participation cost for single and married women</td><td>0.52, 0.50</td></tr><tr><td>$\\theta_{m}, \\theta_{j}$</td><td>Labor disutility</td><td>6.3, 3.3</td></tr><tr><td>$\\psi$</td><td>Replacement rate</td><td>0.095</td></tr><tr><td>$\\psi$</td><td>Total factor productivity</td><td>1.78</td></tr><tr><td>G/Y</td><td>Expenditures/GDP</td><td>4.4%</td></tr><tr><td>Tr</td><td>Health insurance and social service in-kind transfers</td><td>0.32</td></tr></table>",
+          "reading_order": 5,
+          "tags": []
+        },
+        {
+          "label": "foot",
+          "bbox": [
+            336,
+            847,
+            354,
+            863
+          ],
+          "text": "30",
+          "reading_order": 6,
+          "tags": [
+            "page_num"
+          ]
+        }
+      ]
+    },
+    {
+      "page_number": 32,
+      "elements": [
+        {
+          "label": "cap",
+          "bbox": [
+            225,
+            69,
+            466,
+            87
+          ],
+          "text": "Table 9: Summary of Targeted Moments",
+          "reading_order": 0,
+          "tags": []
+        },
+        {
+          "label": "tab",
+          "bbox": [
+            70,
+            113,
+            620,
+            326
+          ],
+          "text": "<table><tr><td>Parameter</td><td>Target Moment</td><td>Source</td><td>Data Value</td><td>Model Fit</td></tr><tr><td>$\\phi_{S}^{S}$</td><td>Single Male Labor Participation</td><td>Ministry of Labor</td><td>70.8%</td><td>71.8%</td></tr><tr><td>$\\phi_{M}^{M}$</td><td>Married Male Labor Participation</td><td>Ministry of Labor</td><td>66.8%</td><td>66.2%</td></tr><tr><td>$\\phi_{F}^{F}$</td><td>Single Female Labor Participation</td><td>Ministry of Labor</td><td>64.7%</td><td>64.1%</td></tr><tr><td>$\\phi_{f}^{M}$</td><td>Married Female Labor Participation</td><td>Ministry of Labor</td><td>49.3%</td><td>49.6%</td></tr><tr><td>$\\theta_{m}$</td><td>Male Hours</td><td>Ministry of Labor</td><td>36.4%</td><td>35.6%</td></tr><tr><td>$\\theta_{f}$</td><td>Female Hours</td><td>Ministry of Labor</td><td>35.3%</td><td>34.9%</td></tr><tr><td>$\\beta$</td><td>K/Y</td><td>DGBAS</td><td>2.1</td><td>2.1</td></tr><tr><td>$\\psi$</td><td>Pension Exp / GDP</td><td>Lee et al. (2022)</td><td>3.6%</td><td>3.4%</td></tr><tr><td>Tr</td><td>(Health Insur. Trans.+Social Trans)/GDP</td><td>Lee et al. (2022)</td><td>9.2%</td><td>9.2%</td></tr><tr><td>Jointly</td><td>Gini coefficient of Income</td><td>Chu et al. (2023)</td><td>0.60</td><td>0.62</td></tr><tr><td>calibrate</td><td>Top 1% of income share</td><td>Chu et al. (2023)</td><td>19.2%</td><td>19.7%</td></tr><tr><td>z_{5}, \\lambda_{in}, \\lambda_{out}</td><td>Top 10% of income share</td><td>Chu et al. (2023)</td><td>47.8%</td><td>46.8%</td></tr><tr><td>\\lambda_{S}</td><td>Single household average tax rate</td><td>Ministry of Finance</td><td>10.1%</td><td>10.5%</td></tr><tr><td>\\lambda_{M}</td><td>Married household average tax rate</td><td>Ministry of Finance</td><td>14.1%</td><td>14.5%</td></tr></table>",
+          "reading_order": 1,
+          "tags": []
+        },
+        {
+          "label": "cap",
+          "bbox": [
+            159,
+            406,
+            530,
+            424
+          ],
+          "text": "Table 10: Productivity Transitions in the Benchmark Economy",
+          "reading_order": 2,
+          "tags": []
+        },
+        {
+          "label": "tab",
+          "bbox": [
+            192,
+            437,
+            491,
+            532
+          ],
+          "text": "<table><tr><td></td><td>z_{1}</td><td>z_{2}</td><td>z_{3}</td><td>z_{4}</td><td>z_{5}</td></tr><tr><td>z_{1}=1</td><td>0.383</td><td>0.254</td><td>0.215</td><td>0.146</td><td>0.002</td></tr><tr><td>z_{2}=2</td><td>0.353</td><td>0.250</td><td>0.231</td><td>0.164</td><td>0.002</td></tr><tr><td>z_{3}=2.85</td><td>0.357</td><td>0.240</td><td>0.228</td><td>0.172</td><td>0.002</td></tr><tr><td>z_{4}=5.91</td><td>0.393</td><td>0.244</td><td>0.209</td><td>0.152</td><td>0.002</td></tr><tr><td>z_{5}=70.59</td><td>0.038</td><td>0.038</td><td>0.038</td><td>0.038</td><td>0.850</td></tr></table>",
+          "reading_order": 3,
+          "tags": []
+        },
+        {
+          "label": "sec_1",
+          "bbox": [
+            67,
+            572,
+            171,
+            596
+          ],
+          "text": "References",
+          "reading_order": 4,
+          "tags": []
+        },
+        {
+          "label": "reference",
+          "bbox": [
+            69,
+            608,
+            622,
+            641
+          ],
+          "text": "Bakiş, Ozan, Barış Kaynak, and Markus Pockels (2015). \"Transitional dynamics and the optimal\nprogressivity of income redistribution.\" Review of Economic Dynamics , 18(3), pp. 679–693.",
+          "reading_order": 5,
+          "tags": []
+        },
+        {
+          "label": "reference",
+          "bbox": [
+            69,
+            651,
+            622,
+            685
+          ],
+          "text": "Benabou, Roland (2002). \"Tax and education policy in a heterogeneous agent economy: What\nlevels of redistribution maximize growth and efficiency?\" Econometrica, 70(2), pp. 481-517.",
+          "reading_order": 6,
+          "tags": []
+        },
+        {
+          "label": "reference",
+          "bbox": [
+            69,
+            696,
+            622,
+            729
+          ],
+          "text": "Blundell, Richard, Luigi Pistaferri, and Itay Saporta-Elestein (2016). “Consumption inequality\nand family labor supply.” American Economic Review , 106(2), pp. 387–435.",
+          "reading_order": 7,
+          "tags": []
+        },
+        {
+          "label": "reference",
+          "bbox": [
+            69,
+            740,
+            622,
+            773
+          ],
+          "text": "Brüggemann, Bettina and Jinhyuk Yoo (2015). \"Aggregate and distributional effects of increasing\ntaxes on top income earners.\"",
+          "reading_order": 8,
+          "tags": []
+        },
+        {
+          "label": "reference",
+          "bbox": [
+            69,
+            784,
+            622,
+            817
+          ],
+          "text": "Castañeda, Ana, Javier Díaz-Giménez, and José-Víctor Rius-Rull (2003), \"Accounting for the\nus earnings and wealth inequality,\" Journal of Political Economy , 111(4), pp. 818-857.",
+          "reading_order": 9,
+          "tags": []
+        },
+        {
+          "label": "foot",
+          "bbox": [
+            336,
+            846,
+            353,
+            862
+          ],
+          "text": "31",
+          "reading_order": 10,
+          "tags": [
+            "page_num"
+          ]
+        }
+      ]
+    },
+    {
+      "page_number": 33,
+      "elements": [
+        {
+          "label": "reference",
+          "bbox": [
+            68,
+            73,
+            621,
+            106
+          ],
+          "text": "Cheng, Yu-Hsiang, Hsuan-Chih Lin, and Atsuko Tanaka (2020). “Pension reform in taiwan: a\nmacroeconomic analysis,” Taiwan Econ Rev , 48(1), pp. 1–30.",
+          "reading_order": 0,
+          "tags": []
+        },
+        {
+          "label": "reference",
+          "bbox": [
+            68,
+            116,
+            621,
+            150
+          ],
+          "text": "Chu, Cyrus, Chien-Yu Chen, Ming-Jen Lin, and Hsuan-Li Su (2023). “Distributional national\naccounts of taiwan, 1981-2017. Taiwan Economic Review , 51(2), pp. 137–181.",
+          "reading_order": 1,
+          "tags": []
+        },
+        {
+          "label": "reference",
+          "bbox": [
+            68,
+            159,
+            623,
+            209
+          ],
+          "text": "Fehr, Hans, Manuel Kallweit, and Fabian Kindermann (2017). “Families and social security,”\nEuropean Economic Review , 91(November 2015), pp. 30–56. doi:10.1016/j.euroecorev.2016.\n09.007.",
+          "reading_order": 2,
+          "tags": []
+        },
+        {
+          "label": "reference",
+          "bbox": [
+            69,
+            221,
+            621,
+            254
+          ],
+          "text": "Guner, Nezh, Reniz Kugusuz, and Gustavo Ventura (2014) “Income taxation of us households:\nFacts and parametric estimates.” Review of Economic Dynamics , 17(4), pp. 559–581.",
+          "reading_order": 3,
+          "tags": []
+        },
+        {
+          "label": "reference",
+          "bbox": [
+            68,
+            264,
+            622,
+            316
+          ],
+          "text": "Heathcote, Jonathan, Fabrizio Perri, and Giovanni L Violante (2010). \"Unequal we stand: An\nempirical analysis of economic inequality in the united states, 1967–2006.\" Review of Economic\ndynamics , 13(1), pp. 15–51.",
+          "reading_order": 4,
+          "tags": []
+        },
+        {
+          "label": "reference",
+          "bbox": [
+            69,
+            325,
+            623,
+            374
+          ],
+          "text": "Heathcote, Jonathan, Kjetil Storesletten, and Giovanni L Violante (2017), “Optimal tax\nprogressivity: An analytical framework.” The Quarterly Journal of Economics , 132(4), pp.\n1693–1754.",
+          "reading_order": 5,
+          "tags": []
+        },
+        {
+          "label": "reference",
+          "bbox": [
+            69,
+            384,
+            622,
+            418
+          ],
+          "text": "Kaygusuz, Renzi (2015). \"Social security and two-earner households.\" Journal of Economic\nDynamics and Control, 59, pp. 163-178.",
+          "reading_order": 6,
+          "tags": []
+        },
+        {
+          "label": "reference",
+          "bbox": [
+            69,
+            428,
+            623,
+            479
+          ],
+          "text": "Kaynak, Barış and Markus Poschke (2016). \"The evolution of wealth inequality over half a\ncentury: The role of taxes, transfers and technology.\" Journal of Monetary Economics, 77,\npp. 1-25.",
+          "reading_order": 7,
+          "tags": []
+        },
+        {
+          "label": "reference",
+          "bbox": [
+            69,
+            489,
+            622,
+            523
+          ],
+          "text": "Kaymak, Baris, David Leung, and Markus Poschke (2022). \"Accounting for wealth concentration\nin the united states.\"",
+          "reading_order": 8,
+          "tags": []
+        },
+        {
+          "label": "reference",
+          "bbox": [
+            68,
+            532,
+            622,
+            584
+          ],
+          "text": "Kindermann, Fabian and Dirk Krueger (2022). “High marginal tax rates on the top 1 percent:\nlessons from a life-cycle model with idiosyncratic income risk.” American Economic Journal:\nMacroeconomics , 14(2), pp. 319–366.",
+          "reading_order": 9,
+          "tags": []
+        },
+        {
+          "label": "reference",
+          "bbox": [
+            69,
+            594,
+            623,
+            644
+          ],
+          "text": "Lee, Wei-Lun, Ming-Jen Lin, Hsuan-Li Su, and Yi-Chan Tsai (2022). “Income inequality, growth\ninequality, and redistribution in taiwan, 2001-2017: Evidence from distributional national\naccounts.” Technical report, Working paper.",
+          "reading_order": 10,
+          "tags": []
+        },
+        {
+          "label": "reference",
+          "bbox": [
+            69,
+            654,
+            621,
+            687
+          ],
+          "text": "Liao, Pei-Ju (2011), “Does demographic change matter for growth?” European Economic Review ,\n55(5), pp. 659–677.",
+          "reading_order": 11,
+          "tags": []
+        },
+        {
+          "label": "reference",
+          "bbox": [
+            69,
+            698,
+            621,
+            732
+          ],
+          "text": "Nishiyama, Shin-ichi (2010). \"The joint labor supply decision of married couples and the social\nsecurity pension system.\"",
+          "reading_order": 12,
+          "tags": []
+        }
+      ]
+    }
+  ]
+}
