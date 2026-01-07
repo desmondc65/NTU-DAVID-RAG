@@ -333,7 +333,7 @@ def main():
     parser.add_argument(
         "--max_batch_size",
         type=int,
-        default=4,
+        default=3,
         help="Maximum number of document elements to parse in a single batch (default: 4)",
     )
     args = parser.parse_args()
