@@ -1,1 +1,4 @@
 docling
+google-genai
+python-dotenv
+openai
