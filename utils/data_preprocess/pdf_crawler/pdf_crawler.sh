@@ -22,14 +22,14 @@ echo "PDF Crawler - Processing manuscripts"
 echo "================================================"
 echo ""
 
-# Project 1: Consumption Smoothing
-PROJECT_1="${DATA_DIR}/Consumption Smoothing and Welfare Implications of Redistributive and Insurance Systems"
-PDF_1="${PROJECT_1}/Manuscript.pdf"
+# Project 1: The Joint Labor Supply Decision
+PROJECT_1="${DATA_DIR}/The Joint Labor Supply Decision of Married Couples and the Social Security Pension System"
+PDF_1="${PROJECT_1}/source/Manuscript.pdf"
 OUTPUT_DIR_1="${PROJECT_1}/manuscript_parsed_docling"
 OUTPUT_1="${OUTPUT_DIR_1}/Manuscript_parsed_docling.json"
 
 if [ -f "$PDF_1" ]; then
-    echo "[1/2] Processing: Consumption Smoothing manuscript"
+    echo "[1/2] Processing: Joint Labor Supply Decision manuscript"
     mkdir -p "$OUTPUT_DIR_1"
     "${PROJECT_ROOT}/.venv/bin/python3" "$PDF_CRAWLER_PY" "$PDF_1" -o "$OUTPUT_1"
     echo ""
@@ -38,14 +38,14 @@ else
     echo ""
 fi
 
-# Project 2: The Welfare Implications
-PROJECT_2="${DATA_DIR}/The Welfare Implications of Top Marginal Tax Reform in Taiwan"
-PDF_2="${PROJECT_2}/Manuscript.pdf"
+# Project 2: Transitional Dynamics
+PROJECT_2="${DATA_DIR}/Transitional Dynamics and the Optimal Progressivity of Income Redistribution"
+PDF_2="${PROJECT_2}/source/Manuscript.pdf"
 OUTPUT_DIR_2="${PROJECT_2}/manuscript_parsed_docling"
 OUTPUT_2="${OUTPUT_DIR_2}/Manuscript_parsed_docling.json"
 
 if [ -f "$PDF_2" ]; then
-    echo "[2/2] Processing: Top Marginal Tax Reform manuscript"
+    echo "[2/2] Processing: Transitional Dynamics manuscript"
     mkdir -p "$OUTPUT_DIR_2"
     "${PROJECT_ROOT}/.venv/bin/python3" "$PDF_CRAWLER_PY" "$PDF_2" -o "$OUTPUT_2"
     echo ""
