@@ -115,42 +115,51 @@ def crop_formulas(json_path, png_folder, output_folder):
                                 # To convert to Image (Top-Left 0):
                                 # new_y = PAGE_HEIGHT - old_y
                                 
-                                # Wait, Docling usually normalizes or gives absolute PDF points.
-                                # Standard PDF page height is usually 792 for Letter or 842 for A4.
-                                # We might not know the exact PDF height here just from the image, but we can infer or assume.
-                                # However, better approach: 
-                                # The 't' and 'b' in the dict are usually Y-coordinates from bottom.
-                                # t > b usually.
+                                # Attempt to find page dimensions from Docling JSON
+                                # Docling JSON usually has a "pages" dict: { "1": { "size": {"width": ..., "height": ...} } }
+                                # or similar structure.
+                                # Let's try to lookup the page height for this page_no.
+                                true_pdf_height = None
                                 
-                                # Let's assume standard scaling first, but we need PDF height.
-                                # A more robust way if we don't have PDF height:
-                                # If we see BOTTOMLEFT, usually:
-                                # img_y = (pdf_page_height - pdf_y) * scale
-                                
-                                # Since we generated the PNGs, we know the aspect ratio is preserved.
-                                # But we don't strictly know the original PDF MediaBox height in points.
-                                # BUT: scale = PROJECT_DPI / 72.
-                                # img_height_px = pdf_height_pt * scale
-                                # So: pdf_height_pt = img_height_px / scale
-                                
-                                pdf_height_pt = height / SCALE_FACTOR
-                                
+                                # Access 'pages' from the root 'data' object captured in outer scope
+                                if isinstance(data, dict) and "pages" in data:
+                                    # pages keys might be strings or ints
+                                    p_key = str(page_no)
+                                    if p_key in data["pages"]:
+                                        p_data = data["pages"][p_key]
+                                        if "size" in p_data:
+                                             true_pdf_height = p_data["size"].get("height")
+                                        elif "height" in p_data:
+                                             true_pdf_height = p_data.get("height")
+
+                                if true_pdf_height:
+                                     # Scale factor is still needed to go from PDF points to Image Pixels
+                                     # But we should rely on the ratio of ImageHeight / PDFHeight if we want to be exact
+                                     # instead of assuming 72 DPI vs 450 DPI, although they should match if generated correctly.
+                                     
+                                     # Recalculate scale factor precisely for this page
+                                     current_scale = height / true_pdf_height
+                                     pdf_height_pt = true_pdf_height
+                                else:
+                                     # Fallback to fixed DPI assumption
+                                     # PDF points (72dpi) -> Image (450dpi)
+                                     current_scale = SCALE_FACTOR
+                                     pdf_height_pt = height / current_scale
+
                                 # Convert Bottom-Origin Y to Top-Origin Y
-                                # docling 't' is the top edge (highest Y value), 'b' is bottom edge (lowest Y value)
-                                # In image (Top-Left):
-                                # Top edge = (pdf_height - t) * scale
-                                # Bottom edge = (pdf_height - b) * scale
-                                
-                                img_t = (pdf_height_pt - t) * SCALE_FACTOR
-                                img_b = (pdf_height_pt - b) * SCALE_FACTOR
+                                img_t = (pdf_height_pt - t) * current_scale
+                                img_b = (pdf_height_pt - b) * current_scale
                                 
                                 # Assign to final crop variables (t must be < b in image coords)
+                                # In bottom-origin: t is usually > b (e.g. 700 vs 600)
+                                # (Height - 700) is smaller than (Height - 600). So img_t < img_b. 
+                                # Correct.
                                 final_t = img_t
                                 final_b = img_b
                                 
                                 # scale x directly
-                                final_l = l * SCALE_FACTOR
-                                final_r = r * SCALE_FACTOR
+                                final_l = l * current_scale
+                                final_r = r * current_scale
                                 
                             else:
                                 # Default to TOPLEFT behavior
