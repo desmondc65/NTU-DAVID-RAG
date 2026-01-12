@@ -88,6 +88,7 @@ NTU-DAVID-RAG/
 │       ├── fortran_preprocess/     # Fortran code extraction & parsing
 │       ├── Dolphin/                # PDF parsing with Dolphin (layout-aware)
 │       ├── pdf_crawler/            # PDF parsing with Docling (structured)
+│       ├── vlm_formula_to_latex/   # VLM-based formula extraction
 │       ├── s2orc-doc2json/         # PDF/LaTeX to S2ORC JSON format
 │       └── Paper2Code/             # Auto-generate code from papers
 └── README.md
@@ -95,7 +96,7 @@ NTU-DAVID-RAG/
 
 ## Tools Documentation
 
-### Data Preprocessing Tools Overview
+### [Phase 1] Data Preprocessing Tools Overview
 
 The `utils/data_preprocess/` directory contains specialized tools for extracting and parsing economic research materials:
 
@@ -127,7 +128,23 @@ The `utils/data_preprocess/` directory contains specialized tools for extracting
 - **Output**: JSON with text, formulas, and metadata
 - **GPU**: Optional (faster with GPU, works on CPU)
 
-#### 4. **s2orc-doc2json/** - Scientific Paper Parsing
+#### 4. **vlm_formula_to_latex/** - VLM Formula to LaTeX
+- **Purpose**: Uses Vision Language Models (VLMs) to accurately extract mathematical formulas as LaTeX.
+- **Conversion Script**: `run_all.sh`
+  - Automates batch processing to convert formulas.
+  ```bash
+  # Run for all papers
+  ./utils/data_preprocess/vlm_formula_to_latex/run_all.sh
+
+  # Run for a specific paper
+  ./utils/data_preprocess/vlm_formula_to_latex/run_all.sh --target-folder "Paper Name"
+
+  # Skip already processed papers
+  ./utils/data_preprocess/vlm_formula_to_latex/run_all.sh --skip-existing
+  ```
+- **Output**: JSON and Markdown files with corrected LaTeX formulas.
+
+#### 5. **s2orc-doc2json/** - Scientific Paper Parsing
 - **Purpose**: Convert PDFs/LaTeX to S2ORC JSON format using Grobid
 - **Best For**: Academic papers requiring bibliographic data and citations
 - **Conversion Script**: `process_all_manuscripts.sh`
@@ -135,10 +152,16 @@ The `utils/data_preprocess/` directory contains specialized tools for extracting
 - **Output**: S2ORC-formatted JSON with sections, citations, bibliography
 - **GPU**: Not required
 
-#### 5. **Paper2Code/** - Code Generation from Papers
+#### 6. **Paper2Code/** - Code Generation from Papers
 - **Purpose**: Multi-agent LLM system to generate code repositories from papers
 - **Best For**: Reproducing ML/computational methods from manuscripts
 - **Conversion Scripts**:
   - `scripts/run_econs.sh`: Specialized script for data/ directory
 - **Pipeline**: Planning → Analysis → Code Generation
 - **GPU**: Optional (uses LLM APIs by default, can use local models with GPU)
+
+### [Phase 2] RAG Database & Embeddings
+(To be implemented)
+
+### [Phase 3] Hybrid Retrieval & Generation
+(To be implemented)
