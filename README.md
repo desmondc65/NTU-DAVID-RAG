@@ -1,13 +1,33 @@
-# NTU DAVID RAG - Economics Fortran Code Parser
+# NTU DAVID RAG
 
-A specialized toolkit for extracting, parsing, and preparing Fortran economic model code for Retrieval-Augmented Generation (RAG) systems.
+**Project Status**: Active Development
 
-## Overview
+This project aims to build an efficient and high-quality Retrieval-Augmented Generation (RAG) system specialized for economics-related academic papers and their associated codebases (specifically Fortran).
 
-This project handles the unique challenges of parsing monolithic Fortran programs where:
-- Subroutines use global variables without explicit parameter passing
-- Standard text chunking would lose critical context
-- Variable definitions are separated from their usage by thousands of lines
+![System Design](docs/initial_system_desgin.png)
+
+## Project Plan & Roadmap
+
+The development is divided into three key phases, focusing on deep parsing, storage architecture, and advanced retrieval.
+
+### Phase 1: Document Parsing and Retrieval (In Progress)
+Focus on parsing and retrieving context from academic paper PDFs and Fortran code.
+- **Deep Parsing**: Processing Thesis PDF Corpus (text, tables, figures).
+- **Code Extraction**: Parsing Fortran code, extracting global variables, and summarization.
+- **Visual Extraction**: Using VLMs (Gemini 1.5 / GPT-4o) for image captioning.
+- **Goal**: Efficiently parse heterogeneous data sources into structured formats.
+
+### Phase 2: Building RAG Database [To Be Done]
+Focus on embedding strategies and database architecture.
+- **Storage Architecture**: Designing Multi-Vector Storage (Doc Store for raw content + Vector DB for embeddings).
+- **Embedding Models**: Selecting optimal models (e.g., text-embedding-3, CLIP).
+- **Metadata & Chunking**: Defining strategies for storing and chunking different context types to maximize retrieval performance.
+
+### Phase 3: Hybrid Retrieval and Generation [To Be Done]
+Focus on retrieval quality and answer generation.
+- **Hybrid Retrieval**: Combining keyword and semantic search with metadata filtering.
+- **Reranking**: Implementing Cross-Encoder Rerankers (e.g., bge-reranker) to refine search results.
+- **Generation**: Utilizing Multimodal LLMs to generate meaningful, context-aware answers.
 
 ## Quick Start
 
