@@ -2,6 +2,7 @@
 
 # PDF Crawler Script
 # Parses multiple PDF files and saves to their respective manuscript_parsed_docling directories
+# Usage: ./pdf_crawler.sh [--skip-existing]
 
 set -e  # Exit on error
 
@@ -17,42 +18,71 @@ PDF_CRAWLER_PY="${SCRIPT_DIR}/pdf_crawler.py"
 # Base data directory
 DATA_DIR="${PROJECT_ROOT}/data"
 
+# Parse arguments
+SKIP_EXISTING=false
+
+for arg in "$@"; do
+    case $arg in
+        --skip-existing)
+        SKIP_EXISTING=true
+        shift # Remove --skip-existing from processing
+        ;;
+    esac
+done
+
 echo "================================================"
 echo "PDF Crawler - Processing manuscripts"
 echo "================================================"
 echo ""
 
-# Project 1: The Joint Labor Supply Decision
-PROJECT_1="${DATA_DIR}/The Joint Labor Supply Decision of Married Couples and the Social Security Pension System"
-PDF_1="${PROJECT_1}/source/Manuscript.pdf"
-OUTPUT_DIR_1="${PROJECT_1}/manuscript_parsed_docling"
-OUTPUT_1="${OUTPUT_DIR_1}/Manuscript_parsed_docling.json"
+# Iterate over each directory in data
+for paper_dir in "$DATA_DIR"/*; do
+    if [ -d "$paper_dir" ]; then
+        paper_name=$(basename "$paper_dir")
+        
+        # 1. Find PDF in source/
+        SOURCE_DIR="$paper_dir/source"
+        if [ ! -d "$SOURCE_DIR" ]; then
+             # echo "  [Skipping] 'source' directory not found in $paper_name"
+             continue
+        fi
+        
+        # Taking the first PDF found
+        PDF_FILE=$(find "$SOURCE_DIR" -maxdepth 1 -name "Manuscript.pdf" | head -n 1)
 
-if [ -f "$PDF_1" ]; then
-    echo "[1/2] Processing: Joint Labor Supply Decision manuscript"
-    mkdir -p "$OUTPUT_DIR_1"
-    "${PROJECT_ROOT}/.venv/bin/python3" "$PDF_CRAWLER_PY" "$PDF_1" -o "$OUTPUT_1"
-    echo ""
-else
-    echo "[1/2] WARNING: PDF not found: $PDF_1"
-    echo ""
-fi
+        if [[ -z "$PDF_FILE" ]]; then
+            # echo "  [Skipping] No PDF file found in $SOURCE_DIR for $paper_name"
+            continue
+        fi
+        
+        # 2. Define Output Paths
+        OUTPUT_DIR="$paper_dir/manuscript_parsed_docling"
+        OUTPUT_JSON="${OUTPUT_DIR}/Manuscript_parsed_docling.json"
+        OUTPUT_MD="${OUTPUT_DIR}/Manuscript_parsed_docling.md"
+        
+        echo "Processing: $paper_name"
 
-# Project 2: Transitional Dynamics
-PROJECT_2="${DATA_DIR}/Transitional Dynamics and the Optimal Progressivity of Income Redistribution"
-PDF_2="${PROJECT_2}/source/Manuscript.pdf"
-OUTPUT_DIR_2="${PROJECT_2}/manuscript_parsed_docling"
-OUTPUT_2="${OUTPUT_DIR_2}/Manuscript_parsed_docling.json"
+        # 3. Check Skip Condition
+        if [ "$SKIP_EXISTING" = true ]; then
+            if [ -f "$OUTPUT_JSON" ] && [ -f "$OUTPUT_MD" ]; then
+                echo "  [Skipping] Output files already exist (JSON & MD)."
+                echo ""
+                continue
+            fi
+        fi
 
-if [ -f "$PDF_2" ]; then
-    echo "[2/2] Processing: Transitional Dynamics manuscript"
-    mkdir -p "$OUTPUT_DIR_2"
-    "${PROJECT_ROOT}/.venv/bin/python3" "$PDF_CRAWLER_PY" "$PDF_2" -o "$OUTPUT_2"
-    echo ""
-else
-    echo "[2/2] WARNING: PDF not found: $PDF_2"
-    echo ""
-fi
+        # 4. Run Crawler
+        mkdir -p "$OUTPUT_DIR"
+        echo "  Input PDF: $PDF_FILE"
+        echo "  Output JSON: $OUTPUT_JSON"
+        
+        # We use the python interpeter from venv explicitly or rely on 'python3' if venv activated
+        # Using explicit path is safer in scripts
+        "${PROJECT_ROOT}/.venv/bin/python3" "$PDF_CRAWLER_PY" "$PDF_FILE" -o "$OUTPUT_JSON"
+        
+        echo ""
+    fi
+done
 
 echo "================================================"
 echo "✓ PDF crawling complete!"

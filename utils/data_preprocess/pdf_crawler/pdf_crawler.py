@@ -34,18 +34,18 @@ def crawl_pdf(pdf_path, output_path=None, extract_formulas=True):
         print("Formula extraction: Enabled (will extract equations as LaTeX)")
     print("-" * 60)
     
-    # Configure pipeline options for formula extraction
+    # Configure pipeline options
     pipeline_options = PdfPipelineOptions()
-    pipeline_options.do_ocr = True  # Enable OCR for better text extraction
-    pipeline_options.do_table_structure = True  # Extract table structures
-    pipeline_options.do_formula_enrichment = True  # Enable formula extraction as LaTeX
-    pipeline_options.generate_page_images = False  # Disable page images for speed
-    pipeline_options.generate_picture_images = False  # Disable picture extraction
+    pipeline_options.do_ocr = True
+    pipeline_options.do_table_structure = True
+    pipeline_options.do_formula_enrichment = extract_formulas
+    pipeline_options.generate_page_images = True
+    pipeline_options.generate_picture_images = True
     
     # Initialize Docling converter with options
     converter = DocumentConverter(
         format_options={
-            "pdf": PdfFormatOption(pipeline_options=pipeline_options)
+            InputFormat.PDF: PdfFormatOption(pipeline_options=pipeline_options)
         }
     )
     
@@ -78,6 +78,28 @@ def crawl_pdf(pdf_path, output_path=None, extract_formulas=True):
     markdown_path = output_path.parent / f"{output_path.stem}.md"
     with open(markdown_path, 'w', encoding='utf-8') as f:
         f.write(markdown_content)
+
+    # Save generated images
+    if pipeline_options.generate_page_images:
+        pages_dir = output_path.parent / "page_images"
+        pages_dir.mkdir(parents=True, exist_ok=True)
+        for page_no, page in result.document.pages.items():
+            if page.image:
+                page.image.save(pages_dir / f"page_{page_no}.png")
+        print(f"✓ Saved page images to: {pages_dir.absolute()}")
+
+    if pipeline_options.generate_picture_images:
+        try:
+            images_dir = output_path.parent / "extracted_images"
+            images_dir.mkdir(parents=True, exist_ok=True)
+            saved_imgs = 0
+            for item, _ in result.document.iterate_items():
+                if hasattr(item, "image") and item.image:
+                     item.image.save(images_dir / f"img_{saved_imgs}.png")
+                     saved_imgs += 1
+            print(f"✓ Saved {saved_imgs} extracted images to: {images_dir.absolute()}")
+        except Exception as e:
+            print(f"⚠ Failed to save extracted images: {e}")
     
     print(f"\n✓ Successfully parsed PDF")
     print(f"✓ Output saved to: {output_path.absolute()}")
