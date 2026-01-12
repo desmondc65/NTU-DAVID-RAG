@@ -12,12 +12,12 @@ class GeminiClient:
     A wrapper class for the Google Gemini API using the google-genai SDK.
     """
 
-    def __init__(self, model_name: str = "gemini-2.0-flash-exp", api_key: Optional[str] = None):
+    def __init__(self, model_name: str = "gemini-3-flash-preview", api_key: Optional[str] = None):
         """
         Initialize the GeminiClient.
 
         Args:
-            model_name (str): The name of the Gemini model to use. Defaults to "gemini-2.0-flash-exp".
+            model_name (str): The name of the Gemini model to use. Defaults to "gemini-3-flash-preview".
             api_key (str, optional): The API key. If not provided, it is fetched from the GEMINI_API_KEY env var.
         """
         self.api_key = api_key or os.getenv("GEMINI_API_KEY")
