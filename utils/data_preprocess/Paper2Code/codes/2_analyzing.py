@@ -182,8 +182,8 @@ for todo_file_name in tqdm(todo_file_lst):
 
     # print and logging
     print_response(completion_json)
-    temp_total_accumulated_cost = print_log_cost(completion_json, gpt_version, current_stage, output_dir, total_accumulated_cost)
-    total_accumulated_cost = temp_total_accumulated_cost
+    # temp_total_accumulated_cost = print_log_cost(completion_json, gpt_version, current_stage, output_dir, total_accumulated_cost)
+    # total_accumulated_cost = temp_total_accumulated_cost
 
     # save
     with open(f'{artifact_output_dir}/{todo_file_name}_simple_analysis.txt', 'w') as f:

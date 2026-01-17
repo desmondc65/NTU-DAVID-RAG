@@ -3,12 +3,14 @@ from tqdm import tqdm
 import argparse
 import os
 import sys
-from utils import print_response, print_log_cost, load_accumulated_cost, save_accumulated_cost
+from utils import print_response
 
 # Import GeminiClient from the utils directory
 import sys
 from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / 'llm_clients'))
+# Go up from codes_gemini -> Paper2Code -> data_preprocess, then up to utils, then access llm_clients
+llm_clients_path = Path(__file__).resolve().parent.parent.parent.parent / 'llm_clients'
+sys.path.insert(0, str(llm_clients_path))
 from gemini import GeminiClient
 
 parser = argparse.ArgumentParser()
@@ -22,7 +24,7 @@ parser.add_argument('--output_dir',type=str, default="")
 
 args    = parser.parse_args()
 
-client = GeminiClient(model_name="gemini-2.0-flash-exp")
+client = GeminiClient(model_name="gemini-3-flash-preview")
 
 paper_name = args.paper_name
 gpt_version = args.gpt_version
@@ -278,7 +280,6 @@ def api_call(msg, gpt_version):
 
 responses = []
 trajectories = []
-total_accumulated_cost = 0
 
 for idx, instruction_msg in enumerate([plan_msg, file_list_msg, task_list_msg, config_msg]):
     current_stage = ""
@@ -301,8 +302,6 @@ for idx, instruction_msg in enumerate([plan_msg, file_list_msg, task_list_msg, c
 
     # print and logging
     print_response(completion_json)
-    temp_total_accumulated_cost = print_log_cost(completion_json, gpt_version, current_stage, output_dir, total_accumulated_cost)
-    total_accumulated_cost = temp_total_accumulated_cost
 
     responses.append(completion_json)
 
@@ -312,8 +311,6 @@ for idx, instruction_msg in enumerate([plan_msg, file_list_msg, task_list_msg, c
 
 
 # save
-save_accumulated_cost(f"{output_dir}/accumulated_cost.json", total_accumulated_cost)
-
 os.makedirs(output_dir, exist_ok=True)
 
 with open(f'{output_dir}/planning_response.json', 'w') as f:

@@ -2,13 +2,15 @@ import json
 import os
 from tqdm import tqdm
 import sys
-from utils import extract_planning, content_to_json, print_response, print_log_cost, load_accumulated_cost, save_accumulated_cost
+from utils import extract_planning, content_to_json, print_response
 import copy
 
 # Import GeminiClient from the utils directory
 import sys
 from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / 'llm_clients'))
+# Go up from codes_gemini -> Paper2Code -> data_preprocess, then up to utils, then access llm_clients
+llm_clients_path = Path(__file__).resolve().parent.parent.parent.parent / 'llm_clients'
+sys.path.insert(0, str(llm_clients_path))
 from gemini import GeminiClient
 
 import argparse
@@ -24,7 +26,7 @@ parser.add_argument('--output_dir',type=str, default="")
 
 args    = parser.parse_args()
 
-client = GeminiClient(model_name="gemini-2.0-flash-exp")
+client = GeminiClient(model_name="gemini-3-flash-preview")
 
 paper_name = args.paper_name
 gpt_version = args.gpt_version
@@ -199,7 +201,6 @@ def api_call(msg):
 artifact_output_dir=f'{output_dir}/analyzing_artifacts'
 os.makedirs(artifact_output_dir, exist_ok=True)
 
-total_accumulated_cost = load_accumulated_cost(f"{output_dir}/accumulated_cost.json")
 for todo_file_name in tqdm(todo_file_lst):
     responses = []
     trajectories = copy.deepcopy(analysis_msg)
@@ -228,8 +229,6 @@ for todo_file_name in tqdm(todo_file_lst):
 
     # print and logging
     print_response(completion_json)
-    temp_total_accumulated_cost = print_log_cost(completion_json, gpt_version, current_stage, output_dir, total_accumulated_cost)
-    total_accumulated_cost = temp_total_accumulated_cost
 
     # save
     with open(f'{artifact_output_dir}/{todo_file_name}_simple_analysis.txt', 'w') as f:
@@ -245,5 +244,3 @@ for todo_file_name in tqdm(todo_file_lst):
 
     with open(f'{output_dir}/{todo_file_name}_simple_analysis_trajectories.json', 'w') as f:
         json.dump(trajectories, f)
-
-save_accumulated_cost(f"{output_dir}/accumulated_cost.json", total_accumulated_cost)

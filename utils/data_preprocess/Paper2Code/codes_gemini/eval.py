@@ -3,15 +3,17 @@ import os
 import sys
 import argparse
 from utils import read_python_files, extract_planning, content_to_json, \
-        num_tokens_from_messages, read_all_files, extract_json_from_string, get_now_str, print_log_cost
+        num_tokens_from_messages, read_all_files, extract_json_from_string, get_now_str
 
 # Import GeminiClient from the utils directory
 import sys
 from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / 'llm_clients'))
+# Go up from codes_gemini -> Paper2Code -> data_preprocess, then up to utils, then access llm_clients
+llm_clients_path = Path(__file__).resolve().parent.parent.parent.parent / 'llm_clients'
+sys.path.insert(0, str(llm_clients_path))
 from gemini import GeminiClient
 
-client = GeminiClient(model_name="gemini-2.0-flash-exp")
+client = GeminiClient(model_name="gemini-3-flash-preview")
 
 def api_call(request_json):
     completion = client.chat.completions.create(**request_json)
@@ -280,8 +282,6 @@ def main(args):
     print(f"\t📈 Score: {avg_score:.4f}")
     print(f"\t✅ Valid: {output_json['eval_result']['valid_n']}/{generated_n}")
     print("=" * 40)
-    
-    print_log_cost(completion_json, gpt_version, f"[Evaluation] {paper_name} - {eval_type}", output_dir, 0)
     # ---------------
 
 

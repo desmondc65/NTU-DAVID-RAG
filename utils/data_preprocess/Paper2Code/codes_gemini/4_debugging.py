@@ -9,7 +9,9 @@ from utils import read_python_files, content_to_json, extract_planning
 # Import GeminiClient from the utils directory
 import sys
 from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / 'llm_clients'))
+# Go up from codes_gemini -> Paper2Code -> data_preprocess, then up to utils, then access llm_clients
+llm_clients_path = Path(__file__).resolve().parent.parent.parent.parent / 'llm_clients'
+sys.path.insert(0, str(llm_clients_path))
 from gemini import GeminiClient
 
 
@@ -128,7 +130,7 @@ def parse_args() -> argparse.Namespace:
 
 
 args = parse_args()
-client = GeminiClient(model_name="gemini-2.0-flash-exp")
+client = GeminiClient(model_name="gemini-3-flash-preview")
 
 if not os.path.exists(args.error_file_name):
     raise FileNotFoundError(f"Error file not found: {args.error_file_name}")
