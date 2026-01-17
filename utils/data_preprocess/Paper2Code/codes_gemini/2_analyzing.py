@@ -2,7 +2,7 @@ import json
 import os
 from tqdm import tqdm
 import sys
-from utils import extract_planning, content_to_json, print_response
+from utils import extract_planning, content_to_json, print_response, print_log_gemini_cost, load_accumulated_cost, save_accumulated_cost
 import copy
 
 # Import GeminiClient from the utils directory
@@ -157,26 +157,28 @@ def api_call(msg):
     
     combined_user_prompt = "\n\n".join(user_messages)
     
-    response_text = client.generate_response(
-        user_prompt=combined_user_prompt,
-        system_prompt=system_prompt,
-        response_mime_type="text/plain"
+    # Call Gemini API and get the full response object
+    response = client.client.models.generate_content(
+        model=client.model_name,
+        contents=combined_user_prompt,
+        config={
+            "response_mime_type": "text/plain",
+            "system_instruction": system_prompt
+        } if system_prompt else {"response_mime_type": "text/plain"}
     )
+    
+    response_text = response.text
     
     # Create a mock completion object similar to OpenAI's format
     class MockCompletion:
-        def __init__(self, text):
+        def __init__(self, text, usage_metadata):
             self.choices = [type('obj', (object,), {
                 'message': type('obj', (object,), {
                     'content': text,
                     'role': 'assistant'
                 })()
             })()]
-            self.usage = type('obj', (object,), {
-                'prompt_tokens': len(combined_user_prompt) // 4,
-                'completion_tokens': len(text) // 4,
-                'total_tokens': (len(combined_user_prompt) + len(text)) // 4
-            })()
+            self.usage_metadata = usage_metadata
             self.model = gpt_version
             
         def model_dump_json(self):
@@ -187,20 +189,16 @@ def api_call(msg):
                         'role': self.choices[0].message.role
                     }
                 }],
-                'usage': {
-                    'prompt_tokens': self.usage.prompt_tokens,
-                    'completion_tokens': self.usage.completion_tokens,
-                    'total_tokens': self.usage.total_tokens
-                },
                 'model': self.model
             })
     
-    return MockCompletion(response_text)
+    return MockCompletion(response_text, response.usage_metadata)
 
 
 artifact_output_dir=f'{output_dir}/analyzing_artifacts'
 os.makedirs(artifact_output_dir, exist_ok=True)
 
+total_accumulated_cost = load_accumulated_cost(f"{output_dir}/accumulated_cost.json")
 for todo_file_name in tqdm(todo_file_lst):
     responses = []
     trajectories = copy.deepcopy(analysis_msg)
@@ -229,6 +227,8 @@ for todo_file_name in tqdm(todo_file_lst):
 
     # print and logging
     print_response(completion_json)
+    temp_total_accumulated_cost = print_log_gemini_cost(completion.usage_metadata, client.model_name, current_stage, output_dir, total_accumulated_cost)
+    total_accumulated_cost = temp_total_accumulated_cost
 
     # save
     with open(f'{artifact_output_dir}/{todo_file_name}_simple_analysis.txt', 'w') as f:
@@ -244,3 +244,5 @@ for todo_file_name in tqdm(todo_file_lst):
 
     with open(f'{output_dir}/{todo_file_name}_simple_analysis_trajectories.json', 'w') as f:
         json.dump(trajectories, f)
+
+save_accumulated_cost(f"{output_dir}/accumulated_cost.json", total_accumulated_cost)
