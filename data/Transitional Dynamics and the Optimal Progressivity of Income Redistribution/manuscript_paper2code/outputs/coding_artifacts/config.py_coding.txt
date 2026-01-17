@@ -1,0 +1,148 @@
+```python
+## config.py
+import yaml
+import numpy as np
+from typing import Dict, Any
+
+class EconomyConfig:
+    """
+    Central repository for hyperparameters, preferences, production parameters,
+    and discretized state spaces for the dynastic Aiyagari-Bewley-Huggett model.
+    
+    This class handles the conversion of annual parameters from config.yaml 
+    into model-period (5-year) equivalents and constructs the Markov transition 
+    matrices for labor efficiency.
+    """
+
+    def __init__(self, config_path: str = "config.yaml"):
+        # Load the raw configuration
+        with open(config_path, "r") as f:
+            raw_config = yaml.safe_load(f)
+
+        # Basic parameters from YAML
+        self.sigma: float = float(raw_config["economy"]["sigma"])
+        self.alpha: float = float(raw_config["economy"]["alpha"])
+        self.mu: float = float(raw_config["economy"]["mu"])
+        self.g_y_ratio: float = float(raw_config["economy"]["g_y_ratio"])
+        self.r_annual_target: float = float(raw_config["economy"]["r_annual_target"])
+
+        # Preferences
+        self.theta: float = float(raw_config["preferences"]["theta"])
+        self.epsilon: float = float(raw_config["preferences"]["epsilon"])
+        
+        # Time conversion (annual to model-period)
+        self.period_years: int = int(raw_config["economy"]["period_years"])
+        delta_annual: float = float(raw_config["economy"]["delta_annual"])
+        beta_annual: float = float(raw_config["preferences"]["beta_annual"])
+        
+        # 5-year depreciation: delta = 1 - (1 - delta_annual)^5
+        self.delta: float = 1.0 - (1.0 - delta_annual) ** self.period_years
+        # 5-year discount factor: beta = beta_annual^5
+        self.beta: float = beta_annual ** self.period_years
+
+        # Taxation parameters
+        self.tau_status_quo: float = float(raw_config["taxation"]["tau_status_quo"])
+        self.tau_optimal_ss: float = float(raw_config["taxation"]["tau_optimal_ss"])
+        # Variable 'tau' typically represents the current policy being evaluated
+        self.tau: float = self.tau_status_quo
+
+        # Numerical solver settings
+        self.k_min: float = float(raw_config["numerical"]["k_min"])
+        self.k_max: float = float(raw_config["numerical"]["k_max"])
+        self.k_size: int = int(raw_config["numerical"]["k_size"])
+        self.k_grid_exp: float = float(raw_config["numerical"]["k_grid_exp"])
+        self.tol_ss: float = float(raw_config["numerical"]["tol_ss"])
+        self.tol_ge: float = float(raw_config["numerical"]["tol_ge"])
+        self.max_iter: int = int(raw_config["numerical"]["max_iter"])
+        self.transition_periods: int = int(raw_config["numerical"]["transition_periods"])
+        self.damping_r: float = float(raw_config["numerical"]["damping_r"])
+        self.damping_lambda: float = float(raw_config["numerical"]["damping_lambda"])
+
+        # Grid construction: Capital (exponentially spaced for borrowing constraint)
+        self.k_grid: np.ndarray = self._make_k_grid()
+
+        # Productivity States and Transitions
+        self._f_states: np.ndarray = np.array(raw_config["productivity"]["f_states"])
+        self._a_states: np.ndarray = np.array(raw_config["productivity"]["a_states"])
+        self._pi_newborn_low: float = float(raw_config["productivity"]["pi_newborn_low"])
+        self._trans_f_raw: np.ndarray = np.array(raw_config["productivity"]["transition_F"])
+        self._trans_a_annual: np.ndarray = np.array(raw_config["productivity"]["transition_A_annual"])
+
+        # Discretized productivity vector: exp(f + a)
+        self.z_states: np.ndarray = self._make_z_states()
+        
+        # Transition matrices: S (survival), D (death), P (aggregate)
+        self.S_matrix: np.ndarray = np.zeros((4, 4))
+        self.D_matrix: np.ndarray = np.zeros((4, 4))
+        self.transition_matrix: np.ndarray = self._make_transition_matrices()
+
+    def _make_k_grid(self) -> np.ndarray:
+        """Constructs an exponential grid for capital."""
+        grid_lin = np.linspace(0.0, 1.0, self.k_size)
+        grid_exp = grid_lin ** self.k_grid_exp
+        return self.k_min + (self.k_max - self.k_min) * grid_exp
+
+    def _make_z_states(self) -> np.ndarray:
+        """
+        Combines intergenerational (f) and life-cycle (a) components into a 4-state vector.
+        State indices: 
+        0: (f_L, a_L)
+        1: (f_L, a_H)
+        2: (f_H, a_L)
+        3: (f_H, a_H)
+        """
+        z0 = np.exp(self._f_states[0] + self._a_states[0])
+        z1 = np.exp(self._f_states[0] + self._a_states[1])
+        z2 = np.exp(self._f_states[1] + self._a_states[0])
+        z3 = np.exp(self._f_states[1] + self._a_states[1])
+        return np.array([z0, z1, z2, z3])
+
+    def _make_transition_matrices(self) -> np.ndarray:
+        """
+        Computes the aggregate transition matrix P = (1-mu)*S + mu*D.
+        P is the 4x4 matrix governing transitions between (f, a) states.
+        """
+        # 1. Survival Transition (S): f is fixed, a transitions via A^5
+        A_period = np.linalg.matrix_power(self._trans_a_annual, self.period_years)
+        self.S_matrix = np.zeros((4, 4))
+        self.S_matrix[0:2, 0:2] = A_period
+        self.S_matrix[2:4, 2:4] = A_period
+
+        # 2. Death/Descendant Transition (D): f transitions via F, a resets to a_L/a_H via pi
+        self.D_matrix = np.zeros((4, 4))
+        pi = self._pi_newborn_low
+        f_trans = self._trans_f_raw
+        
+        # If parent was f_L (states 0, 1)
+        for i in [0, 1]:
+            # Child gets f_L with prob f_trans[0,0]
+            self.D_matrix[i, 0] = f_trans[0, 0] * pi
+            self.D_matrix[i, 1] = f_trans[0, 0] * (1.0 - pi)
+            # Child gets f_H with prob f_trans[0,1]
+            self.D_matrix[i, 2] = f_trans[0, 1] * pi
+            self.D_matrix[i, 3] = f_trans[0, 1] * (1.0 - pi)
+            
+        # If parent was f_H (states 2, 3)
+        for i in [2, 3]:
+            # Child gets f_L with prob f_trans[1,0]
+            self.D_matrix[i, 0] = f_trans[1, 0] * pi
+            self.D_matrix[i, 1] = f_trans[1, 0] * (1.0 - pi)
+            # Child gets f_H with prob f_trans[1,1]
+            self.D_matrix[i, 2] = f_trans[1, 1] * pi
+            self.D_matrix[i, 3] = f_trans[1, 1] * (1.0 - pi)
+
+        # 3. Aggregate Transition P
+        return (1.0 - self.mu) * self.S_matrix + self.mu * self.D_matrix
+
+    def update_tau(self, new_tau: float) -> None:
+        """Utility to change progressivity for experiments."""
+        self.tau = new_tau
+
+    def get_annual_r(self, period_r: float) -> float:
+        """Converts period interest rate to annual interest rate."""
+        return (1.0 + period_r) ** (1.0 / self.period_years) - 1.0
+
+    def get_period_r(self, annual_r: float) -> float:
+        """Converts annual interest rate to period interest rate."""
+        return (1.0 + annual_r) ** self.period_years - 1.0
+```

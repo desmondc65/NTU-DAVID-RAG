@@ -1,0 +1,70 @@
+Based on the provided paper, research plan, and design specifications, the following is the logic analysis for `steady_state.py`. This analysis details the implementation of the `SteadyStateSolver` class, focusing on finding the general equilibrium of the dynastic economy.
+
+### 1. Initialization and Integration
+The `SteadyStateSolver` acts as the orchestrator for solving the long-run equilibrium. It requires:
+*   **`EconomyConfig`**: Access to `alpha`, `delta_annual`, `period_years`, `g_y_ratio`, and grids (`k_grid`, `z_states`, `transition_matrix`).
+*   **`HouseholdSolver`**: An instance to compute optimal policies $k'(k, z)$ and $h(k, z)$ given prices.
+*   **State Variables**: The solver must handle two distinct modes:
+    1.  **Benchmark Mode**: $\tau = 0.17$. Determine $g$ as $17\%$ of benchmark output $Y$.
+    2.  **Optimal/Counterfactual Mode**: Varying $\tau$. Keep $g$ fixed at the benchmark level.
+
+### 2. Computing the Stationary Distribution (`compute_distribution`)
+This method solves for the stationary measure $\Gamma(k, z)$ that satisfies $\Gamma = H(\Gamma)$.
+*   **Logic**: Since the saving policy $k'(k, z)$ from the `HouseholdSolver` is continuous and likely falls between points on the `k_grid`, we use a linear interpolation (lottery) method to update the distribution.
+*   **Step-by-Step**:
+    1.  Initialize $\Gamma_0$ (e.g., uniform distribution).
+    2.  For each state $(k_i, z_j)$ in the grid:
+        *   Retrieve optimal next-period capital $k'_{i,j}$.
+        *   Identify indices $m, m+1$ such that $k_m \leq k'_{i,j} \leq k_{m+1}$.
+        *   Calculate weights $\omega = \frac{k'_{i,j} - k_m}{k_{m+1} - k_m}$.
+        *   Distribute the mass $\Gamma(k_i, z_j)$ to the next states:
+            *   Add $(1-\omega) \cdot P(z'|z_j) \cdot \Gamma(k_i, z_j)$ to $\Gamma_{new}(k_m, z')$.
+            *   Add $\omega \cdot P(z'|z_j) \cdot \Gamma(k_i, z_j)$ to $\Gamma_{new}(k_{m+1}, z')$.
+    3.  Iterate until the maximum absolute difference between $\Gamma_{new}$ and $\Gamma$ is less than `config.numerical.tol_ss`.
+*   **Performance**: Use `numba.njit` to accelerate the nested loops over the capital and productivity grids.
+
+### 3. Market Clearing and Budget Balance (`check_market_clearing`)
+This internal method evaluates the consistency of a specific guess for $r$ and $\lambda$.
+*   **Inputs**: `r_guess`, `lambda_guess`, `tau`.
+*   **Logic**:
+    1.  **Period Adjustment**: Convert annual depreciation $\delta$ to period depreciation (5 years): $\delta_{p} = 1 - (1-\delta_{annual})^5$.
+    2.  **Factor Prices**: From `r_guess`, derive the capital-labor ratio $(K/N) = [(\text{r\_guess} + \delta_p) / \alpha]^{1/(\alpha-1)}$. Then compute wage $w = (1-\alpha)(K/N)^\alpha$.
+    3.  **Policy Solution**: Call `hh_solver.solve_steady_state_policy(r_guess, w, lambda_guess)`.
+    4.  **Aggregation**:
+        *   Compute $\Gamma(k, z)$ using the policies.
+        *   $K_{implied} = \sum_{k, z} k \cdot \Gamma(k, z)$.
+        *   $N_{implied} = \sum_{k, z} (z \cdot h(k, z)) \cdot \Gamma(k, z)$.
+        *   $Y = K_{implied}^\alpha N_{implied}^{1-\alpha}$.
+    5.  **Residual Calculation**:
+        *   $r_{new} = \alpha(K_{implied} / N_{implied})^{\alpha-1} - \delta_p$.
+        *   Let $y_{i,j} = z_j w h_{i,j} + r_{guess} k_i$.
+        *   $g_{implied} = \sum_{k, z} (y_{i,j} - \lambda_{guess} y_{i,j}^{1-\tau}) \cdot \Gamma(k, z)$.
+        *   If in benchmark mode, update $g = \text{config.economy.g\_y\_ratio} \cdot Y$.
+*   **Returns**: Implied $r_{new}$, implied $\lambda_{new}$ (the value that would satisfy the budget given current incomes), and the `HouseholdPolicy` object.
+
+### 4. General Equilibrium Search Loop (`find_equilibrium`)
+This is the main loop that iterates on prices and tax scaling until convergence.
+*   **Nested Loop Structure**:
+    1.  **Outer Loop ($\lambda$ Adjustment)**:
+        *   Guess $\lambda$. 
+        *   **Inner Loop ($r$ Adjustment)**:
+            *   Guess $r$.
+            *   Call `check_market_clearing`.
+            *   Update $r$ using damping: $r_{next} = (1 - \text{damping\_r}) \cdot r_{guess} + \text{damping\_r} \cdot r_{new}$.
+            *   Continue until $|r_{new} - r_{guess}| < \text{tol\_ge}$.
+        *   Update $\lambda$ using damping: $\lambda_{next} = (1 - \text{damping\_lambda}) \cdot \lambda_{guess} + \text{damping\_lambda} \cdot \lambda_{new}$.
+        *   In counterfactuals, $\lambda_{new}$ is calculated to satisfy $g_{fixed} = \int (y - \lambda y^{1-\tau}) d\Gamma$.
+    2.  Continue until $| \lambda_{new} - \lambda_{guess} | < \text{tol\_ge}$.
+*   **Output**: A dictionary containing the equilibrium interest rate, wage, $\lambda$, $g$, aggregate $K, N, Y, C$, and Gini coefficients (calculated in `utils.py`).
+
+### 5. Critical Convergence Considerations
+*   **Regressive Taxes ($\tau < 0$)**: As noted in the logic analysis, regressive taxes may create non-convexities. The solver must check if the labor supply bisection or the EGM fails to converge. 
+*   **Damping Factors**: Use `config.numerical.damping_r` and `config.numerical.damping_lambda` (both 0.1) to prevent oscillations in the GE loop.
+*   **Initial Guesses**: For $\tau = 0.17$, start with $r_{annual} = 0.041$. For counterfactuals, use the previous equilibrium's values as starting points to speed up convergence.
+
+### 6. Reference to Configuration (config.yaml)
+All hardcoded values must be retrieved from the config object:
+*   Tolerance: `numerical.tol_ge`, `numerical.tol_ss`.
+*   Production: `economy.alpha`, `economy.delta_annual`.
+*   Grid: `numerical.k_grid_exp`, `numerical.k_size`.
+*   Damping: `numerical.damping_r`, `numerical.damping_lambda`.

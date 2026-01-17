@@ -1,0 +1,87 @@
+This plan outlines a roadmap for reproducing the methodology and findings of Kaymak, Leung, and Poschke (2023) regarding the drivers of US wealth concentration.
+
+---
+
+### 1. Empirical Analysis and Data Preparation
+The first phase involves recreating the empirical facts from the Survey of Consumer Finances (SCF) that discipline the model.
+
+*   **Datasets:** 
+    *   Download SCF triennial waves from 2001 to 2019 (public use files).
+    *   Use IRS-based top income shares (Piketty & Saez, 2003; 2018 update) for validation.
+*   **Income Definitions:**
+    *   **Market Income:** Sum of wages, business/farm income, interest, dividends, private pensions, and realized capital gains.
+    *   **Labor Income Imputation:** 
+        *   Identify "imputation sample": Business owners with no reported salary but active management.
+        *   Run the regression: $\ln(\text{Business Income}) = \alpha \ln(\text{Equity}) + \beta \ln(\text{Labor Controls}) + \epsilon$.
+        *   Set $\alpha = 0.25$ (capital share) and attribute 75% of income to labor for this group.
+*   **Implied Rates of Return:**
+    *   Use Equation (2) from the paper: $\frac{r_i}{r_0} = \frac{e_{i/0}}{k_{i/0}} \cdot \frac{1/\lambda_i - 1}{1/\lambda_0 - 1}$.
+    *   Calculate returns for top 0.1%, 1%, 5%, and 10% income/wealth groups relative to the bottom 90%.
+
+### 2. Model Methodology (Theoretical Framework)
+The core is an Overlapping Generations (OLG) model with incomplete markets and heterogeneous agents.
+
+*   **Demographics:** 
+    *   Model period: 5 years.
+    *   Ages: 20 to 99 (16 periods). Retirement at age 65 (period 10).
+    *   Survival probabilities $s(j)$: Use the logistic function parameters from Halliday et al. (2019).
+*   **Stochastic Processes:**
+    *   **Labor Productivity ($z$):** 8 states.
+        *   States 1-6 (Ordinary): Calibrated via AR(1) process (persistence 0.97 annually) using Rouwenhorst approximation.
+        *   States 7-8 (Extraordinary): "Superearners" with transition probabilities $\lambda_{in}, \lambda_{out}$.
+    *   **Asset Returns ($\kappa$):** 3 states $\{r\kappa_L, r\kappa_H, r\kappa_{top}\}$.
+        *   Transition matrix $\Pi_\kappa(z)$: Note that $\pi_{in}$ depends on $z$ (productivity-return correlation).
+*   **Preferences & Constraints:**
+    *   Utility: CRRA for consumption and bequests; separable disutility for labor.
+    *   Bequest Motive: Non-homothetic utility $\phi(k') = \phi_1 [ (k' + \phi_2)^{1-\sigma_b} - 1 ]$.
+    *   Budget Constraint: Includes progressive income tax, corporate tax, sales tax, and estate tax.
+
+### 3. Computational Implementation (The "Engine")
+Since the authors do not provide code, you must build the solver from scratch.
+
+*   **State Space:** Discrete grid for age ($j \in \{1...16\}$), labor productivity ($z \in \{1...8\}$), and return state ($\kappa \in \{1...3\}$). A fine, non-linear grid for assets ($k$).
+*   **Household Problem Solver:** 
+    *   **Method:** Backward induction starting from age $J=16$.
+    *   **Algorithm:** Endogenous Grid Method (EGM) is recommended for efficiency in the consumption-savings choice, combined with a root-finder for the labor supply choice $h$.
+*   **General Equilibrium Iteration:**
+    1.  Guess aggregate capital $K$ and aggregate labor $N$.
+    2.  Compute wage $w$ and base interest rate $r$ from marginal products.
+    3.  Solve the household VFI/EGM.
+    4.  Simulate the distribution $\Gamma(s)$ using the transition matrices and policy functions.
+    5.  Update $K, N$ and the government transfer $Tr$ to balance the budget.
+    6.  Repeat until $K$ and $N$ converge.
+
+### 4. Calibration Strategy
+The paper uses a mix of external and internal (Method of Moments) calibration.
+
+*   **External Parameters:**
+    *   $\sigma_c = 1.5$, $\sigma_l = 1.22$ (Frisch = 0.82).
+    *   Tax rates: $\tau_c = 23.6\%$, $\tau_s = 5\%$.
+*   **Internal Parameters (Targeted via SMM):**
+    *   $\beta$ (Discount factor): Target $K/Y = 3.0$.
+    *   $\theta$ (Work disutility): Target 35% of time spent working.
+    *   $\sigma^2, \zeta$: Target PSID wage variance growth over the life cycle.
+    *   $\lambda_{in}, \lambda_{out}, z_7, z_8$: Target top 0.1% and 1% earnings shares and 5-year earnings persistence.
+    *   $\kappa$ values and transitions: Target top wealth shares and the relative returns calculated in Section 1.
+    *   $\phi_1, \phi_2, \sigma_b$: Target bequest-to-wealth ratio (Guvenen et al.) and the share of the top 2% of estates.
+
+### 5. Experimental Design (Counterfactuals)
+To reproduce the main results (Table 5 and Figure 7), run the following simulations:
+
+1.  **Equal Bequests:** Redistribute all estates equally across recipients regardless of parentage.
+2.  **No Superearners:** Set $z_8 = z_7 = z_6$.
+3.  **Homogeneous Returns:** Set all $\kappa_i$ to the value-weighted average return.
+4.  **Combinations:** Remove components in all 4! permutations to calculate **Marginal Effects** (as shown in the "whiskers" of Figure 7).
+5.  **Robustness Check:** Re-run the calibration assuming 100% of business income is capital (Section VII.B).
+
+### 6. Evaluation Metrics
+*   **Primary Metrics:** Wealth Gini, Top 1% Wealth Share, Top 0.1% Wealth Share.
+*   **Secondary Metrics:** 
+    *   Joint distribution: Share of wealth held by the top 1% of earners.
+    *   Factor composition: Labor share of income for the top 1% and 0.1% of the income distribution.
+    *   Life cycle: Age-wealth profile (Figure 5) and Gini-by-age (Figure 6).
+
+### 7. Explicit Uncertainties/Challenges
+*   **Bequest Correlation:** The paper mentions allocating bequests based on "low vs high" $z$ and $\kappa$ states. The exact threshold for these groups needs to be determined (e.g., $z_1-z_3$ as low).
+*   **Transition Matrix Specifics:** While the structure of $\Pi_z$ is provided in Table 3, the final calibrated values for $\lambda_{in}, \lambda_{out}, \lambda_{ll}$, etc., are in the *Supplemental Appendix*, which must be consulted for exact replication.
+*   **Grid Density:** The wealth distribution is extremely skewed; the asset grid must be very dense at the bottom (for precautionary savings) and extremely far-reaching at the top to capture the top 0.1%.

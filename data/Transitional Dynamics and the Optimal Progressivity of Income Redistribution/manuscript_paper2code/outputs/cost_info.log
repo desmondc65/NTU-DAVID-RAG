@@ -1,0 +1,234 @@
+🌟 Usage Summary 🌟
+[Planning] Overall plan
+🛠️ Model: gemini-3-flash-preview
+📥 Input tokens: 17848 (Cost: $0.00892400)
+📤 Output tokens: 2025 (Cost: $0.00607500)
+💵 Current total cost: $0.01499900
+🪙 Accumulated total cost so far: $0.01499900
+============================================
+
+🌟 Usage Summary 🌟
+[Planning] Architecture design
+🛠️ Model: gemini-3-flash-preview
+📥 Input tokens: 20637 (Cost: $0.01031850)
+📤 Output tokens: 1200 (Cost: $0.00360000)
+💵 Current total cost: $0.01391850
+🪙 Accumulated total cost so far: $0.02891750
+============================================
+
+🌟 Usage Summary 🌟
+[Planning] Logic design
+🛠️ Model: gemini-3-flash-preview
+📥 Input tokens: 22616 (Cost: $0.01130800)
+📤 Output tokens: 1147 (Cost: $0.00344100)
+💵 Current total cost: $0.01474900
+🪙 Accumulated total cost so far: $0.04366650
+============================================
+
+🌟 Usage Summary 🌟
+[Planning] Configuration file generation
+🛠️ Model: gemini-3-flash-preview
+📥 Input tokens: 23957 (Cost: $0.01197850)
+📤 Output tokens: 5329 (Cost: $0.01598700)
+💵 Current total cost: $0.02796550
+🪙 Accumulated total cost so far: $0.07163200
+============================================
+
+🌟 Usage Summary 🌟
+[ANALYSIS] config.py
+🛠️ Model: gemini-3-flash-preview
+📥 Input tokens: 22758 (Cost: $0.01137900)
+📤 Output tokens: 1481 (Cost: $0.00444300)
+💵 Current total cost: $0.01582200
+🪙 Accumulated total cost so far: $0.08745400
+============================================
+
+🌟 Usage Summary 🌟
+[ANALYSIS] utils.py
+🛠️ Model: gemini-3-flash-preview
+📥 Input tokens: 22782 (Cost: $0.01139100)
+📤 Output tokens: 1438 (Cost: $0.00431400)
+💵 Current total cost: $0.01570500
+🪙 Accumulated total cost so far: $0.10315900
+============================================
+
+🌟 Usage Summary 🌟
+[ANALYSIS] calibration.py
+🛠️ Model: gemini-3-flash-preview
+📥 Input tokens: 22759 (Cost: $0.01137950)
+📤 Output tokens: 1577 (Cost: $0.00473100)
+💵 Current total cost: $0.01611050
+🪙 Accumulated total cost so far: $0.11926950
+============================================
+
+🌟 Usage Summary 🌟
+[ANALYSIS] household.py
+🛠️ Model: gemini-3-flash-preview
+📥 Input tokens: 22772 (Cost: $0.01138600)
+📤 Output tokens: 1629 (Cost: $0.00488700)
+💵 Current total cost: $0.01627300
+🪙 Accumulated total cost so far: $0.13554250
+============================================
+
+🌟 Usage Summary 🌟
+[ANALYSIS] steady_state.py
+🛠️ Model: gemini-3-flash-preview
+📥 Input tokens: 22761 (Cost: $0.01138050)
+📤 Output tokens: 1738 (Cost: $0.00521400)
+💵 Current total cost: $0.01659450
+🪙 Accumulated total cost so far: $0.15213700
+============================================
+
+🌟 Usage Summary 🌟
+[ANALYSIS] transition.py
+🛠️ Model: gemini-3-flash-preview
+📥 Input tokens: 22774 (Cost: $0.01138700)
+📤 Output tokens: 1395 (Cost: $0.00418500)
+💵 Current total cost: $0.01557200
+🪙 Accumulated total cost so far: $0.16770900
+============================================
+
+🌟 Usage Summary 🌟
+[ANALYSIS] visualization.py
+🛠️ Model: gemini-3-flash-preview
+📥 Input tokens: 22740 (Cost: $0.01137000)
+📤 Output tokens: 1383 (Cost: $0.00414900)
+💵 Current total cost: $0.01551900
+🪙 Accumulated total cost so far: $0.18322800
+============================================
+
+🌟 Usage Summary 🌟
+[ANALYSIS] main.py
+🛠️ Model: gemini-3-flash-preview
+📥 Input tokens: 22749 (Cost: $0.01137450)
+📤 Output tokens: 1422 (Cost: $0.00426600)
+💵 Current total cost: $0.01564050
+🪙 Accumulated total cost so far: $0.19886850
+============================================
+
+🌟 Usage Summary 🌟
+[CODING] config.py
+🛠️ Model: gemini-3-flash-preview
+📥 Input tokens: 24244 (Cost: $0.01212200)
+📤 Output tokens: 2215 (Cost: $0.00664500)
+💵 Current total cost: $0.01876700
+🪙 Accumulated total cost so far: $0.21763550
+============================================
+
+🌟 Usage Summary 🌟
+[CODING] utils.py
+🛠️ Model: gemini-3-flash-preview
+📥 Input tokens: 26422 (Cost: $0.01321100)
+📤 Output tokens: 2318 (Cost: $0.00695400)
+💵 Current total cost: $0.02016500
+🪙 Accumulated total cost so far: $0.23780050
+============================================
+
+🌟 Usage Summary 🌟
+[CODING] calibration.py
+🛠️ Model: gemini-3-flash-preview
+📥 Input tokens: 28885 (Cost: $0.01444250)
+📤 Output tokens: 2003 (Cost: $0.00600900)
+💵 Current total cost: $0.02045150
+🪙 Accumulated total cost so far: $0.25825200
+============================================
+
+🌟 Usage Summary 🌟
+[CODING] household.py
+🛠️ Model: gemini-3-flash-preview
+📥 Input tokens: 30946 (Cost: $0.01547300)
+📤 Output tokens: 3704 (Cost: $0.01111200)
+💵 Current total cost: $0.02658500
+🪙 Accumulated total cost so far: $0.28483700
+============================================
+
+🌟 Usage Summary 🌟
+[CODING] steady_state.py
+🛠️ Model: gemini-3-flash-preview
+📥 Input tokens: 34774 (Cost: $0.01738700)
+📤 Output tokens: 2630 (Cost: $0.00789000)
+💵 Current total cost: $0.02527700
+🪙 Accumulated total cost so far: $0.31011400
+============================================
+
+🌟 Usage Summary 🌟
+[CODING] transition.py
+🛠️ Model: gemini-3-flash-preview
+📥 Input tokens: 37061 (Cost: $0.01853050)
+📤 Output tokens: 3891 (Cost: $0.01167300)
+💵 Current total cost: $0.03020350
+🪙 Accumulated total cost so far: $0.34031750
+============================================
+
+🌟 Usage Summary 🌟
+[CODING] visualization.py
+🛠️ Model: gemini-3-flash-preview
+📥 Input tokens: 40947 (Cost: $0.02047350)
+📤 Output tokens: 3747 (Cost: $0.01124100)
+💵 Current total cost: $0.03171450
+🪙 Accumulated total cost so far: $0.37203200
+============================================
+
+🌟 Usage Summary 🌟
+[CODING] main.py
+🛠️ Model: gemini-3-flash-preview
+📥 Input tokens: 44739 (Cost: $0.02236950)
+📤 Output tokens: 2627 (Cost: $0.00788100)
+💵 Current total cost: $0.03025050
+🪙 Accumulated total cost so far: $0.40228250
+============================================
+
+🌟 Usage Summary 🌟
+[Planning] Overall plan
+🛠️ Model: gemini-3-flash-preview
+📥 Input tokens: 17848 (Cost: $0.00892400)
+📤 Output tokens: 1910 (Cost: $0.00573000)
+💵 Current total cost: $0.01465400
+🪙 Accumulated total cost so far: $0.01465400
+============================================
+
+🌟 Usage Summary 🌟
+[Planning] Architecture design
+🛠️ Model: gemini-3-flash-preview
+📥 Input tokens: 20522 (Cost: $0.01026100)
+📤 Output tokens: 1221 (Cost: $0.00366300)
+💵 Current total cost: $0.01392400
+🪙 Accumulated total cost so far: $0.02857800
+============================================
+
+🌟 Usage Summary 🌟
+[Planning] Logic design
+🛠️ Model: gemini-3-flash-preview
+📥 Input tokens: 22522 (Cost: $0.01126100)
+📤 Output tokens: 1157 (Cost: $0.00347100)
+💵 Current total cost: $0.01473200
+🪙 Accumulated total cost so far: $0.04331000
+============================================
+
+🌟 Usage Summary 🌟
+[Planning] Configuration file generation
+🛠️ Model: gemini-3-flash-preview
+📥 Input tokens: 23873 (Cost: $0.01193650)
+📤 Output tokens: 3739 (Cost: $0.01121700)
+💵 Current total cost: $0.02315350
+🪙 Accumulated total cost so far: $0.06646350
+============================================
+
+🌟 Usage Summary 🌟
+[ANALYSIS] config.py
+🛠️ Model: gemini-3-flash-preview
+📥 Input tokens: 22751 (Cost: $0.01137550)
+📤 Output tokens: 1476 (Cost: $0.00442800)
+💵 Current total cost: $0.01580350
+🪙 Accumulated total cost so far: $0.08226700
+============================================
+
+🌟 Usage Summary 🌟
+[ANALYSIS] model/productivity.py
+🛠️ Model: gemini-3-flash-preview
+📥 Input tokens: 22768 (Cost: $0.01138400)
+📤 Output tokens: 1301 (Cost: $0.00390300)
+💵 Current total cost: $0.01528700
+🪙 Accumulated total cost so far: $0.09755400
+============================================
+

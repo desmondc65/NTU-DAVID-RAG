@@ -1,0 +1,57 @@
+The `simulation.py` module is responsible for computing the stationary distribution of households across the state space and aggregating these distributions to derive macroeconomic variables ($K$, $N$, Tax Revenue). This logic must precisely reflect the OLG structure and the stochastic bequest system described in the paper.
+
+### 1. State Space Representation
+The distribution $\Gamma(j, k, z, \kappa)$ is defined over:
+- **Age ($j$):** 1 to 16 (representing ages 20–99 in 5-year increments).
+- **Assets ($k$):** A non-linear grid (finer at the bottom to capture precautionary savings, extremely wide at the top to capture the top 0.1% wealth share).
+- **Labor Productivity ($z$):** 8 states (6 ordinary, 2 extraordinary).
+- **Asset Returns ($\kappa$):** 3 states ($r\kappa_L, r\kappa_H, r\kappa_{top}$).
+
+### 2. Logic for Stationary Distribution Computation
+
+#### A. Initial Distribution (Age $j=1$)
+As per the paper, agents enter the economy at age 20 with:
+- **Zero Assets:** All agents start with $k=0$ (or a very small initial endowment).
+- **Productivity $z$:** Drawn from the "Initial dist." row in Table 3, parameterized by $\zeta$ (from `config.yaml`). No agents start in extraordinary states ($z_7, z_8$).
+- **Return State $\kappa$:** Typically initialized to the low-return state $\kappa_L$.
+
+#### B. Forward Induction (Distribution Transition)
+The distribution is updated age-by-age. For each age $j \in [1, J-1]$:
+1. **Apply Policy Functions:** For every state $(k, z, \kappa)$, identify the optimal next-period assets $k'(j, k, z, \kappa)$ and labor supply $h(j, k, z, \kappa)$ from the `HouseholdProblem` solver.
+2. **Transition Probabilities:**
+   - **Survival:** Weight the mass by $s(j)$ (from Halliday et al., 2019 parameters).
+   - **Productivity:** Use transition matrix $F_z(z'|z)$ (Table 3).
+   - **Returns:** Use transition matrix $\Pi_\kappa(z)$, accounting for the calibrated correlation where extraordinary $z$ increases the probability of top returns $\kappa_{top}$.
+3. **Mass Allocation (Lottery Method):** Since $k'$ will likely fall between asset grid points $k_i$ and $k_{i+1}$, use linear interpolation to distribute the mass:
+   - Weight $w = \frac{k' - k_i}{k_{i+1} - k_i}$ goes to $k_{i+1}$.
+   - Weight $(1-w)$ goes to $k_i$.
+4. **Iterate:** $\Gamma_{j+1}(k', z', \kappa') = \sum \Gamma_j(k, z, \kappa) \cdot s(j) \cdot P(z'|z) \cdot P(\kappa'|\kappa, z)$.
+
+### 3. Stochastic Bequest Integration
+The paper identifies bequests as a critical driver (Counterfactual 'a'). The simulation must ensure the total volume of bequests is consistent with the savings of the deceased.
+- **Calculate Total Estates ($E$):** $E = \sum_{j, k, z, \kappa} \Gamma_j(k, z, \kappa) \cdot (1 - s(j)) \cdot k'(j, k, z, \kappa)$.
+- **Redistribution Logic:**
+  - Allocate a fraction $\gamma_j$ of $E$ to age $j$ survivors (Targeting Feiveson and Sabelhaus, 2018).
+  - Use internal parameters $\gamma_{-z}$ and $\gamma_{-\kappa}$ to correlate the bequest received with the agent's current productivity and return state (modeling "wealthy parents have wealthy/productive children").
+  - **The "Bequest Receipt" Step:** In the distribution update, the asset transition becomes $k \to k' + \Phi'$, where $\Phi'$ is the received bequest net of estate tax $\tau_b$.
+
+### 4. Aggregate Variables and Convergence
+Once the distribution $\Gamma$ is computed across all 16 periods:
+- **Aggregate Capital ($K$):** $\sum_{j, k, z, \kappa} k \cdot \Gamma_j(k, z, \kappa)$.
+- **Aggregate Labor ($N$):** $\sum_{j < J_r, k, z, \kappa} (z \epsilon_j h) \cdot \Gamma_j(k, z, \kappa)$ (where $J_r=10$ as per `config.yaml`).
+- **Government Revenues:**
+  - **Consumption Tax:** $\tau_s \cdot \sum c(j, k, z, \kappa) \Gamma$.
+  - **Income/Corporate Tax:** Sum of taxes on $y$ and $r\kappa k$.
+  - **Estate Tax:** $\tau_b$ applied to the top 2% of estates $E$.
+- **Fixed Point Loop:** Because the bequest distribution depends on the savings distribution, the simulation iterates until the guessed distribution of bequests matches the generated one.
+
+### 5. Numerical Efficiency (Numba & Multi-threading)
+Given the high dimensionality of the state space (16 ages $\times$ grid size $\times$ 8 productivity states $\times$ 3 return states), the `compute_stationary_distribution` method must utilize:
+- **Numba `@njit`:** For the forward mass-shifting loops.
+- **Sparse Matrix Representations:** Or optimized array operations to handle the transition probabilities efficiently.
+
+### 6. Calibration Target Extraction
+The `Simulator` must output specific metrics for the `EquilibriumSolver`:
+- **Gini Coefficient:** Calculated using the Lorenz curve on the final asset distribution.
+- **Top Shares:** Cumulative wealth held by the top 0.1%, 1%, and 10% (targeted in Section IV.D).
+- **Factor Composition:** Labor income share for the top 1% income group (Target: 59% as per Table 4).

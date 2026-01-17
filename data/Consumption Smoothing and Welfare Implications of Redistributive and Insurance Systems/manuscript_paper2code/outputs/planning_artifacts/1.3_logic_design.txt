@@ -1,0 +1,45 @@
+----------------------------------------
+[Required packages]
+- numpy==1.24.3
+- scipy==1.10.1
+- numba==0.57.0
+- pandas==2.0.2
+- matplotlib==3.7.1
+- scikit-learn==1.2.2
+
+----------------------------------------
+[Required Other language third-party packages]
+- No third-party dependencies required
+
+----------------------------------------
+[Logic Analysis]
+- ['config.py', "Contains the 'Config' class. Defines all constants from the paper: J=15 (5-year periods from age 25 to 99), retirement age Jr=9 (age 65), alpha=0.29, delta=0.07, sigma=1.8, eta=1.7, phi=0.2, and G=0.116. Also defines grid dimensions for assets (k), average earnings (e_tilde), and health status (h)."]
+- ['params_generator.py', "Contains 'ParamsGenerator'. Implements the Rouwenhorst method to discretize the AR(1) productivity process into a 6-state Markov chain (z). Loads or generates the gender-specific deterministic wage profiles (epsilon). Defines the 5-state health transition matrices from Table 5. Calculates the survival probability parameters (omega_0 to omega_3) based on the logistic function described in Section 4.2."]
+- ['household_solver.py', "Implements 'HouseholdSolver' using Numba-accelerated functions. Functions: 1. 'utility_function': logarithmic for consumption, power for leisure, including the Hall & Jones constant (vg). 2. 'solve_retirement_phase': Backward induction for ages 15 down to 9, optimizing consumption (c), next-period assets (k'), and medical spending (m) to maximize V_S and V_M. 3. 'solve_working_phase': Backward induction for ages 8 down to 1, optimizing (c, n, k'). 4. 'married_to_single_transition': Handles the value function logic where a spouse dies and the survivor transitions to the 'Single' state."]
+- ['simulation_engine.py', "Implements 'SimulationEngine'. Uses the policy functions (k_prime, n, m) to simulate 50,000 households from age 25 to 99. Tracks assets, productivity shocks, and health status evolution. Specifically handles the probabilistic death of spouses for married couples and the collection/redistribution of bequests."]
+- ['equilibrium_solver.py', "Implements 'EquilibriumSolver'. The outer loop for General Equilibrium. 1. Guess 'r' and premium rate 't'. 2. Calculate 'w' from firm FOC. 3. Call 'HouseholdSolver'. 4. Call 'SimulationEngine' to find aggregate K and N. 5. Update 'r' and 't' based on market clearing (K_demand vs K_supply) and government budget balance (pension + medical + G = tax + premiums)."]
+- ['welfare_analysis.py', "Implements 'WelfareAnalysis'. 1. 'compensating_variation': Calculates the % consumption change between benchmark and counterfactual. 2. 'pass_through_regression': Performs the panel regression (Delta log c on Delta log y) to calculate the insurance coefficient (chi)."]
+- ['main.py', 'Entry point. Coordinates the sequence: 1. Solve Benchmark GE. 2. Solve Counterfactual 1 (No Pension). 3. Solve Counterfactual 2 (No Health Insurance). 4. Solve Counterfactual 3 (Linear Tax). 5. Generate plots (Wealth accumulation, Medical expenses) and tables (Aggregate effects).']
+
+----------------------------------------
+[Task list]
+- config.py
+- params_generator.py
+- household_solver.py
+- simulation_engine.py
+- equilibrium_solver.py
+- welfare_analysis.py
+- main.py
+
+----------------------------------------
+[Full API spec]
+
+
+----------------------------------------
+[Shared Knowledge]
+1. Numerical Optimization: Numba's @njit is critical because the nested loops in VFI (Value Function Iteration) for the 'Married' state space are extremely slow in pure Python. 2. Interpolation: Use linear interpolation for the asset grid 'k' during the solver phase to avoid grid-size-induced jitter in policy functions. 3. Bequests: Bequests are collected from deceased agents and redistributed as a lump sum to all workers (ages 1-8). This requires a fixed-point iteration within the GE loop if bequests are non-negligible.
+
+----------------------------------------
+[Anything UNCLEAR]
+The 'medical expenses' vs 'health status' relationship: While the paper defines a production function for health I(m_j), it also uses a transition matrix H_j based on medical spending decisions. We assume the transition probabilities in Table 5 are modified by the 'new health capital' produced by m_j, but the exact shift in the probability distribution is not explicitly described. We will assume m_j shifts the mean of the next-period health distribution.
+

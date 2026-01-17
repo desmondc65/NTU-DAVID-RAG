@@ -1,0 +1,42 @@
+## config.yaml
+demographics:
+  total_periods: 15        # J=15 (each 5 years, ages 25-99)
+  retirement_period: 9     # Jr=9 (age 65)
+  period_length: 5         # years per period
+
+production:
+  alpha: 0.34              # Capital share
+  delta_annual: 0.0905     # Annual depreciation
+  tfp_psi: 1.78            # Total Factor Productivity (calibrated to w=1)
+
+preferences:
+  beta_annual: 0.9818      # Corresponds to 5-year beta of 0.912
+  frisch_m: 0.68           # Frisch elasticity for males (sigma_m = 1.47)
+  frisch_f: 0.96           # Frisch elasticity for females (sigma_f = 1.04)
+  equivalence_scale: 1.7   # OECD-based for married households
+  fixed_cost_participation:
+    single_m: 0.1
+    married_m: 0.05
+    single_f: 0.15
+    married_f: 0.2
+
+taxation:
+  consumption_tax: 0.05    # tau_c
+  benchmark_top_rate: 0.45
+  reform_top_rate: 0.40
+  optimal_top_rate: 0.69
+  progressivity:
+    single: 0.027
+    married: 0.041
+  threshold_multiplier: 13.0 # Top rate applies at 13x average income
+
+grids:
+  k_min: 0.0
+  k_max: 2000.0
+  k_size: 150
+  e_tilde_size: 40
+
+solver:
+  tolerance_ge: 1.0e-4
+  max_iterations_ge: 50
+  vfi_tolerance: 1.0e-6

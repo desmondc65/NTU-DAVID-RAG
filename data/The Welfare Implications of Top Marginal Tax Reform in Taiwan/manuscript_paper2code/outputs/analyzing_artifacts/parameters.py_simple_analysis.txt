@@ -1,0 +1,60 @@
+Based on the research paper, the provided plan, the design, and the `config.yaml` file, the following is the logic analysis for the `parameters.py` module.
+
+### Logic Analysis: `parameters.py`
+
+The `ModelParams` class serves as the central repository for all structural and calibrated parameters governing the economy. Its primary responsibility is to translate annual frequency data and high-level configuration into the specific 5-year period format required by the overlapping generations (OLG) model.
+
+#### 1. Demographic and Temporal Conversion
+The model operates on 5-year increments ($period\_length = 5$).
+*   **Life Cycle:** Households enter at age 25 ($j=1$), retire at age 65 ($j=J_r=9$), and live until a maximum of 99 ($j=J=15$).
+*   **Discount Factor:** Convert `beta_annual` (0.9818) to the 5-year equivalent $\beta = (0.9818)^5 \approx 0.912$, as specified in the paper and `config.yaml`.
+*   **Depreciation:** Annual $\delta_{annual} = 0.0905$ must be converted to a 5-year depreciation rate. The survival-of-capital formula is $\delta = 1 - (1 - \delta_{annual})^5 \approx 0.377$.
+
+#### 2. Production and Preferences
+*   **Technology:** A Cobb-Douglas production function $Y = \Psi K^\alpha N^{1-\alpha}$ is used. 
+    *   $\alpha = 0.34$ (Capital share).
+    *   $\Psi = 1.78$ (TFP), calibrated to normalize the equilibrium wage $w = 1$.
+*   **Utility Parameters:** 
+    *   The utility function is $u(c, n) = \log c - \theta_g \frac{n^{1+\sigma_g}}{1+\sigma_g} - \phi_{\iota, g} \mathbb{I}_{n>0}$.
+    *   The curvature $\sigma_g$ is derived from the gender-specific Frisch elasticity: $\sigma_g = 1 / Frisch_g$. From `config.yaml`, $\sigma_m = 1/0.68 \approx 1.47$ and $\sigma_f = 1/0.96 \approx 1.04$.
+    *   $\theta_g$ (disutility) and $\phi_{\iota, g}$ (fixed costs) are calibration targets to match hours worked and participation rates (Table 10).
+*   **Equivalence Scale:** $\eta = 1.7$ is applied to married household consumption to account for joint utility.
+
+#### 3. Labor Productivity (The "Superstar" Markov Process)
+The stochastic component $z$ follows a 5-state Markov process to capture the extreme income tail.
+*   **States:** $z = [z_1, z_2, z_3, z_4, z_5]$. Based on Table 11 (Appendix/TABREF7): $z = [1.0, 2.0, 2.85, 5.91, 70.59]$. 
+*   **Transition Matrix ($A$):** A 5x5 matrix representing the probability $Pr(z' | z)$. 
+    *   Ordinary states ($z_1 \dots z_4$) have high persistence but a small probability ($\lambda_{in} = 0.002$) of jumping to the superstar state $z_5$.
+    *   The superstar state $z_5$ has high persistence ($\lambda_{stay} = 0.85$) and a probability of falling back to ordinary states ($\lambda_{out} = 0.038$ for each ordinary state).
+
+#### 4. Tax System and Social Security
+*   **Benabou Tax Function:** $y^d = \lambda \min\{y_b, y_f\}^{1-\tau} + (1 - \tau_{max}) \max\{0, y_f - y_b\}$.
+    *   Progressivity $\tau$: $0.027$ (Singles), $0.041$ (Married).
+    *   Top Rate $\tau_{max}$: Variable ($0.45$ benchmark, $0.40$ reform, $0.69$ optimal).
+    *   Threshold $y_b$: Calculated as the point where the marginal tax rate of the log-linear part equals $\tau_{max}$. According to the paper, this is approximately $13 \times$ average income.
+*   **Consumption Tax:** $\tau_c = 0.05$.
+*   **Social Security:** $SS(\tilde{e}) = \psi \tilde{e}$. $\psi$ (replacement rate) is calibrated to match Pension Exp/GDP (3.6%).
+
+#### 5. State Space Discretization (Grids)
+To handle the "superstar" tail and borrowing constraints, grids must be constructed carefully:
+*   **Asset Grid ($k$):** Needs to be non-linear. Use a power scale or log-scale: $k_i = \text{scale} \times (e^{g \cdot i} - 1)$. 
+    *   Size: 150 points.
+    *   Range: $[0, 2000]$. Dense at the bottom to capture liquidity constraints; sparse at the top to cover "superstar" wealth.
+*   **Average Earnings Grid ($\tilde{e}$):** Tracks lifetime earnings for pension calculation.
+    *   Size: 40 points.
+    *   Range: Based on the maximum possible labor income ($w \cdot z_5 \cdot \max(\epsilon)$).
+
+#### 6. Methods
+*   `__init__`: Initializes all values from `config.yaml` and calculates the 5-year temporal conversions.
+*   `_init_productivity_matrix`: Hardcodes the 5x5 transition matrix and states as per Appendix Table 10.
+*   `_generate_grids`: Creates the $k\_grid$ (non-linear) and $\tilde{e}\_grid$ (linear or log).
+*   `update_calibrated_params(params)`: A dictionary-based interface allowing the calibration loop (in `EconomySimulator`) to update $\beta$, $\theta_g$, $\phi_{\iota, g}$, and $\psi$ until the model moments (e.g., $K/Y$, labor participation) match the target data.
+
+#### Summary of Calibration Targets (to be stored for reference)
+| Variable | Target | Data Value |
+| :--- | :--- | :--- |
+| $\beta$ | Capital-to-Income Ratio ($K/Y$) | 2.1 |
+| $\theta_m, \theta_f$ | Average hours worked | 36.4% (m), 35.3% (f) |
+| $\phi_{\iota, g}$ | Labor participation rate | Table 10 values |
+| $\psi$ | Pension Expenditure / GDP | 3.6% |
+| $z_5, \lambda_{in}$ | Top 1% Income Share | 19.2% |

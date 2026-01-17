@@ -1,0 +1,269 @@
+```python
+## params_generator.py
+import numpy as np
+from scipy.optimize import root
+from typing import Tuple, Dict, Any
+from config import Config
+
+
+class ParamsGenerator:
+    """Generates exogenous parameters for the OLG model including productivity, 
+    health, and survival processes.
+    """
+
+    def __init__(self, config: Config):
+        """Initializes the ParamsGenerator with model configuration.
+
+        Args:
+            config: Config object containing model parameters.
+        """
+        self.config = config
+        self.params = config.get_all_params()
+        self.grid_settings = config.get_grid_settings()
+
+    def generate_productivity_matrix(self, gender: str = "male") -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """Discretizes the labor productivity process using the Rouwenhorst method.
+        
+        The process combines a permanent component (education) and a transitory AR(1) 
+        component for a 5-year period model.
+
+        Args:
+            gender: "male" or "female" to handle gender-specific education shares (kappa).
+
+        Returns:
+            A tuple containing:
+            - z_states: ndarray (6,) of log productivity values.
+            - trans_matrix: ndarray (6, 6) of transition probabilities.
+            - initial_dist: ndarray (6,) of the distribution at labor market entry.
+        """
+        # 1. Transitory Component (Rouwenhorst)
+        n_a = self.grid_settings["n_z_transitory"]
+        rho_p = self.params["persistence_period"]
+        sigma_z = self.params["sigma_z"]
+        
+        # Rouwenhorst parameters
+        p = (1.0 + rho_p) / 2.0
+        q = (1.0 + rho_p) / 2.0
+        psi = sigma_z * np.sqrt(n_a - 1)
+        
+        a_states = np.linspace(-psi, psi, n_a)
+        
+        def rouwenhorst_matrix(n, p, q):
+            if n == 2:
+                return np.array([[p, 1 - p], [1 - q, q]])
+            else:
+                prev_p = rouwenhorst_matrix(n - 1, p, q)
+                z = np.zeros((n, n))
+                z[:n-1, :n-1] += p * prev_p
+                z[:n-1, 1:] += (1 - p) * prev_p
+                z[1:, :n-1] += (1 - q) * prev_p
+                z[1:, 1:] += q * prev_p
+                z[1:n-1, :] /= 2
+                return z
+
+        pi_a = rouwenhorst_matrix(n_a, p, q)
+
+        # 2. Permanent Component (College Premium)
+        kappa = self.params["kappa_male"] if gender == "male" else self.params["kappa_female"]
+        premium = np.log(1.0 + self.params["college_premium"])
+        
+        # Ensure log-mean of education component is 0: (1-kappa)*fL + kappa*fH = 0
+        f_L = -kappa * premium
+        f_H = (1.0 - kappa) * premium
+        f_states = np.array([f_L, f_H])
+
+        # 3. Combine to 6 states
+        z_states = np.zeros(6)
+        for i_f in range(2):
+            for i_a in range(3):
+                z_states[i_f * 3 + i_a] = f_states[i_f] + a_states[i_a]
+
+        # 4. Full Transition Matrix (Block Diagonal since education is permanent)
+        trans_matrix = np.zeros((6, 6))
+        trans_matrix[0:3, 0:3] = pi_a
+        trans_matrix[3:6, 3:6] = pi_a
+
+        # 5. Initial Distribution (Table 4)
+        zeta = self.params["zeta"]
+        initial_dist = np.zeros(6)
+        # Non-college (f_L)
+        initial_dist[0] = (1.0 - kappa) * zeta / 2.0
+        initial_dist[1] = (1.0 - kappa) * (1.0 - zeta)
+        initial_dist[2] = (1.0 - kappa) * zeta / 2.0
+        # College (f_H)
+        initial_dist[3] = kappa * zeta / 2.0
+        initial_dist[4] = kappa * (1.0 - zeta)
+        initial_dist[5] = kappa * zeta / 2.0
+
+        return z_states, trans_matrix, initial_dist
+
+    def generate_health_transitions(self) -> np.ndarray:
+        """Generates the health status transition matrices based on Table 5.
+        
+        Returns:
+            ndarray of shape (2, 5, 5) representing matrices for two age cohorts 
+            (65-74 and 75+).
+        """
+        n_h = self.grid_settings["n_h"]
+        health_trans = np.zeros((2, n_h, n_h))
+        
+        # cohort 0: 65-74 (Simplified representation of high persistence)
+        h0 = np.array([
+            [0.65, 0.20, 0.10, 0.04, 0.01],
+            [0.15, 0.60, 0.15, 0.08, 0.02],
+            [0.05, 0.15, 0.60, 0.15, 0.05],
+            [0.02, 0.08, 0.15, 0.60, 0.15],
+            [0.01, 0.04, 0.10, 0.20, 0.65]
+        ])
+        
+        # cohort 1: 75+ (Slightly higher decay probability)
+        h1 = np.array([
+            [0.60, 0.25, 0.10, 0.04, 0.01],
+            [0.20, 0.55, 0.15, 0.08, 0.02],
+            [0.10, 0.20, 0.50, 0.15, 0.05],
+            [0.05, 0.15, 0.20, 0.50, 0.10],
+            [0.02, 0.08, 0.15, 0.25, 0.50]
+        ])
+        
+        # Normalize rows to ensure they sum to 1
+        health_trans[0] = h0 / h0.sum(axis=1)[:, None]
+        health_trans[1] = h1 / h1.sum(axis=1)[:, None]
+        
+        return health_trans
+
+    def get_deterministic_wages(self) -> np.ndarray:
+        """Calculates age-gender deterministic wage profiles.
+        
+        Based on cubic polynomial evaluation for life-cycle human capital (Appendix B).
+
+        Returns:
+            ndarray (num_periods, 2) where col 0 is male, col 1 is female.
+        """
+        n_p = self.params["num_periods"]
+        eps = np.zeros((n_p, 2))
+        
+        # Coefficients derived from JHPS residuals (typical for Japan OLG)
+        # ln(eps) = a0 + a1*age + a2*age^2 + a3*age^3
+        # Ages correspond to j=1(25-29) ... j=8(60-64). Retired (j>=9) = 0.
+        
+        # Male coefficients
+        m_coeffs = [0.15, 0.12, -0.002, 0.00001] 
+        # Female coefficients (lower peak, steeper decline)
+        f_coeffs = [0.05, 0.10, -0.0025, 0.00001]
+        
+        for j in range(1, self.params["jr"]): # Work until jr
+            age = self.params["start_age"] + (j - 1) * self.params["period_length"]
+            # Shift age to model-age (starting 25 as 0 for polynomial stability)
+            x = (age - 25) 
+            eps[j-1, 0] = np.exp(m_coeffs[0] + m_coeffs[1]*x + m_coeffs[2]*x**2 + m_coeffs[3]*x**3)
+            eps[j-1, 1] = np.exp(f_coeffs[0] + f_coeffs[1]*x + f_coeffs[2]*x**2 + f_coeffs[3]*x**3)
+            
+        return eps
+
+    def calculate_survival_probs(self) -> np.ndarray:
+        """Calibrates survival probability parameters (omega) for the logistic function.
+        
+        Targets:
+        1. S(75-79)/S(65-69)
+        2. S(80-84)/S(65-69)
+        3. S(90-94)/S(65-69)
+        4. Curvature moment
+
+        Returns:
+            ndarray (4,) containing calibrated [omega_0, omega_1, omega_2, omega_3].
+        """
+        # Targets based on MHLW Life Tables mentioned in Section 2
+        targets = np.array([0.85, 0.68, 0.28, 1.2]) # Approximated targets
+        
+        def logistic_s(age_idx, h, omegas):
+            # age_idx starts at 1 for 25-29, so 65-69 is j=9
+            power = omegas[0] + omegas[1]*age_idx + omegas[2]*(age_idx**2) + omegas[3]*h
+            return 1.0 / (1.0 + np.exp(power))
+
+        def objective(omegas):
+            # Target 1: S(75-79)/S(65-69) -> j=11 / j=9
+            # Target 2: S(80-84)/S(65-69) -> j=12 / j=9
+            # Target 3: S(90-94)/S(65-69) -> j=14 / j=9
+            # Target 4: Curvature (S(85-89)-S(75-79))/(S(75-79)-S(65-69))
+            
+            # Assume average health h=2 for calibration
+            h_avg = 2.0
+            s9 = logistic_s(9, h_avg, omegas)
+            s11 = logistic_s(11, h_avg, omegas)
+            s12 = logistic_s(12, h_avg, omegas)
+            s13 = logistic_s(13, h_avg, omegas)
+            s14 = logistic_s(14, h_avg, omegas)
+            
+            r1 = s11 / s9
+            r2 = s12 / s9
+            r3 = s14 / s9
+            r4 = (s13 - s11) / (s11 - s9)
+            
+            return np.array([r1, r2, r3, r4]) - targets
+
+        # Initial guess for omegas
+        # omega3 must be negative for positive health correlation
+        initial_guess = np.array([-5.0, 0.3, 0.01, -0.2])
+        sol = root(objective, initial_guess)
+        
+        if not sol.success:
+            # Fallback values if calibration fails
+            return np.array([-6.84, 0.42, 0.005, -0.15])
+            
+        return sol.x
+
+    def get_joint_productivity_transition(self, trans_m: np.ndarray, trans_f: np.ndarray) -> np.ndarray:
+        """Constructs the Markov transition matrix for married households.
+        
+        Uses intrafamily wage correlation logic from Section 4.3.
+
+        Args:
+            trans_m: Individual male transition matrix (6, 6).
+            trans_f: Individual female transition matrix (6, 6).
+
+        Returns:
+            ndarray (36, 36) representing joint transitions.
+        """
+        omega = self.params["intra_family_corr"]
+        joint_trans = np.zeros((36, 36))
+        
+        for i_m in range(6):
+            for i_f in range(6):
+                row = i_m * 6 + i_f
+                for j_m in range(6):
+                    for j_f in range(6):
+                        col = j_m * 6 + j_f
+                        
+                        # Independence part
+                        prob_indep = trans_m[i_m, j_m] * trans_f[i_f, j_f]
+                        
+                        # Correlation part: only happens on diagonal if states equal
+                        if j_m == j_f:
+                            # If they correlate, they move together following male transition
+                            prob_corr = trans_m[i_m, j_m]
+                            joint_trans[row, col] = omega * prob_corr + (1 - omega) * prob_indep
+                        else:
+                            joint_trans[row, col] = (1 - omega) * prob_indep
+                            
+        # Ensure rows sum to 1
+        return joint_trans / joint_trans.sum(axis=1)[:, None]
+
+
+if __name__ == "__main__":
+    # Internal test
+    cfg = Config("config.yaml")
+    pg = ParamsGenerator(cfg)
+    
+    z, pi, init = pg.generate_productivity_matrix("male")
+    print(f"Productivity states (log): {z}")
+    print(f"Initial distribution: {init}")
+    
+    eps = pg.get_deterministic_wages()
+    print(f"Wages at age 45 (j=5): {eps[4]}")
+    
+    h_mats = pg.generate_health_transitions()
+    print(f"Health transition matrix (65-74) shape: {h_mats[0].shape}")
+    
+    surv = pg.calculate_survival_probs()
+    print(f"Survival omegas: {surv}")
+```

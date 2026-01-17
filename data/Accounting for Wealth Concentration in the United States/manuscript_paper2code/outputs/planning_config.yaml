@@ -1,0 +1,41 @@
+## config.yaml
+model_parameters:
+  period_length_years: 5
+  total_periods: 16
+  retirement_period: 10 # Age 65
+  sigma_c: 1.5 # Inverse elasticity of intertemporal substitution
+  sigma_l: 1.22 # Inverse elasticity of labor supply (Frisch = 0.82)
+  theta: 2.5 # Initial guess for disutility of work (calibrated to 35% hours)
+  beta: 0.88 # 5-year discount factor (approx 0.974 annual)
+  alpha: 0.33 # Capital share in production
+  depreciation_annual: 0.045
+  aggregate_tfp: 1.55
+
+labor_productivity:
+  ordinary_states: 6
+  extraordinary_states: 2
+  ar1_persistence_annual: 0.97
+  variance_ratio_permanent: 0.6
+  extraordinary_in_prob: 0.01 # lambda_in (placeholder, needs calibration)
+  extraordinary_out_prob: 0.25 # lambda_out (placeholder)
+
+capital_returns:
+  states: 3 # [Low, High, Top]
+  equilibrium_return_annual: 0.045
+  top_return_annual: 0.227
+  high_return_annual: 0.067
+  low_return_annual: 0.0
+
+tax_system:
+  corporate_tax_rate: 0.236
+  sales_tax_rate: 0.05
+  estate_tax_threshold_top_pct: 0.02
+  estate_tax_rate: 0.20
+  income_tax_max_marginal: 0.396
+
+calibration_targets:
+  capital_income_ratio: 3.0
+  avg_work_hours: 0.35
+  top_1pct_wealth_share: 0.35
+  top_01pct_wealth_share: 0.13
+  bequest_to_wealth_ratio: 0.02 # Example target from Guvenen et al.

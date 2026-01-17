@@ -1,0 +1,61 @@
+The `visualizer.py` module is responsible for translating the quantitative outputs of the life cycle model into the graphical representations described in the research paper. It serves as the primary tool for evaluating the distributional and welfare impacts of the 2017 Taiwan tax reform and identifying the optimal top marginal tax rate.
+
+### 1. Analysis of Figure 4: Welfare Curves (Identifying the 69% Peak)
+*   **Purpose**: To visualize the social welfare functions ($W_N$ for newborns and $W_U$ for the utilitarian aggregate) as a function of the top marginal tax rate $\tau_{max}$, identifying the optimal point.
+*   **Inputs**: 
+    *   `tax_range`: A list or array of $\tau_{max}$ values (e.g., from 0.0 to 0.9).
+    *   `welfare_scores`: A dictionary containing lists of Consumption Equivalent Variation (CEV) values for both `newborn` and `utilitarian` measures relative to the benchmark.
+*   **Logic**:
+    *   **X-Axis**: Top marginal tax rate $\tau_{max}$.
+    *   **Y-Axis**: Percentage change in lifetime consumption (CEV).
+    *   **Plotting**: Dual line plots. Reference `taxation.optimal_top_rate` from `config.yaml` (0.69) to verify if the peak in the simulated data aligns with the paper's findings.
+    *   **Annotations**: Vertical lines at the benchmark rate (0.45), reform rate (0.40), and the identified optimal rate (0.69).
+
+### 2. Analysis of Figure 5: Life-Cycle Consumption Profiles
+*   **Purpose**: To demonstrate the efficiency trade-offs across different age groups under different tax regimes.
+*   **Inputs**: `results` dictionary containing age-specific mean consumption for:
+    *   Benchmark ($\tau_{max} = 0.45$)
+    *   Reform ($\tau_{max} = 0.40$)
+    *   Optimal ($\tau_{max} = 0.69$)
+*   **Logic**:
+    *   **X-Axis**: Age cohorts, derived from `demographics.total_periods` (15 periods) mapped to actual ages (25-29, ..., 95-99).
+    *   **Y-Axis**: Average consumption levels.
+    *   **Subplots**: Two panels—one for Single Households (combined or separate genders) and one for Married Households (using `preferences.equivalence_scale` of 1.7).
+    *   **Interpretation Logic**: The plot must show that the reform (40%) shifts consumption towards older cohorts, while the optimal tax (69%) benefits younger cohorts through lower insurance premiums and redistribution.
+
+### 3. Analysis of Figure 6: Consumption Insurance (Variance of Log Consumption)
+*   **Purpose**: To visualize the impact of the tax system on consumption smoothing (insurance effect).
+*   **Inputs**: `results` dictionary containing the variance of log consumption by age for each scenario.
+*   **Logic**:
+    *   **X-Axis**: Age.
+    *   **Y-Axis**: $Var(\log c)$.
+    *   **Significance**: A lower variance in the optimal scenario (69%) compared to the reform scenario (40%) indicates improved consumption insurance, especially for older households approaching the `demographics.retirement_period` (Jr=9).
+
+### 4. Analysis of Figure 8: Gini Coefficient Comparison
+*   **Purpose**: To compare the overall economic inequality across the three scenarios.
+*   **Inputs**: `results` dictionary containing Gini coefficients for Wealth, Income, and Consumption for each steady state.
+*   **Logic**:
+    *   **Format**: Grouped bar charts.
+    *   **Groups**: Three bars per category (Benchmark, Reform, Optimal).
+    *   **Categories**: Wealth Gini, Income Gini, Consumption Gini.
+    *   **Validation**: The plot should reflect that the `reform_top_rate` (0.40) increases the Gini, while the `optimal_top_rate` (0.69) significantly reduces it (e.g., Income Gini reduction of ~2.96% as per Section 5.2).
+
+### 5. Analysis of Figure 7: Top Shares Distribution (Redistribution)
+*   **Purpose**: To visualize the concentration of resources in the top 1% and 0.1% (Superstar states).
+*   **Inputs**: `results` dictionary containing the share of total wealth, income, and consumption held by the top percentiles.
+*   **Logic**:
+    *   **Data Source**: Calculated from the stationary distribution $\Gamma$ and the productivity state $z_5$.
+    *   **Format**: Comparative bar charts.
+    *   **Highlight**: Show the "superstar" effect where the top 1% wealth share increases to 22.6% in the reform scenario and drops to 14.2% in the optimal scenario.
+
+### 6. Technical Implementation Details (Styling and Standards)
+*   **Coordinate System**: All age-related plots must use a 5-year step reflecting `demographics.period_length`.
+*   **Scaling**: Consumption and Income values should be normalized to the benchmark mean to ensure comparability.
+*   **Color Palette**: Distinct colors for Scenario 1 (Benchmark: 45%), Scenario 2 (Reform: 40%), and Scenario 3 (Optimal: 69%).
+*   **Libraries**: Use `matplotlib` for core plotting and `seaborn` for the statistical distribution visualizations (Gini bars and Lorenz curves).
+
+### Summary of `Visualizer` Interface Mapping
+*   `plot_consumption_profiles`: Handles life-cycle efficiency analysis (Figure 5).
+*   `plot_gini_comparison`: Handles inequality assessment (Figure 8).
+*   `plot_welfare_curve`: Handles the search for the optimal $\tau_{max}$ (Figure 4).
+*   *Note*: Internally, these functions will process nested dictionaries containing simulation results from `EconomySimulator` and `WelfareAnalyst`.

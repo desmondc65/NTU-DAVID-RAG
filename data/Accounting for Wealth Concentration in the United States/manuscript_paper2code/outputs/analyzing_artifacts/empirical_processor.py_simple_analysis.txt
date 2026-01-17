@@ -1,0 +1,59 @@
+Based on the research paper, the specified plan, and the design requirements, here is the logic analysis for the `empirical_processor.py` module.
+
+### 1. Data Loading and Preprocessing
+The analysis must handle multiple triennial waves of the Survey of Consumer Finances (SCF) from 2001 to 2019. 
+*   **Variable Construction**:
+    *   **Net Worth**: Defined as total assets minus total liabilities (directly provided by SCF).
+    *   **Market Income**: Sum of wages and salary, business and farm income, interest and dividend income, private pension withdrawals, and realized capital gains.
+    *   **Earnings**: Wage and salary income + imputed labor income from business owners.
+*   **Weighting**: All statistical calculations (means, Ginis, shares) must use the SCF weights (`X42001`) to represent the US population accurately.
+*   **Inflation Adjustment**: Adjust all nominal values to a common base year (e.g., 2019 dollars) using the CPI.
+
+### 2. Labor Income Imputation Logic
+A crucial step is identifying the "imputation sample" and apportioning business income.
+*   **Sample Selection**: 
+    1.  Households reporting positive active business income/equity but zero wage/salary income.
+    2.  Households where the head/spouse is self-employed in their main job and reports no salary drawn from their actively managed business.
+*   **The Regression**: To determine capital’s share ($\alpha$), implement the following log-linear specification:
+    $$\text{sign}(Y_i) \cdot \ln(1 + |Y_i|) = \text{const} + \alpha \cdot \ln(K_i) + \beta \cdot \text{Controls} + \epsilon_i$$
+    *   $Y_i$: Total business income.
+    *   $K_i$: Active business equity.
+    *   **Controls**: Education (categories), Age, Race, Gender, Occupation, Survey Year, and total hours worked by head/spouse for the business.
+*   **Imputation Implementation**: 
+    *   Following the paper's estimate, set $\alpha = 0.25$ (capital share).
+    *   **Labor Income** for the imputation sample = $0.75 \times \text{Active Business Income}$.
+    *   **Labor Income** for everyone else = Reported Wages/Salaries.
+
+### 3. Implied Rate of Return Calculation (Equation 2)
+The processor must calculate the relative rates of return $r_i/r_0$ to discipline the model’s return heterogeneity.
+*   **Reference Group ($0$)**: The bottom 90% of the income or wealth distribution.
+*   **Target Group ($i$)**: Top 0.1%, 1%, 5%, 10%.
+*   **Variables**:
+    *   $\lambda_i$: Labor income share of group $i = e_i / (e_i + \text{capital\_income}_i)$.
+    *   $e_{i/0}$: Ratio of average earnings in group $i$ to group $0$.
+    *   $k_{i/0}$: Ratio of average assets in group $i$ to group $0$.
+*   **Formula**: 
+    $$ \frac{r_i}{r_0} = \frac{e_{i/0}}{k_{i/0}} \cdot \frac{1/\lambda_i - 1}{1/\lambda_0 - 1} $$
+*   **Translation to Levels**: Multiply the relative returns by the aggregate target return (4.5% annual as per `config.yaml` `capital_returns.equilibrium_return_annual`).
+
+### 4. Target Moments for Calibration
+The `get_calibration_moments` method must output a dictionary that maps to the `calibration_targets` in `config.yaml`.
+*   **Wealth Distribution**: Gini coefficient (including negative values) and top shares (0.1%, 1%, 5%, 10%).
+*   **Income/Earnings Shares**: Top 1% and 0.1% shares of total market income and total earnings.
+*   **Joint Distribution**: Share of total wealth held by the top 1% of earners (Table 2).
+*   **Factor Composition**: Labor share of total income for the top 0.1%, 1%, and 10% income groups (Table 3).
+*   **Bequest Targets**: Although bequests are hard to measure in SCF, use the 2% estate tax threshold and top 2% share of total bequests (40%) as mentioned in Section IV.F.
+
+### 5. Robustness Handling
+The processor must support toggling specific definitions to replicate Section VII.B:
+*   **Conservative Case**: A flag to allocate 100% of active business income to capital (to bound the labor share importance from below).
+*   **Capital Gains**: Support metrics calculation both "with" and "without" realized capital gains to match the whiskers in Figure 1.
+
+### 6. Interface Consistency
+*   Ensure `impute_business_labor_income` returns a cleaned DataFrame that other methods can use to avoid redundant computation.
+*   Use `statsmodels.formula.api` for the imputation regression to handle categorical controls easily.
+*   In `calculate_implied_returns`, ensure the base group ($0$) is correctly partitioned as the bottom 90% to prevent overlapping with top percentiles.
+
+### 7. Reference to Config
+*   **Target Rate**: Use `config.yaml` `capital_returns.equilibrium_return_annual` (4.5%) as the anchor for converting relative rates to absolute percentages.
+*   **Target Shares**: Validate calculated moments against `calibration_targets` (e.g., `top_1pct_wealth_share: 0.35`).

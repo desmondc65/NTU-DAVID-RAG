@@ -1,0 +1,70 @@
+In accordance with the research paper, the model design, and the technical specifications in `config.yaml`, the following logic analysis details the implementation of the `WelfareAnalyst` class.
+
+### 1. Objective and Theoretical Context
+The `WelfareAnalyst` is responsible for evaluating the impact of tax reforms (e.g., the 2017 reform reducing the top rate from 45% to 40% and the search for an optimal 69% rate) on social welfare. Per Section 2.5 and 5.2 of the paper, welfare is quantified using two primary measures:
+1.  **Ex-ante Newborn Welfare ($W_N$):** The expected lifetime utility of a household entering the economy at age 25 ($j=1$), before productivity shocks are realized.
+2.  **Utilitarian Social Welfare ($W_U$):** The sum of lifetime utilities of all living households in the stationary distribution, weighted by their population share.
+3.  **Consumption Equivalent Variation (CEV):** The percentage change in consumption required in the benchmark steady state to make an agent indifferent to the new policy steady state.
+
+### 2. Log-Utility and CEV Derivation
+The utility function is additively separable and logarithmic in consumption:
+$$u(c, n) = \log c - \theta_g \frac{n^{1+\sigma_g}}{1 + \sigma_g} - \phi_{\iota, g} \mathbb{I}_{n>0}$$
+Given the property $\log(c(1+\Delta)) = \log c + \log(1+\Delta)$, a uniform percentage change $\Delta$ in consumption results in an additive constant in the lifetime value function.
+
+#### For Single Households:
+The value function $V^S$ scaled by $(1+\Delta)$ becomes:
+$$V^S_{scaled} = V^S_{base} + \log(1+\Delta) \cdot EDL^S$$
+Where $EDL^S$ (Expected Discounted Lifetime) is $\mathbb{E}[\sum_{j=1}^{J} \beta^{j-1} \cdot \text{survival\_prob}]$.
+
+#### For Married Households:
+The joint utility is $U = u(c/\eta, n_m) + u(c/\eta, n_f)$. Scaling $c$ by $(1+\Delta)$ adds $\log(1+\Delta)$ to *each* spouse's utility:
+$$V^M_{scaled} = V^M_{base} + 2 \cdot \log(1+\Delta) \cdot EDL^M$$
+The factor of 2 accounts for the two members of the household.
+
+### 3. Logic Analysis for `WelfareAnalyst`
+
+#### A. Data Preparation and Expected Discounted Lifetime (EDL)
+Before calculating welfare, the analyst must compute the EDL for each household type based on survival probabilities provided by `DataHandler` and the discount factor $\beta$ from `config.yaml`.
+*   **Annual to 5-Year Beta:** Convert `preferences.beta_annual` to the model period: $\beta = (\beta_{annual})^5$.
+*   **EDL Calculation:** 
+    *   For singles (gender $g$): $EDL^S_g = \sum_{j=1}^{J} \beta^{j-1} (\prod_{m=1}^{j-1} s_{g, m})$.
+    *   For married: $EDL^M = \sum_{j=1}^{J} \beta^{j-1} (\prod_{m=1}^{j-1} s_{m, m} \cdot s_{f, m} + \dots)$. (Note: The married EDL must account for the paper's assumption that survivors become single after a spouse dies in retirement).
+
+#### B. Method: `compute_newborn_welfare(steady_state)`
+This method calculates $W_N$ using the distribution and value functions at age $j=1$.
+1.  **Inputs:** `steady_state` dictionary containing `value_funcs` ($V^S, V^M$) and the stationary distribution $\Gamma$ restricted to $j=1$.
+2.  **Logic:**
+    *   Extract newborn distribution: households start with $k=0$ (assets) and $\tilde{e}=0$ (historical earnings).
+    *   Integrate $V(1, k=0, z, \tilde{e}=0)$ over the initial productivity distribution $F_z(z)$.
+    *   $W_N = \sum_{g \in \{m,f\}} \text{share}^S_g \int V^S(1, \dots) d\Gamma^S + \text{share}^M \int V^M(1, \dots) d\Gamma^M$.
+
+#### C. Method: `compute_utilitarian_welfare(steady_state)`
+This method calculates $W_U$ by aggregating utility across the entire population.
+1.  **Inputs:** `steady_state` dictionary containing the full stationary distribution $\Gamma$ and value functions ($V, R$).
+2.  **Logic:**
+    *   Iterate through all states $(j, k, z, \tilde{e})$ for all household types.
+    *   Sum $V \cdot \Gamma$ for all living agents.
+    *   Ensure weights reflect the mass of households in the stationary distribution (which already incorporates survival probabilities).
+
+#### D. Method: `calculate_cev(base_results, new_results)`
+This is the core evaluation metric.
+1.  **Ex-ante CEV ($\Delta_N$):**
+    *   Calculate $W_N^{base}$ and $W_N^{new}$.
+    *   Let $L_{avg}$ be the population-weighted newborn EDL: $L_{avg} = \sum (\text{Type\_Share} \cdot \text{Household\_Size} \cdot EDL_{Type})$.
+    *   $\Delta_N = \exp\left( \frac{W_N^{new} - W_N^{base}}{L_{avg}} \right) - 1$.
+2.  **Utilitarian CEV ($\Delta_U$):**
+    *   Calculate $W_U^{base}$ and $W_U^{new}$.
+    *   Divide the difference by the aggregate discounted remaining life years of the current population.
+    *   $\Delta_U = \exp\left( \frac{W_U^{new} - W_U^{base}}{L_{pop\_agg}} \right) - 1$.
+
+### 4. Integration with Configuration (`config.yaml`)
+The analyst must reference the following parameters:
+*   `demographics.total_periods`: For summation limits.
+*   `preferences.beta_annual`: For discounting.
+*   `preferences.equivalence_scale`: To verify the joint utility scaling logic.
+*   `taxation.benchmark_top_rate`, `taxation.reform_top_rate`, `taxation.optimal_top_rate`: To label the comparisons.
+
+### 5. Implementation Considerations
+*   **Precision:** Use high-precision floats for welfare values as differences (e.g., 0.30% change in consumption) can be small relative to absolute utility values.
+*   **Stationary Distribution:** Ensure the distribution $\Gamma$ used in $W_U$ is normalized so that the total population of men and women is 1 (as per Section 2.1).
+*   **Retirement Phase:** The calculation must correctly transition from the working phase value functions $V$ to retirement value functions $R$ at $j=J_r$ (age 65).

@@ -1,0 +1,59 @@
+The logic for `steady_state.py` focuses on finding a stationary equilibrium where household decisions are consistent with aggregate factor prices and government budget constraints. This involves a nested iteration process.
+
+### 1. Objective and Overview
+The `SteadyStateSolver` class finds the baseline equilibrium (2013 U.S. economy) by iterating on the aggregate variables: Capital ($K$), Labor ($L$), and Accidental Bequests ($q$). The equilibrium is reached when the values used for factor prices in the household problem are consistent with the values resulting from the aggregation of individual behaviors.
+
+### 2. Dependency Integration
+*   **`Config`**: Retrieves `production.theta`, `production.delta`, `production.A_target`, `production.mu`, `production.nu` for firm FOCs, and `solver.damping_factor`, `solver.tolerance` for convergence.
+*   **`HouseholdSolver`**: Solves the backward induction given prices ($r, w$) and transfers ($q$).
+*   **`EconomySimulator`**: Computes the stationary distribution and calculates the resulting aggregate $K, L,$ and $Q$ (total accidental bequests).
+
+### 3. Factor Price Logic (Firm FOCs)
+Factor prices are derived from the representative firm's Cobb-Douglas production function:
+1.  **Production**: $Y_t = A K_t^{\theta} L_t^{1-\theta}$.
+2.  **Interest Rate ($r$)**: $r_t = \theta A (K_t / L_t)^{\theta-1} - \delta$.
+3.  **Wage Rate ($w$)**: $w_t = (1-\theta) A (K_t / L_t)^{\theta}$.
+*   *Calibration Reference*: In the baseline, $A$ is adjusted (`A_target`) such that $w=1.0$ when $K/Y=3.0$ and $r=0.05$.
+
+### 4. Equilibrium Iteration Logic (`find_equilibrium`)
+The solver utilizes a fixed-point iteration or a multi-dimensional root-finder (e.g., Broyden or `scipy.optimize.root` via `check_market_clearing`).
+
+**The Outer Loop Process:**
+1.  **Initialize Guesses**:
+    *   Initial guess for $K$ and $L$ (or $K/L$ ratio).
+    *   Initial guess for accidental bequests $q$ (uniform distribution to working-age adults $i < I_R$).
+    *   Set Social Security adjustment factor $\psi = 1.0$ (baseline).
+2.  **Inner Loop - Household Step**:
+    *   Calculate $r$ and $w$ from current guesses.
+    *   Call `hs.solve_backward_induction(prices, policy)`. This computes optimal $c, h_1, h_2, a'$ for all states.
+3.  **Simulation Step**:
+    *   Call `es.simulate_forward(policy_functions)`.
+    *   This generates the stationary population density $x(s)$ by starting newborns at $a=0, b_1=0, b_2=0$ and iterating ages $21 \dots 100$.
+4.  **Aggregation**:
+    *   Retrieve $K_{new} = \sum a \cdot x(s)$ (Total Wealth).
+    *   Retrieve $L_{new} = \sum (e_1 h_1 + e_2 h_2) \cdot x(s)$ (Labor Efficiency Units).
+    *   Calculate $Q_{new}$ (Total wealth of deceased agents, distributed to $i < I_R$).
+5.  **Convergence Check**:
+    *   Compare $(K, L, q)$ with $(K_{new}, L_{new}, q_{new})$.
+    *   Tolerance is defined by `config.solver.tolerance`.
+6.  **Update Guesses**:
+    *   Update guesses using `damping_factor` from `config.yaml`:
+        *   $K_{next} = (1 - \text{damp}) \cdot K + \text{damp} \cdot K_{new}$
+        *   $L_{next} = (1 - \text{damp}) \cdot L + \text{damp} \cdot L_{new}$
+        *   $q_{next} = (1 - \text{damp}) \cdot q + \text{damp} \cdot q_{new}$
+
+### 5. Government Budget Finalization
+Once $K, L, q$ converge:
+*   **OASI Balance**: Calculate $T_{P,t}$ (payroll tax revenue) and $T_{RSS,t}$ (benefit expenditure).
+*   **Residual Calculation**: Compute the OASI residual $T_{RO} = T_{P,t} - T_{RSS,t}$. This value is stored to be kept constant during policy experiments.
+*   **Income Tax**: Verify that total income tax revenue $T_{I,t}$ aligns with the 10% of GDP target mentioned in Section 3.5.
+
+### 6. Data Interface Implementation
+According to the design:
+*   `find_equilibrium(guess_k_l, guess_bequests)`: Manages the loop and returns a dictionary containing converged prices, policy functions, and the distribution.
+*   `check_market_clearing(guess)`: A helper function that takes a vector `[K, L, q]`, performs one iteration of the Household/Simulator steps, and returns the vector of residuals `[K - K_new, L - L_new, q - q_new]`.
+
+### 7. Strategic Calibration Alignment
+*   **Productivity Growth**: Aggregate variables ($K, L, Y, q, a, b$) are growth-adjusted by $(1+\mu)$ and $(1+\nu)$ as per Section 2.3.
+*   **Accidental Bequests**: Distributed uniformly to all working-age adults ($i < I_R$) as per the definition in Section 2.3.
+*   **Firm Markets**: Markets clear when $K = W_P$ (private wealth) and $L = \text{aggregate efficiency hours}$.

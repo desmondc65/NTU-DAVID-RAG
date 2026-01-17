@@ -1,0 +1,78 @@
+The `household_solver.py` module is the core computational engine of the OLG model. It solves the life-cycle optimization problem for heterogeneous agents through backward induction. The following logic analysis details the implementation requirements, aligning with the paper's methodology and the provided design.
+
+### 1. Functional Overview
+The solver iterates backward from the maximum age ($I=100$) to the entry age ($i=21$). At each age, it solves a joint optimization problem for consumption, labor supply, and savings, accounting for marital status, wage shocks, and Social Security rules.
+
+### 2. State Space and Decision Variables
+*   **State Variables ($s$):**
+    *   `i` (Age): 21 to 100.
+    *   `m` (Marital Status): 0 (Married), 1 (Single Male), 2 (Single Female).
+    *   `a` (Wealth): 27 grid nodes.
+    *   `b1, b2` (Historical Earnings/AIME): 15 nodes each.
+    *   `e1, e2` (Earning Ability Shocks): 5 nodes each (Rouwenhorst discretization).
+*   **Decision Variables:**
+    *   `c` (Consumption).
+    *   `h1, h2` (Work hours for husband and wife/single).
+    *   `a'` (End-of-period wealth).
+
+### 3. Logic for the Unitary Household Problem
+The paper assumes a unitary utility model for married couples (perfectly altruistic).
+
+*   **Utility Specification (Appendix A.1):**
+    *   **Single ($m=1, 2$):** $\tilde{u}_j(c, h_j) = \frac{c^\alpha (1 - \kappa n_{m,i} - h_j)^{1-\alpha}}{1-\gamma}$.
+    *   **Married ($m=0$):** $u(c, h_1, h_2) = \tilde{u}_1(\frac{c}{1+\lambda}, h_1) + \tilde{u}_2(\frac{c}{1+\lambda}, h_2)$.
+    *   Reference `config.yaml`: `preferences.gamma`, `preferences.alpha`, `preferences.lambda_joint`.
+*   **Time Cost:** $\kappa$ applies to female work hours (`config.yaml`: `household_preferences.kappa`).
+*   **Budget Constraint:** 
+    $c + (1+\mu)a' = (1+r)a + w e_1 h_1 + w e_2 h_2 - \tau_I(y; m) - \tau_P(y_1, y_2) + tr_{SS} + (1+1_{\{m=0\}})(tr_{LS} + q)$.
+    *   $tr_{LS}$: Lump-sum transfer.
+    *   $q$: Accidental bequests.
+    *   $\tau_I$: Progressive income tax (`policy.income_tax`).
+    *   $\tau_P$: Payroll tax (`policy.tau_p`).
+
+### 4. Discrete Choice: Utility from Staying at Home
+The model incorporates a discrete labor participation decision by adding a random utility $\chi$ if a member stays at home ($h=0$).
+
+*   **Stochastic Participation:**
+    1.  Solve the "working" case ($h > 0$) using the Kuhn-Tucker conditions.
+    2.  Solve the "staying home" case ($h = 0$).
+    3.  Compare values. Because $\chi$ follows a Gamma distribution, the expected value function $V(s)$ must integrate over the distribution of $\chi$ (Appendix A.2).
+    4.  The probability of participation is determined by whether the utility gain from working exceeds the realization of $\chi$.
+
+### 5. Implementation of Kuhn-Tucker Conditions
+To solve the interior/boundary problem for $(c, h_1, h_2)$, the system of nonlinear equations derived from the FOCs (Equations 18-20) is solved using a complementarity approach.
+
+*   **Fischer-Burmeister Function:**
+    Replace the `min(u, v)` and `max(u, v)` operators with $\phi(u, v) = u + v - \sqrt{u^2 + v^2}$ to make the system differentiable for the Newton-type solver (`scipy.optimize.root` with method 'hybr').
+*   **Marginal Values:** 
+    Solving the Euler equation requires $E[V_a(s', t+1)]$ and $E[V_{b}(s', t+1)]$. These are computed using the envelope theorem and multilinear interpolation over the $a'$ and $b'$ grids for the next period.
+
+### 6. Social Security Integration
+*   The `HouseholdSolver` interacts with the `SocialSecurity` class to determine $tr_{SS}$.
+*   **PIA Calculation:** Use the 3-bracket replacement logic (90/32/15) based on current $b_1, b_2$.
+*   **Spousal/Survivor Benefits:** 
+    *   If $m=0$: $\max(\psi(b_1)+\psi(b_2), 1.5\psi(b_1), 1.5\psi(b_2))$.
+    *   If widowed: $\max(\text{own}, \text{survivor})$.
+*   **AIME Law of Motion:** $b'$ is updated for $i < I_R$ using the transition rule: $b' = \frac{(i-21)b + \min(w e h, \vartheta_{max})}{i-20}$.
+
+### 7. Performance and Numerical Stability
+*   **Numba JIT:** The nested loops over the state space nodes must be JIT-compiled. The objective function and the Fischer-Burmeister equations should be structured to be Numba-compatible.
+*   **Interpolation:** Use `numba`-optimized linear interpolation to evaluate the value function at $a'$ (which will likely not fall exactly on grid nodes).
+*   **Terminal Period:** At $i=100$, $a'=0$ and $h=0$. $c$ is simply the total remaining resources. This provides the base case for the recursion.
+
+### 8. References to Config and State
+*   **AIME Grids:** `grid_sizes.b` (15 nodes).
+*   **Wealth Grids:** `grid_sizes.a` (27 nodes).
+*   **AIME Bend Points:** `policy.oasi_thresholds`.
+*   **Growth Adjustments:** All value/wealth variables are normalized by $(1+\mu)$ and $(1+\nu)$ as per `production.mu` and `production.nu`.
+
+### 9. Program Flow in `solve_vfi()`
+1.  **Initialize:** Create empty arrays for value functions $V(i, a, b_1, b_2, e_1, e_2, m)$ and policy functions.
+2.  **Age 100:** Direct calculation of $V$ and $C$.
+3.  **Age $I-1 \dots 21$:**
+    *   For each marital status $m \in \{0, 1, 2\}$:
+        *   For each shock combination $(e_1, e_2)$:
+            *   Parallelize/Loop over grids $(a, b_1, b_2)$.
+            *   Call `scipy.optimize.root` to solve the complementarity problem.
+            *   Update value functions using the Gamma-integrated expectation of $\chi$.
+4.  **Store:** Save result matrices for use in `EconomySimulator`.

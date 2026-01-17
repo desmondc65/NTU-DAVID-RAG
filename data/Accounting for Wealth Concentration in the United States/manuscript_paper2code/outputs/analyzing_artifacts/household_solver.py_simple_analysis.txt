@@ -1,0 +1,69 @@
+The `household_solver.py` module is the computational core of the model. It solves the life-cycle problem of households using the **Endogenous Grid Method (EGM)** to handle the consumption-savings choice and a root-finding approach for the non-linear labor supply choice.
+
+### 1. Mathematical Framework
+The household maximizes:
+$$V_j(k, z, \kappa) = \max_{c, k', h} \left\{ \frac{c^{1-\sigma_c}}{1-\sigma_c} - \theta \frac{h^{1+\sigma_l}}{1+\sigma_l} + \beta (1-s_j) \phi(k') + \beta s_j \mathbb{E} [V_{j+1}(k' + \Phi', z', \kappa')] \right\}$$
+
+Subject to:
+$$(1 + \tau_s)c + k' = y^d(y_{labor}, y_{capital}) + k + Tr$$
+
+Where:
+- $y_{labor} = w z \epsilon_j h$ (for workers) or $b(z)$ (for retirees).
+- $y_{capital} = r \kappa k$.
+- $y^d$ is the post-tax income function (including corporate and progressive income taxes).
+- $\phi(k') = \phi_1 [ (k' + \phi_2)^{1-\sigma_b} - 1 ] / (1-\sigma_b)$ is the warm-glow bequest motive.
+
+### 2. Logic Analysis of `HouseholdProblem`
+
+#### A. Initialization and Grid Setup
+- **Asset Grid ($k$):** Construct a non-linear grid (using a power scale) to provide high density at low wealth levels (precautionary savings) and cover the extreme tail (top 0.1%).
+- **Productivity ($z$) and Returns ($\kappa$):** Use indices to map the transition matrices provided in `config.yaml`.
+- **Pre-calculation:** Calculate survival probabilities $s_j$ and deterministic age-efficiency $\epsilon_j$ for all 16 periods.
+
+#### B. The Labor Supply Choice ($j < 10$)
+Because the income tax system is progressive and $y^d$ is non-linear, the "net wage" depends on the hours worked $h$. 
+- **Intra-temporal FOC:** $\theta h^{\sigma_l} = \frac{u'(c)}{1+\tau_s} \cdot \frac{\partial y^d}{\partial h}$.
+- **Logic:** For a given consumption $c$ and state $(z, \kappa, k)$, $h$ is solved using a bounded root-finder (e.g., Brent’s method) within $[0, 1]$.
+
+#### C. Backward Induction (The EGM Loop)
+The solver iterates from $j=16$ down to $1$:
+
+1.  **Terminal Period ($j=16$):** 
+    - Households consume all remaining assets $k$ (no $k'$ choice, $k'=0$).
+    - $c = (y^d + k + Tr) / (1 + \tau_s)$.
+    - Store the derivative of the value function $V'_{16}(k)$ or marginal utility for the previous period's expectation.
+
+2.  **General Step ($j < 16$):**
+    - **Step 1: Compute Expected Marginal Utility (EMU).** 
+      For a grid of "end-of-period" assets (savings) $A_{grid}$:
+      $$EMU(A, z, \kappa) = \beta \left[ (1-s_j) \phi'(A) + s_j \mathbb{E}_{z', \kappa', \Phi'} [ \frac{\partial V_{j+1}}{\partial k}(A + \Phi', z', \kappa') ] \right]$$
+      *Note:* The expectation over $\Phi'$ (stochastic bequests) requires integrating against the bequest distribution.
+    - **Step 2: Apply Euler Equation.**
+      Find optimal consumption $c^*$ such that $u'(c^*) = (1+\tau_s) EMU$.
+    - **Step 3: Solve for Hours $h^*$.**
+      If $j < 10$, solve the intra-temporal FOC (Step 2.B) using $c^*$. If $j \ge 10$, $h^* = 0$.
+    - **Step 4: Inverse Mapping to Current Assets.**
+      Use the budget constraint to find the current asset level $k$ that corresponds to the chosen $A$ ($k'$):
+      $$k_{implied} = (1+\tau_s)c^* + A - y^d(h^*) - Tr$$
+    - **Step 5: Interpolate back to fixed $k\_grid$.**
+      Since $k_{implied}$ is not on the fixed grid, interpolate $c(k, z, \kappa)$, $h(k, z, \kappa)$, and $k'(k, z, \kappa)$.
+    - **Step 6: Handle Borrowing Constraint.**
+      If $k_{grid} < \min(k_{implied})$, the household is borrowing-constrained ($k'=0$). Solve for $c$ and $h$ using the budget constraint with $k'=0$.
+
+#### D. Performance Optimization (Numba)
+- Multi-dimensional interpolation (over $k, z, \kappa$) is computationally expensive. Use `@njit` on core loops.
+- Pre-calculate the transition probability weighted sums to minimize redundant matrix-vector multiplications.
+
+### 3. Data Structures and Interfaces
+- `solve_lifecycle`: Returns a dictionary containing 4D arrays (age, $k$, $z$, $\kappa$) for policy functions: `c_policy`, `k_prime_policy`, and `h_policy`.
+- `egm_step`: Processes a single age cohort. It requires the `V_prime` (marginal utility) matrix from the subsequent age.
+- `labor_supply_choice`: A helper function that encapsulates the non-linear tax logic.
+
+### 4. Integration with Config
+- **Reference `model_parameters`:** Use `sigma_c`, `sigma_l`, and `beta` (5-year).
+- **Reference `tax_system`:** Implement $y^d$ using `corporate_tax_rate` and the progressive structure.
+- **Reference `labor_productivity`:** $z_7$ and $z_8$ are used to determine which transition matrix slice to apply.
+
+### 5. Identification of Potential Challenges
+- **Non-monotonicity:** If the progressive tax system creates non-convexities in the budget set, the EGM mapping $k_{implied} \to A$ might not be monotonic. A check/sort for monotonicity is required before interpolation.
+- **Bequest Integration:** The term $\mathbb{E}_{\Phi'} [V'_{j+1}(k' + \Phi')]$ is a convolution. For speed, this can be approximated using a small number of bequest size points (as described in Section IV.F).

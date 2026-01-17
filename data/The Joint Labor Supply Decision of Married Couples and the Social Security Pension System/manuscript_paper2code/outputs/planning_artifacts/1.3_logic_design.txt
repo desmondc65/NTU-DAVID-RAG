@@ -1,0 +1,48 @@
+----------------------------------------
+[Required packages]
+- numpy==1.24.3
+- scipy==1.10.1
+- matplotlib==3.7.1
+- pandas==2.0.2
+- numba==0.57.0
+
+----------------------------------------
+[Required Other language third-party packages]
+- No third-party dependencies required
+
+----------------------------------------
+[Logic Analysis]
+- ['config.py', 'Contains the ModelConfig class. Stores all calibrated parameters from Table 1, including preference parameters (gamma=2.0, alpha=0.653), production parameters (theta=0.375, delta=0.075), and government policy parameters (tax rates, OASI brackets). It serves as a central source of truth for all other modules.']
+- ['discretization.py', 'Implements StateSpace builder. Functions: 1. rouwenhorst() to discretize the AR(1) wage shocks into 5 nodes for husbands and wives. 2. create_grids() to generate non-linear grids for wealth (27 nodes) and historical earnings (15 nodes). 3. get_survival_probs() to load SSA 2010 life tables. This module is a prerequisite for the HouseholdSolver.']
+- ['social_security.py', "Implements OASISystem class. Logic: 1. calculate_pia() using the 90/32/15% brackets. 2. get_benefits() which handles the 'max(own, spousal)' and 'max(own, survivors)' logic for married and widowed households. 3. get_marginal_benefits() to provide derivatives needed for the Kuhn-Tucker conditions in the household problem."]
+- ['household_solver.py', "Implements the HouseholdProblem solver using backward induction. Key method: solve_vfi(). For each age from 100 down to 21, it uses scipy.optimize.root or a custom Newton-solver to find optimal consumption and work hours (h1, h2) based on the current state. It uses Numba JIT for performance. It incorporates the 'utility from staying at home' (Gamma distribution) logic to handle the discrete labor participation choice."]
+- ['economy_simulator.py', 'Implements PopulationSimulator. It takes the policy functions from HouseholdSolver and iterates forward from age 21 (starting wealth=0, AIME=0) to find the stationary distribution of agents across the state space. Methods: simulate_step(), aggregate_macro_vars() (calculating total K, L, and tax revenue).']
+- ['steady_state.py', 'Implements the BaselineEquilibrium solver. It executes an outer-loop iteration on factor prices (r, w) and accidental bequests (q). It calls HouseholdSolver and EconomySimulator repeatedly until the capital-output ratio hits the target (3.0) and markets clear.']
+- ['transition_path.py', 'Implements the PolicyReform module. It solves for the equilibrium path over T=100 years. It handles the cohort-by-cohort phasing in of the benefit removal. It iterates on the entire sequence of price paths {r_t, w_t} and adjustment factors {psi_t} to balance the Social Security budget annually.']
+- ['evaluation.py', 'Implements WelfareAnalysis. Functions: calculate_cev() to compute the Consumption Equivalence Variation for different cohorts and wage groups (5x5 grid). Generates plots matching Figure 6 and 7 of the paper.']
+- ['main.py', 'The entry point that orchestrates the workflow: 1. Solve Baseline SS. 2. Run Policy Experiments (Run 1a, 1b). 3. Run Sensitivity Analysis (Runs 4, 5, 6). 4. Invoke Evaluation for final results.']
+
+----------------------------------------
+[Task list]
+- config.py
+- discretization.py
+- social_security.py
+- household_solver.py
+- economy_simulator.py
+- steady_state.py
+- transition_path.py
+- evaluation.py
+- main.py
+
+----------------------------------------
+[Full API spec]
+
+
+----------------------------------------
+[Shared Knowledge]
+1. Grids: All modules share the discretized state-space indices. 2. Factor Prices: Prices (r, w) are derived from the firm's Cobb-Douglas FOCs: r = theta*(K/L)^(theta-1) - delta. 3. Unitary Model: Married households always maximize a weighted sum of individual utilities with a joint consumption factor (lambda=0.6). 4. Normalization: All variables are growth-adjusted by (1+mu) and (1+nu) to ensure a steady state exists.
+
+----------------------------------------
+[Anything UNCLEAR]
+The paper mentions using a 'modified Powell hybrid algorithm' from the IMSL library; since this is proprietary, we will substitute it with scipy's 'hybr' method. The exact values of accidental bequests (q) for initial guesses are not provided and must be found via calibration. Clarification is needed on whether the lump-sum transfer (tr_LS) is strictly for working-age adults or all living agents.
+

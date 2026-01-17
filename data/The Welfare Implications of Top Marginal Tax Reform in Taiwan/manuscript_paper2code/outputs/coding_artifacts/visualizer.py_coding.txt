@@ -1,0 +1,258 @@
+```python
+## visualizer.py
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+import pandas as pd
+import yaml
+from typing import Dict, List, Any, Optional
+
+class Visualizer:
+    """
+    Visualizer class for generating publication-quality figures for the 
+    Taiwanese top marginal tax reform analysis.
+    
+    This class implements the plotting logic for:
+    - Welfare curves across different top marginal tax rates (Figure 4).
+    - Life-cycle consumption profiles for singles and married households (Figure 5).
+    - Comparative Gini coefficients for wealth, income, and consumption (Figure 8).
+    
+    The styling adheres to standard scientific standards using Seaborn and Matplotlib.
+    """
+
+    def __init__(self, config_path: str = "config.yaml"):
+        """
+        Initializes the visualizer with project configuration.
+
+        Args:
+            config_path: Path to the config.yaml file.
+        """
+        with open(config_path, 'r') as f:
+            self.config = yaml.safe_load(f)
+        
+        # Set global plotting style
+        sns.set_theme(style="whitegrid", palette="muted")
+        plt.rcParams.update({
+            'font.size': 10,
+            'axes.titlesize': 12,
+            'axes.labelsize': 11,
+            'xtick.labelsize': 10,
+            'ytick.labelsize': 10,
+            'legend.fontsize': 10,
+            'figure.titlesize': 14
+        })
+
+        # Scenario labels and color mapping
+        self.scenarios = {
+            'benchmark': f"Benchmark ({int(self.config['taxation']['benchmark_top_rate'] * 100)}%)",
+            'reform': f"Reform ({int(self.config['taxation']['reform_top_rate'] * 100)}%)",
+            'optimal': f"Optimal ({int(self.config['taxation']['optimal_top_rate'] * 100)}%)"
+        }
+        self.colors = sns.color_palette("husl", 3)
+        self.age_start = 25
+        self.period_len = self.config['demographics']['period_length']
+        self.total_periods = self.config['demographics']['total_periods']
+        self.ages = np.arange(self.age_start, self.age_start + self.total_periods * self.period_len, self.period_len)
+
+    def plot_consumption_profiles(self, results: Dict[str, Any]):
+        """
+        Generates life-cycle average consumption profiles (Figure 5).
+        
+        Args:
+            results: Nested dictionary containing mean consumption arrays for each scenario.
+                     Structure: {
+                        'benchmark': {'cons_s': np.ndarray, 'cons_m': np.ndarray},
+                        'reform': { ... },
+                        'optimal': { ... }
+                     }
+        """
+        fig, axes = plt.subplots(1, 2, figsize=(14, 6), sharey=True)
+        
+        # Plot 1: Single Households
+        for i, (key, label) in enumerate(self.scenarios.items()):
+            if key in results:
+                axes[0].plot(self.ages, results[key]['cons_s'], 
+                             label=label, color=self.colors[i], marker='o', markersize=4)
+        
+        axes[0].set_title("Single Households")
+        axes[0].set_xlabel("Age")
+        axes[0].set_ylabel("Average Consumption")
+        axes[0].legend()
+        
+        # Plot 2: Married Households
+        for i, (key, label) in enumerate(self.scenarios.items()):
+            if key in results:
+                # Married consumption is typically joint/scaled by eta=1.7
+                axes[1].plot(self.ages, results[key]['cons_m'], 
+                             label=label, color=self.colors[i], marker='s', markersize=4)
+        
+        axes[1].set_title("Married Households")
+        axes[1].set_xlabel("Age")
+        axes[1].legend()
+        
+        plt.suptitle("Average Consumption over the Life Cycles")
+        plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+        plt.savefig("figure5_consumption_profiles.png", dpi=300)
+        plt.show()
+
+    def plot_gini_comparison(self, results: Dict[str, Any]):
+        """
+        Generates grouped bar charts comparing Gini coefficients (Figure 8).
+        
+        Args:
+            results: Dictionary containing Gini values for wealth, income, and consumption.
+                     Structure: {
+                        'benchmark': {'gini_wealth': float, 'gini_income': float, 'gini_cons': float},
+                        'reform': { ... },
+                        'optimal': { ... }
+                     }
+        """
+        data_list = []
+        for key, label in self.scenarios.items():
+            if key in results:
+                data_list.append({'Scenario': label, 'Metric': 'Wealth', 'Gini': results[key]['gini_wealth']})
+                data_list.append({'Scenario': label, 'Metric': 'Income', 'Gini': results[key]['gini_income']})
+                data_list.append({'Scenario': label, 'Metric': 'Consumption', 'Gini': results[key]['gini_cons']})
+        
+        df = pd.DataFrame(data_list)
+        
+        plt.figure(figsize=(10, 6))
+        sns.barplot(data=df, x='Metric', y='Gini', hue='Scenario')
+        
+        plt.title("Gini Coefficients of Wealth, Income, and Consumption")
+        plt.ylabel("Gini Coefficient")
+        plt.xlabel("Economic Dimension")
+        plt.ylim(0, 1.0) # Gini is between 0 and 1
+        plt.legend(title="Policy Scenario", loc='upper left')
+        
+        plt.tight_layout()
+        plt.savefig("figure8_gini_comparison.png", dpi=300)
+        plt.show()
+
+    def plot_welfare_curve(self, tax_range: List[float], welfare_scores: Dict[str, List[float]]):
+        """
+        Plots welfare measures as functions of the top marginal tax rate (Figure 4).
+        Identifies the optimal peak (69% as per paper).
+        
+        Args:
+            tax_range: List of top marginal tax rates evaluated (e.g., [0.0, 0.1, ..., 0.9]).
+            welfare_scores: Dictionary containing two lists: 'newborn' and 'utilitarian' CEVs.
+                            CEV is the uniform % change in consumption relative to benchmark.
+        """
+        plt.figure(figsize=(10, 7))
+        
+        # Plot curves
+        plt.plot(tax_range, welfare_scores['newborn'], 
+                 label="Newborn Households ($W_N$)", color='navy', linewidth=2.5, marker='o', markevery=5)
+        plt.plot(tax_range, welfare_scores['utilitarian'], 
+                 label="Utilitarian ($W_U$)", color='crimson', linewidth=2, linestyle='--', marker='x', markevery=5)
+        
+        # Annotate benchmark and reform
+        benchmark_rate = self.config['taxation']['benchmark_top_rate']
+        reform_rate = self.config['taxation']['reform_top_rate']
+        optimal_rate = self.config['taxation']['optimal_top_rate']
+        
+        plt.axvline(x=benchmark_rate, color='gray', linestyle=':', alpha=0.7)
+        plt.text(benchmark_rate, plt.ylim()[0], f'Bench ({int(benchmark_rate*100)}%)', 
+                 rotation=90, verticalalignment='bottom', fontsize=9)
+        
+        plt.axvline(x=reform_rate, color='orange', linestyle='--', alpha=0.7)
+        plt.text(reform_rate, plt.ylim()[0], f'Reform ({int(reform_rate*100)}%)', 
+                 rotation=90, verticalalignment='bottom', fontsize=9)
+        
+        plt.axvline(x=optimal_rate, color='green', linestyle='-', alpha=0.8)
+        plt.text(optimal_rate, plt.ylim()[0], f'Optimal ({int(optimal_rate*100)}%)', 
+                 rotation=90, verticalalignment='bottom', color='green', fontweight='bold')
+
+        # Formatting
+        plt.title("Welfare Measures as Functions of $\\tau_{max}$")
+        plt.xlabel("Top Marginal Tax Rate ($\\tau_{max}$)")
+        plt.ylabel("Welfare Change (Consumption Equivalent %)")
+        plt.grid(True, which='both', linestyle='--', linewidth=0.5)
+        plt.legend(loc='best')
+        
+        # Highlight the peak
+        max_idx = np.argmax(welfare_scores['newborn'])
+        plt.scatter(tax_range[max_idx], welfare_scores['newborn'][max_idx], color='red', s=100, zorder=5)
+        
+        plt.tight_layout()
+        plt.savefig("figure4_welfare_curves.png", dpi=300)
+        plt.show()
+
+    def plot_consumption_insurance(self, results: Dict[str, Any]):
+        """
+        Generates Figure 6: Variance of log consumption over the life cycles.
+        This illustrates the insurance effect of progressive taxation.
+        
+        Args:
+            results: Nested dictionary containing 'var_log_c_s' and 'var_log_c_m'.
+        """
+        fig, axes = plt.subplots(1, 2, figsize=(14, 6), sharey=True)
+        
+        for i, (key, label) in enumerate(self.scenarios.items()):
+            if key in results:
+                # Single Households
+                axes[0].plot(self.ages, results[key]['var_log_c_s'], 
+                             label=label, color=self.colors[i], marker='o')
+                # Married Households
+                axes[1].plot(self.ages, results[key]['var_log_c_m'], 
+                             label=label, color=self.colors[i], marker='s')
+        
+        axes[0].set_title("Single Households")
+        axes[0].set_ylabel("$Var(\log c)$")
+        axes[0].set_xlabel("Age")
+        axes[0].legend()
+        
+        axes[1].set_title("Married Households")
+        axes[1].set_xlabel("Age")
+        axes[1].legend()
+        
+        plt.suptitle("Consumption Insurance: Variance of Log Consumption")
+        plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+        plt.savefig("figure6_consumption_insurance.png", dpi=300)
+        plt.show()
+
+    def plot_top_shares(self, results: Dict[str, Any]):
+        """
+        Generates Figure 7: Top shares of Wealth, Income, and Consumption.
+        
+        Args:
+            results: Dictionary containing 'top1_wealth', 'top1_income', etc.
+        """
+        metrics = ['Wealth', 'Income', 'Consumption']
+        categories = ['Top 1%', 'Top 0.1%']
+        
+        # Prepare data for Seaborn
+        data_rows = []
+        for key, label in self.scenarios.items():
+            if key in results:
+                for m in metrics:
+                    # m_lower = m.lower()
+                    data_rows.append({
+                        'Scenario': label, 
+                        'Metric': m, 
+                        'Group': 'Top 1%', 
+                        'Share': results[key][f'top1_{m.lower()}']
+                    })
+                    data_rows.append({
+                        'Scenario': label, 
+                        'Metric': m, 
+                        'Group': 'Top 0.1%', 
+                        'Share': results[key][f'top01_{m.lower()}']
+                    })
+        
+        df = pd.DataFrame(data_rows)
+        
+        g = sns.catplot(
+            data=df, kind="bar",
+            x="Metric", y="Share", hue="Scenario", col="Group",
+            height=6, aspect=0.8, palette=self.colors
+        )
+        
+        g.set_axis_labels("", "Share of Total (%)")
+        g.set_titles("{col_name} Resource Concentration")
+        
+        plt.savefig("figure7_top_shares.png", dpi=300)
+        plt.show()
+
+```
