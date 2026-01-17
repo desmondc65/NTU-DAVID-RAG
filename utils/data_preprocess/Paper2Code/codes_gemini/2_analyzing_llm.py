@@ -1,31 +1,42 @@
-from openai import OpenAI
 import json
 import os
 from tqdm import tqdm
-import sys
-from utils import extract_planning, content_to_json, print_response, print_log_cost, load_accumulated_cost, save_accumulated_cost
+from utils import extract_planning, content_to_json, print_response
 import copy
+import sys
+from transformers import AutoTokenizer
+from vllm import LLM, SamplingParams
 
 import argparse
 
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--paper_name',type=str)
-parser.add_argument('--gpt_version',type=str, default="o3-mini")
+
+parser.add_argument('--model_name',type=str, default="deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct") 
+parser.add_argument('--tp_size',type=int, default=2)
+parser.add_argument('--temperature',type=float, default=1.0)
+parser.add_argument('--max_model_len',type=int, default=128000)
+
 parser.add_argument('--paper_format',type=str, default="JSON", choices=["JSON", "LaTeX"])
 parser.add_argument('--pdf_json_path', type=str) # json format
 parser.add_argument('--pdf_latex_path', type=str) # latex format
+
 parser.add_argument('--output_dir',type=str, default="")
 
 args    = parser.parse_args()
 
-client = OpenAI(api_key = os.environ["OPENAI_API_KEY"])
-
 paper_name = args.paper_name
-gpt_version = args.gpt_version
+
+model_name = args.model_name
+tp_size = args.tp_size
+max_model_len = args.max_model_len
+temperature = args.temperature
+
 paper_format = args.paper_format
 pdf_json_path = args.pdf_json_path
 pdf_latex_path = args.pdf_latex_path
+
 output_dir = args.output_dir
     
 if paper_format == "JSON":
@@ -37,7 +48,6 @@ elif paper_format == "LaTeX":
 else:
     print(f"[ERROR] Invalid paper format. Please select either 'JSON' or 'LaTeX.")
     sys.exit(0)
-
 
 with open(f'{output_dir}/planning_config.yaml') as f: 
     config_yaml = f.read()
@@ -70,10 +80,10 @@ elif 'logic analysis' in task_list:
 else:
     print(f"[ERROR] 'Logic Analysis' does not exist. Please re-generate the planning.")
     sys.exit(0)
-    
+
 done_file_lst = ['config.yaml']
 logic_analysis_dict = {}
-for desc in task_list['Logic Analysis']:
+for desc in logic_analysis:
     logic_analysis_dict[desc[0]] = desc[1]
 
 analysis_msg = [
@@ -135,25 +145,41 @@ You DON'T need to provide the actual code yet; focus on a thorough, clear analys
     return write_msg
 
 
-def api_call(msg):
-    if "o3-mini" in gpt_version:
-        completion = client.chat.completions.create(
-            model=gpt_version, 
-            reasoning_effort="high",
-            messages=msg
-        )
-    else:
-        completion = client.chat.completions.create(
-            model=gpt_version, 
-            messages=msg
-        )
-    return completion
 
+model_name = args.model_name
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+
+
+if "Qwen" in model_name:
+    llm = LLM(model=model_name, 
+            tensor_parallel_size=tp_size, 
+            max_model_len=max_model_len,
+            gpu_memory_utilization=0.95,
+            trust_remote_code=True, enforce_eager=True, 
+            rope_scaling={"factor": 4.0, "original_max_position_embeddings": 32768, "type": "yarn"})
+    sampling_params = SamplingParams(temperature=temperature, max_tokens=131072)
+
+elif "deepseek" in model_name:
+    llm = LLM(model=model_name, 
+              tensor_parallel_size=tp_size, 
+              max_model_len=max_model_len,
+              gpu_memory_utilization=0.95,
+              trust_remote_code=True, enforce_eager=True)
+    sampling_params = SamplingParams(temperature=temperature, max_tokens=128000, stop_token_ids=[tokenizer.eos_token_id])
+
+def run_llm(msg):
+    # vllm
+    prompt_token_ids = [tokenizer.apply_chat_template(messages, add_generation_prompt=True) for messages in [msg]]
+
+    outputs = llm.generate(prompt_token_ids=prompt_token_ids, sampling_params=sampling_params)
+
+    completion = [output.outputs[0].text for output in outputs]
+    
+    return completion[0]
 
 artifact_output_dir=f'{output_dir}/analyzing_artifacts'
 os.makedirs(artifact_output_dir, exist_ok=True)
 
-total_accumulated_cost = load_accumulated_cost(f"{output_dir}/accumulated_cost.json")
 for todo_file_name in tqdm(todo_file_lst):
     responses = []
     trajectories = copy.deepcopy(analysis_msg)
@@ -170,34 +196,32 @@ for todo_file_name in tqdm(todo_file_lst):
     instruction_msg = get_write_msg(todo_file_name, logic_analysis_dict[todo_file_name])
     trajectories.extend(instruction_msg)
         
-    completion = api_call(trajectories)
+    completion = run_llm(trajectories)
     
     # response
-    completion_json = json.loads(completion.model_dump_json())
+    completion_json = {
+        'text': completion
+    }
+
+    # print and logging
+    print_response(completion_json, is_llm=True)
+
     responses.append(completion_json)
     
     # trajectories
-    message = completion.choices[0].message
-    trajectories.append({'role': message.role, 'content': message.content})
+    trajectories.append({'role': 'assistant', 'content': completion})
 
-    # print and logging
-    print_response(completion_json)
-    # temp_total_accumulated_cost = print_log_cost(completion_json, gpt_version, current_stage, output_dir, total_accumulated_cost)
-    # total_accumulated_cost = temp_total_accumulated_cost
 
     # save
-    with open(f'{artifact_output_dir}/{todo_file_name}_simple_analysis.txt', 'w') as f:
-        f.write(completion_json['choices'][0]['message']['content'])
-
+    with open(f'{artifact_output_dir}/{todo_file_name}_simple_analysis.txt', 'w', encoding='utf-8') as f:
+        f.write(completion)
 
     done_file_lst.append(todo_file_name)
 
     # save for next stage(coding)
     todo_file_name = todo_file_name.replace("/", "_") 
-    with open(f'{output_dir}/{todo_file_name}_simple_analysis_response.json', 'w') as f:
+    with open(f'{output_dir}/{todo_file_name}_simple_analysis_response.json', 'w', encoding='utf-8') as f:
         json.dump(responses, f)
 
-    with open(f'{output_dir}/{todo_file_name}_simple_analysis_trajectories.json', 'w') as f:
+    with open(f'{output_dir}/{todo_file_name}_simple_analysis_trajectories.json', 'w', encoding='utf-8') as f:
         json.dump(trajectories, f)
-
-save_accumulated_cost(f"{output_dir}/accumulated_cost.json", total_accumulated_cost)

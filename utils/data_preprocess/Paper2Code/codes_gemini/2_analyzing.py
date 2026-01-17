@@ -1,10 +1,17 @@
-from openai import OpenAI
 import json
 import os
 from tqdm import tqdm
 import sys
-from utils import extract_planning, content_to_json, print_response, print_log_cost, load_accumulated_cost, save_accumulated_cost
+from utils import extract_planning, content_to_json, print_response, print_log_gemini_cost, load_accumulated_cost, save_accumulated_cost
 import copy
+
+# Import GeminiClient from the utils directory
+import sys
+from pathlib import Path
+# Go up from codes_gemini -> Paper2Code -> data_preprocess, then up to utils, then access llm_clients
+llm_clients_path = Path(__file__).resolve().parent.parent.parent.parent / 'llm_clients'
+sys.path.insert(0, str(llm_clients_path))
+from gemini import GeminiClient
 
 import argparse
 
@@ -19,7 +26,7 @@ parser.add_argument('--output_dir',type=str, default="")
 
 args    = parser.parse_args()
 
-client = OpenAI(api_key = os.environ["OPENAI_API_KEY"])
+client = GeminiClient(model_name="gemini-3-flash-preview")
 
 paper_name = args.paper_name
 gpt_version = args.gpt_version
@@ -136,18 +143,56 @@ You DON'T need to provide the actual code yet; focus on a thorough, clear analys
 
 
 def api_call(msg):
-    if "o3-mini" in gpt_version:
-        completion = client.chat.completions.create(
-            model=gpt_version, 
-            reasoning_effort="high",
-            messages=msg
-        )
-    else:
-        completion = client.chat.completions.create(
-            model=gpt_version, 
-            messages=msg
-        )
-    return completion
+    # Convert OpenAI message format to Gemini format
+    system_prompt = None
+    user_messages = []
+    
+    for message in msg:
+        if message['role'] == 'system':
+            system_prompt = message['content']
+        elif message['role'] == 'user':
+            user_messages.append(message['content'])
+        elif message['role'] == 'assistant':
+            user_messages.append(f"[Previous Response]\n{message['content']}")
+    
+    combined_user_prompt = "\n\n".join(user_messages)
+    
+    # Call Gemini API and get the full response object
+    response = client.client.models.generate_content(
+        model=client.model_name,
+        contents=combined_user_prompt,
+        config={
+            "response_mime_type": "text/plain",
+            "system_instruction": system_prompt
+        } if system_prompt else {"response_mime_type": "text/plain"}
+    )
+    
+    response_text = response.text
+    
+    # Create a mock completion object similar to OpenAI's format
+    class MockCompletion:
+        def __init__(self, text, usage_metadata):
+            self.choices = [type('obj', (object,), {
+                'message': type('obj', (object,), {
+                    'content': text,
+                    'role': 'assistant'
+                })()
+            })()]
+            self.usage_metadata = usage_metadata
+            self.model = gpt_version
+            
+        def model_dump_json(self):
+            return json.dumps({
+                'choices': [{
+                    'message': {
+                        'content': self.choices[0].message.content,
+                        'role': self.choices[0].message.role
+                    }
+                }],
+                'model': self.model
+            })
+    
+    return MockCompletion(response_text, response.usage_metadata)
 
 
 artifact_output_dir=f'{output_dir}/analyzing_artifacts'
@@ -182,8 +227,8 @@ for todo_file_name in tqdm(todo_file_lst):
 
     # print and logging
     print_response(completion_json)
-    # temp_total_accumulated_cost = print_log_cost(completion_json, gpt_version, current_stage, output_dir, total_accumulated_cost)
-    # total_accumulated_cost = temp_total_accumulated_cost
+    temp_total_accumulated_cost = print_log_gemini_cost(completion.usage_metadata, client.model_name, current_stage, output_dir, total_accumulated_cost)
+    total_accumulated_cost = temp_total_accumulated_cost
 
     # save
     with open(f'{artifact_output_dir}/{todo_file_name}_simple_analysis.txt', 'w') as f:

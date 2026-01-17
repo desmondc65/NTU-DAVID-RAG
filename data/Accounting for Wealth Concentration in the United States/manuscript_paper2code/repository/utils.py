@@ -1,0 +1,307 @@
+"""
+utils.py
+
+Provides mathematical and algorithmic helper functions for the life cycle model,
+including interpolation, root-finding for labor supply, tax calculations,
+Markov chain processing, and grid generation.
+"""
+
+import numpy as np
+from scipy import optimize
+from typing import Tuple, Any, Callable
+
+
+def interp_extrap(x_new: np.ndarray, x: np.ndarray, y: np.ndarray) -> np.ndarray:
+    """
+    Linear interpolation with linear extrapolation for values outside the grid.
+    
+    Args:
+        x_new: Points at which to evaluate the interpolated values.
+        x: The x-coordinates of the data points, must be increasing.
+        y: The y-coordinates of the data points.
+
+    Returns:
+        Interpolated/extrapolated values.
+    """
+    y_new = np.interp(x_new, x, y)
+    
+    # Handle extrapolation for values below the grid min
+    mask_low = x_new < x[0]
+    if np.any(mask_low):
+        slope_low = (y[1] - y[0]) / (x[1] - x[0])
+        y_new[mask_low] = y[0] + slope_low * (x_new[mask_low] - x[0])
+        
+    # Handle extrapolation for values above the grid max
+    mask_high = x_new > x[-1]
+    if np.any(mask_high):
+        slope_high = (y[-1] - y[-2]) / (x[-1] - x[-2])
+        y_new[mask_high] = y[-1] + slope_high * (x_new[mask_high] - x[-1])
+        
+    return y_new
+
+
+def solve_labor_supply(
+    c_guess: float, 
+    wage_eff: float, 
+    params: dict, 
+    tax_params: Tuple[float, float]
+) -> float:
+    """
+    Solves the First-Order Condition (FOC) for labor supply h in [0, 1].
+    
+    FOC: theta * h^sigma_l = (c^-sigma_c / (1 + tau_s)) * Net_Wage
+    where Net_Wage = wage_eff * (1 - marginal_tax_rate).
+    
+    Args:
+        c_guess: Consumption value.
+        wage_eff: Effective wage (w * z * epsilon_j).
+        params: Dictionary of model parameters (theta, sigma_l, sigma_c, tau_s, tau_max).
+        tax_params: Tuple of (gamma0, gamma1) for log-linear tax system.
+        
+    Returns:
+        Optimal hours worked h in [0, 1].
+    """
+    theta = params.get('theta', 2.5)
+    sigma_l = params.get('sigma_l', 1.22)
+    sigma_c = params.get('sigma_c', 1.5)
+    tau_s = params.get('tau_s', 0.05)
+    tau_max = params.get('tau_max', 0.396)
+    
+    def foc_residual(h: float) -> float:
+        # Calculate taxable income assuming labor is the main variable component
+        # In this specific context, we evaluate the marginal tax at the current income level
+        income_guess = wage_eff * h 
+        # get_marginal_tax_rate is defined below
+        mtr = get_marginal_tax_rate(income_guess, tax_params, tau_max)
+        
+        lhs = theta * (h ** sigma_l)
+        rhs = (c_guess ** (-sigma_c)) / (1.0 + tau_s) * wage_eff * (1.0 - mtr)
+        return lhs - rhs
+
+    # Check boundaries
+    if foc_residual(0.0) >= 0:
+        return 0.0
+    if foc_residual(1.0) <= 0:
+        return 1.0
+        
+    try:
+        # Solve for h in [0, 1]
+        res = optimize.brentq(foc_residual, 0.0, 1.0)
+        return res
+    except ValueError:
+        # Fallback in case of weird residuals
+        return 0.0
+
+
+def compute_disposable_income(
+    taxable_income: float, 
+    tax_params: Tuple[float, float], 
+    tau_max: float = 0.396
+) -> float:
+    """
+    Calculates disposable income after personal income taxes.
+    Implements y_d = exp(gamma0) * y^gamma1.
+    
+    Args:
+        taxable_income: Gross income subject to personal tax.
+        tax_params: (gamma0, gamma1) parameters.
+        tau_max: Maximum marginal tax rate cap.
+        
+    Returns:
+        Disposable income.
+    """
+    gamma0, gamma1 = tax_params
+    # Ensure taxable income is positive for log-linear logic
+    y = max(taxable_income, 1e-8)
+    
+    # Baseline log-linear formula
+    y_d = np.exp(gamma0) * (y ** gamma1)
+    
+    # Marginal tax check for capping
+    mtr_raw = 1.0 - gamma1 * (y_d / y)
+    
+    if mtr_raw > tau_max:
+        # If mtr exceeds cap, the tax function becomes linear at the margin
+        # We find the threshold where mtr == tau_max
+        # 1 - gamma1 * exp(gamma0) * y_star^(gamma1-1) = tau_max
+        y_star = ((1.0 - tau_max) / (gamma1 * np.exp(gamma0))) ** (1.0 / (gamma1 - 1.0))
+        y_d_star = np.exp(gamma0) * (y_star ** gamma1)
+        # For y > y_star, y_d = y_d_star + (1 - tau_max) * (y - y_star)
+        if y > y_star:
+            y_d = y_d_star + (1.0 - tau_max) * (y - y_star)
+            
+    return y_d
+
+
+def get_marginal_tax_rate(
+    taxable_income: float, 
+    tax_params: Tuple[float, float], 
+    tau_max: float = 0.396
+) -> float:
+    """
+    Computes the marginal tax rate (MTR) for personal income.
+    
+    Args:
+        taxable_income: Gross income.
+        tax_params: (gamma0, gamma1) parameters.
+        tau_max: Max MTR cap.
+        
+    Returns:
+        The marginal tax rate.
+    """
+    gamma0, gamma1 = tax_params
+    y = max(taxable_income, 1e-8)
+    
+    y_d_baseline = np.exp(gamma0) * (y ** gamma1)
+    mtr = 1.0 - gamma1 * (y_d_baseline / y)
+    
+    return min(mtr, tau_max)
+
+
+def get_survival_prob(age_idx: int) -> float:
+    """
+    Calculates survival probability from age_idx to age_idx + 1.
+    Based on Halliday et al. (2019) logistic function.
+    
+    Args:
+        age_idx: Model period (1 to 16).
+        
+    Returns:
+        Probability of surviving to the next period.
+    """
+    # Parameters for US data (approximate for 5-year periods)
+    w0, w1, w2 = -10.5, 0.25, -0.0015
+    
+    if age_idx >= 16:
+        return 0.0
+    
+    logit = w0 + w1 * age_idx + w2 * (age_idx ** 2)
+    s = 1.0 / (1.0 + np.exp(logit))
+    return s
+
+
+def rouwenhorst(rho: float, sigma: float, n: int) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Discretizes an AR(1) process using the Rouwenhorst method.
+    y_t = rho * y_{t-1} + e_t, e_t ~ N(0, sigma^2)
+    
+    Args:
+        rho: Persistence.
+        sigma: Standard deviation of innovations.
+        n: Number of states.
+        
+    Returns:
+        (state_grid, transition_matrix)
+    """
+    if n == 1:
+        return np.array([0.0]), np.array([[1.0]])
+        
+    p = (1 + rho) / 2
+    q = p
+    
+    # Transition matrix construction
+    def build_matrix(p, q, n):
+        if n == 2:
+            return np.array([[p, 1-p], [1-q, q]])
+        else:
+            P_prev = build_matrix(p, q, n-1)
+            P = np.zeros((n, n))
+            P[:n-1, :n-1] += p * P_prev
+            P[:n-1, 1:] += (1-p) * P_prev
+            P[1:, :n-1] += (1-q) * P_prev
+            P[1:, 1:] += q * P_prev
+            P[1:n-1, :] /= 2.0
+            return P
+
+    P = build_matrix(p, q, n)
+    
+    # State grid construction
+    # Variance of AR(1) is sigma^2 / (1 - rho^2)
+    # The spread of the grid is psi = sqrt(n-1) * sigma_y
+    sigma_y = sigma / np.sqrt(1 - rho**2)
+    psi = np.sqrt(n - 1) * sigma_y
+    grid = np.linspace(-psi, psi, n)
+    
+    return grid, P
+
+
+def compute_stationary_distribution(transition_matrix: np.ndarray) -> np.ndarray:
+    """
+    Finds the stationary distribution of a Markov chain.
+    
+    Args:
+        transition_matrix: Square matrix where rows sum to 1.
+        
+    Returns:
+        Stationary distribution vector.
+    """
+    # Solve pi * P = pi  =>  pi * (P - I) = 0
+    n = transition_matrix.shape[0]
+    a = np.transpose(transition_matrix) - np.eye(n)
+    # Replace the last equation with the normalization condition sum(pi) = 1
+    a[-1, :] = np.ones(n)
+    b = np.zeros(n)
+    b[-1] = 1.0
+    
+    try:
+        stationary_dist = np.linalg.solve(a, b)
+        # Ensure no negative probabilities due to precision
+        stationary_dist = np.maximum(stationary_dist, 0.0)
+        return stationary_dist / np.sum(stationary_dist)
+    except np.linalg.LinAlgError:
+        # Fallback to power iteration if singular
+        pi = np.ones(n) / n
+        for _ in range(1000):
+            pi_new = pi @ transition_matrix
+            if np.allclose(pi, pi_new):
+                return pi_new
+            pi = pi_new
+        return pi
+
+
+def generate_non_linear_grid(
+    min_val: float, 
+    max_val: float, 
+    n_points: int, 
+    power: float = 2.5
+) -> np.ndarray:
+    """
+    Generates a non-linear grid for assets.
+    k_i = min + (max - min) * (i / (n-1))^power.
+    
+    Args:
+        min_val: Minimum grid value.
+        max_val: Maximum grid value.
+        n_points: Number of points.
+        power: Curvature parameter (>1 clusters points near min).
+        
+    Returns:
+        Asset grid array.
+    """
+    return min_val + (max_val - min_val) * (np.linspace(0, 1, n_points) ** power)
+
+
+def get_bequest_marginal_utility(
+    k_prime: np.ndarray, 
+    phi1: float, 
+    phi2: float, 
+    sigma_b: float
+) -> np.ndarray:
+    """
+    Calculates the marginal utility of bequeathed assets.
+    phi(k) = phi1 * [ (k + phi2)^(1-sigma_b) - 1 ]
+    phi'(k) = phi1 * (1 - sigma_b) * (k + phi2)^(-sigma_b)
+    
+    Args:
+        k_prime: Assets left as bequest.
+        phi1: Altruism scale.
+        phi2: Non-homotheticity parameter.
+        sigma_b: Curvature parameter.
+        
+    Returns:
+        Marginal utility vector/scalar.
+    """
+    # Note: Utility formulation in Section III.B: phi(k') = phi1 * [(k' + phi2)^(1-sigma_b) - 1] / (1 - sigma_b)
+    # The (1 - sigma_b) denominator is implied for CRRA consistency. 
+    # If standard CRRA: d/dk [ (k^(1-s)-1)/(1-s) ] = k^-s.
+    return phi1 * ((k_prime + phi2) ** (-sigma_b))
