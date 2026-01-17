@@ -115,31 +115,31 @@ find "${DATA_DIR}" -path "*/source/*.pdf" -type f | sort | while read -r PDF_PAT
     fi
     
     echo "------- Preprocess -------"
-    python "${SCRIPT_DIR}/../codes/0_pdf_process.py" \
+    python "${SCRIPT_DIR}/../codes_gemini/0_pdf_process.py" \
         --input_json_path "${PDF_JSON_PATH}" \
         --output_json_path "${PDF_JSON_CLEANED_PATH}"
     
     echo "------- PaperCoder -------"
     
-    python "${SCRIPT_DIR}/../codes/1_planning.py" \
+    python "${SCRIPT_DIR}/../codes_gemini/1_planning.py" \
         --paper_name "$PAPER_NAME" \
         --gpt_version "${GPT_VERSION}" \
         --pdf_json_path "${PDF_JSON_CLEANED_PATH}" \
         --output_dir "${OUTPUT_DIR}"
     
-    python "${SCRIPT_DIR}/../codes/1.1_extract_config.py" \
+    python "${SCRIPT_DIR}/../codes_gemini/1.1_extract_config.py" \
         --paper_name "$PAPER_NAME" \
         --output_dir "${OUTPUT_DIR}"
     
     cp -rp "${OUTPUT_DIR}/planning_config.yaml" "${OUTPUT_REPO_DIR}/config.yaml"
     
-    python "${SCRIPT_DIR}/../codes/2_analyzing.py" \
+    python "${SCRIPT_DIR}/../codes_gemini/2_analyzing.py" \
         --paper_name "$PAPER_NAME" \
         --gpt_version "${GPT_VERSION}" \
         --pdf_json_path "${PDF_JSON_CLEANED_PATH}" \
         --output_dir "${OUTPUT_DIR}"
     
-    python "${SCRIPT_DIR}/../codes/3_coding.py" \
+    python "${SCRIPT_DIR}/../codes_gemini/3_coding.py" \
         --paper_name "$PAPER_NAME" \
         --gpt_version "${GPT_VERSION}" \
         --pdf_json_path "${PDF_JSON_CLEANED_PATH}" \
