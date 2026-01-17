@@ -1,0 +1,78 @@
+The `LifecycleSolver` class is the computational engine of the model. It solves the finite-horizon dynamic programming problem for heterogeneous households using backward induction (Value Function Iteration) and Numba for high-performance execution.
+
+### 1. Pre-computation and Coordinate System
+Before starting the backward induction, several parameters must be converted from annual to 5-year period equivalents (as per `config.yaml` and "Shared Knowledge"):
+*   **Discount Factor:** $\beta_{period} = (\beta_{annual})^5$. Reference `preferences.beta_annual` from `config.yaml`.
+*   **Interest Rate:** $r_{period} = (1 + r_{annual})^5 - 1$.
+*   **Depreciation:** $\delta_{period} = 1 - (1 - \delta_{annual})^5$.
+*   **Grids:** 
+    *   **Asset Grid ($k$):** Non-linear (log-spaced) grid from `k_min` to `k_max` with `k_size` points to capture the "superstar" tail.
+    *   **Average Earnings Grid ($\tilde{e}$):** Linear grid of size `e_tilde_size` to track the state variable for pension calculations.
+    *   **Productivity ($z$):** 5 discrete states from `z_states` including the superstar state $z_5$.
+
+---
+
+### 2. The Single Household Problem (`solve_singles`)
+Calculates policy functions for $c, k', n$ for single males and females separately.
+
+#### A. State Space
+$ \omega^S = \{j, k, z, \tilde{e}, g\} $ where $j \in [1, 15]$, $g \in \{m, f\}$.
+
+#### B. Backward Induction Flow
+1.  **Terminal Period ($j = J = 15$):**
+    *   Household consumes all remaining assets plus income (no bequest motive, but accidental bequests exist).
+    *   $V^S(J, \cdot) = u(c, 0)$, where $(1+\tau_c)c = k + y_d^S(SS(\tilde{e}) + rk) + T_r$.
+2.  **Retirement Phase ($J_r \leq j < J$):**
+    *   $n = 0$. Income is pension $SS(\tilde{e}) = \psi \tilde{e}$ plus capital income.
+    *   Bellman: $R^S(j, k, \tilde{e}, g) = \max_{k'} \{ u(c, 0) + \beta s_{g,j} R^S(j+1, k', \tilde{e}, g) \}$.
+    *   Note: $\tilde{e}$ is constant in retirement.
+3.  **Working Phase ($1 \leq j < J_r$):**
+    *   Bellman: $V^S(j, k, z, \tilde{e}, g) = \max_{c, k', n} \{ u(c, n) + \beta E[V^S(j+1, k', z', \tilde{e}', g) | z] \}$.
+    *   Update $\tilde{e}' = [(j-1)\tilde{e} + wz\epsilon_{g,j}n] / j$.
+
+---
+
+### 3. The Married Household Problem (`solve_married`)
+Solves the collective decision-making problem for couples.
+
+#### A. Specifics
+*   **Joint Utility:** $2 U(c, n_m, n_f) = u(c/\eta, n_m) + u(c/\eta, n_f)$, with $\eta=1.7$.
+*   **State Space:** $\omega^M = \{j, k, z_m, z_f, \tilde{e}\}$.
+*   **Joint Labor:** The solver must optimize both $n_m$ and $n_f$ simultaneously.
+*   **Retirement Transition:** If one spouse dies ($s_{m,j}$ vs $s_{f,j}$), the survivor transitions to the Single Retiree value function $R^S$.
+    *   Continuation value: $\beta [s_{m,j}s_{f,j} R^M_{j+1} + s_{m,j}(1-s_{f,j}) R^S_{j+1, m} + s_{f,j}(1-s_{m,j}) R^S_{j+1, f}]$.
+
+---
+
+### 4. Labor Supply Optimization Logic (`-optimize_labor_supply`)
+For each asset/productivity state, the household chooses $n \in [0, 1]$.
+1.  **Extensive Margin:** Evaluate utility at $n=0$ (no fixed cost $\phi_{\iota, g}$).
+2.  **Intensive Margin:** Evaluate utility for $n > 0$ (including fixed cost).
+3.  **Benabou Tax Implementation:**
+    *   Calculate taxable income $y_f = wz\epsilon n + rk$.
+    *   Apply top marginal rate cap $\tau_{max}$ at threshold $y_b = 13 \times \bar{y}$.
+    *   $y_d = \lambda \min(y_b, y_f)^{1-\tau} + (1-\tau_{max}) \max(0, y_f - y_b)$.
+4.  **Social Insurance:** Subtract premiums $\pi = t \cdot y_f$ (where $t$ is the insurance premium rate).
+
+---
+
+### 5. Numerical Implementation Details
+*   **Numba JIT:** Use `@njit(parallel=True)` for the outer loops over the state space (especially the asset grid and productivity states) within each age group.
+*   **Interpolation:** Since $k'$ and $\tilde{e}'$ will likely not fall exactly on grid points, use linear interpolation (or cubic splines) to evaluate $V(j+1, \cdot)$.
+*   **Optimization Strategy:**
+    *   For $k'$, use a Golden Section Search or a discretized grid search followed by local refinement.
+    *   For married labor $(n_m, n_f)$, a 2D grid search is most robust given the non-convexities introduced by the fixed cost $\phi$ and the kink in the Benabou tax function.
+*   **Integration:** Calculate the expectation $E[\cdot|z]$ using the 5x5 transition matrix (Table 10). For married couples, assume $z_m$ and $z_f$ are independent (unless the paper provides a joint matrix).
+
+### 6. Alignment with `config.yaml`
+*   **Taxation:** Use `progressivity` ($\tau_s, \tau_m$) and `threshold_multiplier` to determine the tax parameters $(\lambda, \tau, y_b)$ dynamically.
+*   **Preferences:** Use `frisch_m` and `frisch_f` to calculate the curvature $\sigma_g = 1/\text{Frisch}_g$.
+*   **Tolerances:** Iterations stop when the value function change is below `vfi_tolerance`.
+
+### 7. Data Interfaces (Logic)
+*   **Input:** Current $r$, current $t$, and `tax_params` (specifically $\tau_{max}$ which changes during reform/optimization).
+*   **Output:** High-dimensional arrays (tensors) for:
+    *   $c(\omega)$: Consumption policy.
+    *   $k'(\omega)$: Savings policy.
+    *   $n(\omega)$: Labor supply policy.
+    *   $V(\omega)$: Value function.

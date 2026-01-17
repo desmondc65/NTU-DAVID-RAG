@@ -1,0 +1,76 @@
+The `main.py` script serves as the central orchestrator for the entire simulation pipeline. It manages the sequential execution of baseline calibration, policy reform simulations (transition paths), sensitivity analyses, and the final generation of comparative metrics and visualizations.
+
+### 1. Initialization and Parameter Setup
+The workflow begins by loading the global settings from `config.yaml` into the `Config` object.
+*   **Grid Construction:** The `Discretizer` is invoked to create the state-space grids:
+    *   Wealth ($a$): 27 nodes, non-linearly spaced to capture the borrowing constraint $a_{min}(i)$ defined in Section 3.4.
+    *   AIME ($b_1, b_2$): 15 nodes each for husband and wife histories.
+    *   Productivity ($e_1, e_2$): 5 nodes each, generated via the **Rouwenhorst method** using persistence $\rho=0.87$ and $\sigma=0.39$ from `earning_process` in `config.yaml`.
+*   **System Components:** Initialize `SocialSecurity` (to handle the 90/32/15 PIA formula), `HouseholdSolver` (for backward induction), and `EconomySimulator` (for forward population aggregation).
+
+### 2. Baseline Steady-State Calibration (Year 0)
+The objective is to find a stationary equilibrium that replicates the 2013 U.S. economy.
+*   **Factor Price Guess:** Initialize the $K/L$ ratio and accidental bequests $q$.
+*   **Solver Loop:** `SteadyStateSolver.find_equilibrium()` executes the following:
+    1.  Calculates $r$ and $w$ using the firm's profit-maximization conditions (Section 2.2).
+    2.  Calls `HouseholdSolver.solve_backward_induction()` to obtain policy functions for consumption, hours ($h_1, h_2$), and savings ($a'$).
+    3.  Calls `EconomySimulator.simulate_forward()` to find the stationary distribution $x(s)$.
+    4.  Checks market clearing: $K$ must equal aggregate private wealth + government net worth; $L$ must equal aggregate efficiency units of labor.
+*   **Calibration Targets:** Adjust $\beta$ (discount factor) to achieve a capital-output ratio of 3.0 and calibrate $\kappa_1, \kappa_2$ to match female/male labor participation rates of 74.5% and 88.7% respectively (Section 3.2).
+*   **Output:** Stores the `baseline_ss` results, which include the value functions $V_0(s)$, distribution $x_0(s)$, and aggregate variables (GDP, Tax Revenue).
+
+### 3. Policy Experiment 1: Primary Reforms (Runs 1a & 1b)
+Following Section 4, the government removes spousal and survivors benefits in a phased-in cohort-by-cohort manner.
+*   **Transition Setup:** Define a path of $T = 100$ years. For each cohort, benefits are adjusted based on their age at $t=1$:
+    *   Age $\ge 61$: Retain old OASI schedule.
+    *   Age $\le 21$: Full removal (only OA benefits).
+    *   Age $22-60$: Linear interpolation between the two schedules.
+*   **Run 1(a) - Lump-sum Financing:**
+    *   Invoke `TransitionSolver.solve_path()`.
+    *   **Budget Balancing:** In each year $t$, adjust $\psi_t$ (OASI adjustment factor) to balance the Social Security budget and adjust $tr_{LS,t}$ to balance the general government budget.
+*   **Run 1(b) - Marginal Tax Financing:**
+    *   Similar to 1a, but instead of $tr_{LS,t}$, the income tax parameter $\phi_t$ is adjusted to balance the general government budget (Section 4.2).
+
+### 4. Sensitivity Analysis (Runs 4, 5, 6)
+To test robustness (Section 5), the orchestrator re-runs the logic for alternative economies:
+*   **Run 4 (Higher Risk Aversion):** Update `preferences.gamma = 4.0`. Re-solve the baseline steady state, then run the 1(a)/1(b) reform paths.
+*   **Run 5 (Higher Wage Persistence):** Update `earning_process.rho = 0.92`. Re-solve the baseline and reform paths.
+*   **Run 6 (Higher Intrafamily Correlation):** Update `earning_process.wage_corr_married = 0.40`. Re-solve the baseline and reform paths.
+
+### 5. Evaluation and Results Generation
+After all simulations are complete, the `Evaluation` module processes the data:
+*   **Macroeconomic Metrics:** Calculate percentage changes in GDP, Capital Stock, Total Labor Supply, and Female LFP from the baseline to the final steady state.
+*   **Welfare Analysis (CEV):**
+    *   Use `calculate_cev()` to determine the Consumption Equivalence Variation for age-21 newborns at $t=1$ and in the long run ($t=T$).
+    *   Map these gains/losses across the $5 \times 5$ wage shock grid to replicate Table 5.
+*   **Visualizations:**
+    *   Generate life-cycle change plots (matching Figure 6).
+    *   Generate transition path plots for aggregate variables (matching Figure 7).
+
+### 6. Logic Flow Summary
+```python
+# 1. Setup
+config = Config("config.yaml")
+grids = Discretizer(config)
+
+# 2. Baseline
+ss_solver = SteadyStateSolver(config, grids)
+baseline_ss = ss_solver.find_equilibrium()
+
+# 3. Policy Reforms
+transition_solver = TransitionSolver(config, grids, baseline_ss)
+results_1a = transition_solver.solve_path(financing="lump_sum")
+results_1b = transition_solver.solve_path(financing="tax_cut")
+
+# 4. Sensitivity (Example: Higher Gamma)
+config.update("gamma", 4.0)
+baseline_gamma4 = ss_solver.find_equilibrium()
+results_gamma4 = TransitionSolver(config, grids, baseline_gamma4).solve_path()
+
+# 5. Evaluation
+evaluator = Evaluation()
+evaluator.calculate_metrics(baseline_ss, results_1a, results_1b)
+evaluator.plot_macro_results({"Run 1a": results_1a, "Run 1b": results_1b})
+```
+
+This structured approach ensures that the general equilibrium constraints (market clearing and budget balance) are strictly maintained throughout both the stationary and transitionary phases of the experiment.

@@ -1,0 +1,69 @@
+### Logic Analysis: `config.py`
+
+The `config.py` module serves as the central repository for all parameters, transition matrices, and grid definitions. It must align with the parameters specified in `config.yaml` and the structural details provided in Section IV and Supplemental Appendix B of the paper.
+
+#### 1. Configuration Class Structure
+Following the design, the `Config` class will handle parameter initialization and storage.
+
+*   **`params`**: A dictionary containing scalars from `config.yaml` (e.g., `sigma_c`, `beta`, `alpha`) and derived values (e.g., 5-year rates, survival probabilities).
+*   **`calibration_targets`**: Target values used in the SMM (Simulated Method of Moments) loop.
+*   **`load_config(path)`**: Logic to parse `config.yaml` and perform initial derivations.
+
+#### 2. Demographics and Survival Probabilities
+*   **Model Horizon**: 16 periods (5 years each), covering ages 20–99.
+*   **Survival Logic**: The survival probability $s(j)$ for age $j$ is calculated using the logistic function:
+    $$s(j) = [1 + \exp(\omega_0 + \omega_1 j + \omega_2 j^2)]^{-1}$$
+    Parameters $(\omega_0, \omega_1, \omega_2)$ are sourced from Halliday et al. (2019) as recommended by the paper.
+*   **Retirement**: Period $j=10$ (age 65) marks the transition from worker to retiree states.
+
+#### 3. Labor Productivity Process ($z$)
+The model uses an 8-state process (6 ordinary, 2 extraordinary).
+
+*   **Ordinary States ($z_1 \dots z_6$)**:
+    *   Composed of a permanent component $f \in \{f_L, f_H\}$ and a transitory component $a \in \{a_L, a_M, a_H\}$.
+    *   $f$ is determined at birth ($j=1$). $a$ follows an AR(1) process.
+    *   **Logic for $A$ (3x3 Matrix)**: Use the Rouwenhorst approximation for annual persistence of 0.97 (referenced from Heathcote et al., 2010). Scale probabilities by $(1 - \lambda_{in})$ to allow transitions to extraordinary states.
+*   **Extraordinary States ($z_7, z_8$)**:
+    *   $z_7$ and $z_8$ represent "superearners".
+    *   **Transition Matrix (8x8)**: Must strictly follow the structure in **Table 3**.
+        *   Rows 1–6 (Ordinary): Transition to other ordinary states via $A$ or to $z_7$ with probability $\lambda_{in}$.
+        *   Row 7 ($z_7$): Transition to any ordinary state with probability $\lambda_{out}$, or stay/move within extraordinary states $(\lambda_{ll}, \lambda_{lh})$.
+        *   Row 8 ($z_8$): Transitions determined by $(\lambda_{hl}, \lambda_{hh})$.
+*   **Initial Distribution**: As per the last row of Table 3, $z_7$ and $z_8$ are not assigned to agents entering the economy.
+
+#### 4. Rate of Return Process ($\kappa$)
+*   **States**: 3-state idiosyncratic returns: $\kappa \in \{\kappa_L, \kappa_H, \kappa_{top}\}$.
+*   **Values**: Annualized rates from `config.yaml` (0.0, 0.067, 0.227) are converted to 5-year returns: $R_{5yr} = (1 + r_{ann})^5$.
+*   **Correlation with Productivity**: The transition matrix $\Pi_\kappa(z)$ depends on whether $z$ is ordinary or extraordinary.
+    *   $\pi_{in}(z)$ is higher for $z \in \{z_7, z_8\}$, creating the empirical correlation between top earners and top investors.
+    *   Specific transitions: $\Pi_\kappa$ involves persistence $\pi_{ll}, \pi_{hh}$ and the entry probability $\pi_{in}(z)$.
+
+#### 5. Grid Definitions
+*   **Asset Grid ($k$)**: A non-linear grid is essential.
+    *   **Density**: High density near $k=0$ (precautionary savings motive) and sparse at high wealth levels.
+    *   **Method**: Use a power-spaced grid or exponential grid: $k_i = \text{max\_k} \cdot \left(\frac{i}{N_k-1}\right)^p$, where $p > 1$.
+*   **State Space**: The total state space for policy functions is $16 \text{ (age)} \times N_k \text{ (assets)} \times 8 \text{ (z)} \times 3 \text{ (kappa)}$.
+
+#### 6. Tax and Transfer Systems
+*   **Corporate Tax**: $\tau_c = 0.236$ applied to capital income above threshold $d_c$. $d_c$ is calibrated to ensure revenue is 2.5% of GDP.
+*   **Personal Income Tax**: Disposable income $y_d$ is modeled as:
+    $$y_d = \min(\lambda y^{1-\tau_{prog}}, y - \tau_{max} y)$$
+    *   $\tau_{prog}$ is calibrated to the 12.4% gap between top 1% and bottom 99% (Piketty & Saez).
+    *   $\lambda$ is adjusted in the equilibrium loop to balance the government budget.
+*   **Estate Tax**: Flat rate $\tau_b = 0.20$ on the top 2% of estates (calibrated via the threshold for $k'$).
+
+#### 7. Bequest Motive Parameters
+*   **Utility Function**: $\phi(k') = \phi_1 [ (k' + \phi_2)^{1-\sigma_b} - 1 ]$.
+*   **Calibration Logic**: 
+    *   $\phi_1$ (altruism) targets the bequest-to-wealth ratio.
+    *   $\phi_2$ (non-homotheticity) targets the share of top 2% bequests (40%).
+    *   $\sigma_b$ (curvature) targets the age-wealth profile.
+
+#### 8. Integration with `config.yaml`
+The logic in `config.py` will prioritize values from the YAML:
+1.  **Preferences**: Load `sigma_c`, `sigma_l`, `beta`, and `theta`.
+2.  **Production**: Load `alpha`, `delta`, and `aggregate_tfp`.
+3.  **Returns**: Load annual return targets for conversion.
+4.  **Taxes**: Map the rates directly to the tax functions.
+
+This structured analysis ensures that the parameters in `config.py` are not just static values but part of a logically consistent economic environment defined by the paper's calibration strategy.

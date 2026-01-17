@@ -1,0 +1,28 @@
+----------------------------------------
+[Implementation approach]
+We will implement a heterogeneous-agent general equilibrium model using the Aiyagari-Bewley-Huggett framework. Given the heavy computational load of solving policy functions over the transition path, we will use 'Numba' for JIT-compiled performance and 'Endogenous Grid Method' (EGM) for the savings policy. The system will be divided into: 1. A core physics engine for household optimization and Markov transitions; 2. A steady-state solver using nested fixed-point iterations for prices (r) and fiscal parameters (lambda); 3. A transition path solver using backward induction on value functions and forward simulation of the wealth distribution; 4. An optimizer that searches over the tax progressivity parameter (tau) to maximize specific welfare criteria.
+
+----------------------------------------
+[File list]
+- main.py
+- config.py
+- model/productivity.py
+- model/household.py
+- model/economy.py
+- solvers/steady_state.py
+- solvers/transition.py
+- utils/metrics.py
+- utils/visualization.py
+
+----------------------------------------
+[Data structures and interfaces]
+classDiagramclass Config {+sigma: float+alpha: float+delta: float+mu: float+beta: float+theta: float+epsilon: float+tau_status_quo: float+g_y_ratio: float+k_grid: ndarray+z_grid: ndarray}class ProductivityProcess {+f_states: ndarray+a_states: ndarray+transition_matrix: ndarray+__init__(config: Config)+get_combined_states() : ndarray}class HouseholdSolver {+__init__(config: Config, productivity: ProductivityProcess)+solve_labor_supply(w: float, r: float, lambda_val: float, tau: float, k_prime: ndarray, z: float) : float+egm_step(v_next: ndarray, w: float, r: float, lambda_val: float, tau: float) : tuple+iterate_policy(w: float, r: float, lambda_val: float, tau: float) : ndarray}class SteadyStateSolver {+__init__(config: Config, hh_solver: HouseholdSolver)+compute_dist(policy_k: ndarray) : ndarray+find_ge_equilibrium(tau: float) : dict}class TransitionSolver {+__init__(config: Config, ss_init: dict, ss_final: dict)+solve_path(tau_new: float, T: int) : DataFrame+compute_welfare(path_data: DataFrame, beta_g: float) : float}class WelfareAnalyzer {+compute_gini(data: ndarray) : float+consumption_equivalent(v_base: float, v_new: float) : float}Config --* ProductivityProcessConfig --* HouseholdSolverHouseholdSolver --* SteadyStateSolverSteadyStateSolver --* TransitionSolverTransitionSolver --* WelfareAnalyzer
+
+----------------------------------------
+[Program call flow]
+sequenceDiagramparticipant M as Mainparticipant C as Configparticipant PP as ProductivityProcessparticipant HS as HouseholdSolverparticipant SS as SteadyStateSolverparticipant TS as TransitionSolverparticipant WA as WelfareAnalyzerM->>C: Initialize parameters (sigma, alpha, etc.)M->>PP: Generate z_grid and transition matrices (S, D)M->>SS: find_ge_equilibrium(tau=0.17)SS->>HS: iterate_policy(prices, lambda)HS-->>SS: return policy_k, policy_hSS-->>M: return Benchmark Steady State (Γ_0, r_0, λ_0)Note over M, SS: Find Optimal Steady StateM->>SS: Loop find_ge_equilibrium over tau range [-0.2, 0.5]SS-->>M: return tau_ss_opt (-0.09)Note over M, TS: Analyze Transitional DynamicsM->>TS: solve_path(tau_new=-0.09, T=30)TS->>HS: Backward induction from V_T to V_0TS->>TS: Forward simulate Γ_t from Γ_0 to Γ_TTS-->>M: return transition_path_dataM->>WA: compute_gini(Γ_t)M->>WA: consumption_equivalent(V_benchmark, V_transition)WA-->>M: return final metrics and welfare gains
+
+----------------------------------------
+[Anything UNCLEAR]
+The specific density and scale of the asset grid (k_grid) are not defined; I will assume a log-spaced grid with 200 points to capture the borrowing constraint behavior. The exact method for computing certainty equivalents (Eq 7) over the transition for agents with different initial wealth and productivity requires storing the full path of discounted utility components (V_c and V_l), which is memory-intensive.
+

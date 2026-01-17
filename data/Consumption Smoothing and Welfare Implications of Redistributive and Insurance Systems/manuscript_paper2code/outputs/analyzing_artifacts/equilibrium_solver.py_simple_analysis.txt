@@ -1,0 +1,78 @@
+### Logic Analysis: `equilibrium_solver.py`
+
+The `EquilibriumSolver` acts as the orchestrator of the OLG model. It finds the set of prices and policy parameters where individual household optimizations are consistent with aggregate market outcomes and government budget constraints. This process is a nested fixed-point iteration.
+
+#### 1. Core State and Initialization
+*   **Inputs**: Receives a `Config` object which provides parameters from `config.yaml` (e.g., $\alpha, \Psi, \delta$, targets for Pension/GDP).
+*   **Initial Guesses**:
+    *   Interest rate $r$ (e.g., starts at 0.02).
+    *   Insurance premium rate $t$ (percentage of labor income).
+    *   Pension replacement rate $\psi$ (to satisfy the 9.5% Pension/GDP target).
+    *   Bequest lump-sum $Tr_{beq}$ (distributed to workers).
+*   **Constants**: $J=15$, $J_r=9$, and the technology parameters ($\alpha, \Psi, \delta_{annual}$). Note that $\delta$ must be adjusted for the 5-year period: $\delta_{period} = 1 - (1 - \delta_{annual})^5$.
+
+#### 2. The Factor Price Logic
+The solver relies on the firm's first-order conditions for a representative firm with $Y = \Psi K^\alpha N^{1-\alpha}$:
+*   **Wage Calculation**: $w = (1-\alpha) \Psi \left( \frac{K}{N} \right)^\alpha$.
+*   **Interest Rate Calculation**: $r = \alpha \Psi \left( \frac{K}{N} \right)^{\alpha-1} - \delta$.
+*   **Inversion**: In the loop, we typically guess $r$ (or $K/N$), which immediately determines $w$.
+    *   $\frac{K}{N} = \left( \frac{r + \delta}{\alpha \Psi} \right)^{\frac{1}{\alpha-1}}$
+    *   $w = (1-\alpha) \Psi \left( \frac{K}{N} \right)^\alpha$
+
+#### 3. The Outer Loop: General Equilibrium Iteration
+The solver enters a `while` loop (up to `max_iter_ge`) until the vector $[r, t, \psi, Tr_{beq}]$ converges within `tolerance_ge`.
+
+**Step A: Household Decision Solving**
+*   Instantiate `HouseholdSolver` using current prices ($r, w$), government policy ($t, \psi, \tau_c, \phi, \lambda, \tau$), and bequests ($Tr_{beq}$).
+*   Execute `backward_induction()`:
+    1.  Solve retirement phase (ages 15 to 9) to get policy functions for $k', m, c$.
+    2.  Solve working phase (ages 8 to 1) to get policy functions for $k', n, c$.
+*   *Note*: $m$ affects the evolution of health status $h$, which in turn affects survival $s_{j,g,h}$.
+
+**Step B: Aggregation via Simulation**
+*   Instantiate `SimulationEngine` with the policy functions.
+*   Execute `simulate_population(N=50000)`:
+    *   Iterate forward from age 25.
+    *   Apply shocks (productivity $z$, health $h$).
+    *   Handle mortality (using survival $s_{j,g,h}$ based on current $h$).
+    *   Transition married couples to single status upon spousal death.
+*   Execute `compute_aggregates()` to retrieve:
+    *   $K_{supply}$: Sum of assets $k$ across all households.
+    *   $N_{supply}$: Sum of effective labor $z \epsilon_g n$ across all working households.
+    *   $Y$: Aggregate output using production function.
+    *   $SS_{total}$: Total pension payments.
+    *   $Med_{total}$: Total gross medical spending.
+    *   $Tax_{rev}$: Total progressive income tax revenue.
+    *   $Lab_{inc}$: Total labor income (tax base for premiums).
+    *   $B_{total}$: Total bequests from deceased agents.
+
+**Step C: Government and Market Updating (The "Check")**
+1.  **Market Clearing (Capital)**:
+    *   $K_{demand} = N_{supply} \times \left( \frac{r + \delta}{\alpha \Psi} \right)^{\frac{1}{\alpha-1}}$.
+    *   Compare $K_{supply}$ and $K_{demand}$. Update $r$ using a relaxation parameter (e.g., $r_{new} = r_{old} + \xi(K_{demand} - K_{supply})$) or Brent's method.
+2.  **Government Budget (Premium rate $t$)**:
+    *   Requirement: $G + SS_{total} + (1-\phi)Med_{total} = Tax_{rev} + \text{Premiums} + \text{ConsTax}$.
+    *   Update $t$ such that $t \times Lab_{inc}$ covers the remaining deficit (after $G$ is calculated as $g\_to\_gdp \times Y$ from `config.yaml`).
+3.  **Pension Target (Replacement rate $\psi$)**:
+    *   Requirement: $SS_{total} / Y = target\_pension\_to\_gdp$ (0.095).
+    *   Update $\psi$ to match this ratio.
+4.  **Bequests**:
+    *   Update $Tr_{beq} = B_{total} / (\text{Total Workers})$ to be used in the next iteration.
+
+#### 4. Convergence Criteria
+Convergence is achieved when:
+1.  Excess demand for capital is negligible.
+2.  Government budget is balanced.
+3.  Pension expenditure ratio targets are met.
+4.  Redistributed bequests equal actual bequests.
+
+#### 5. Integration with Counterfactuals
+The `EquilibriumSolver` must be flexible to handle the "Scenarios" described in Section 6:
+*   **No Pension**: Force $\psi = 0$ and $t_{pension} = 0$.
+*   **No Health Insurance**: Force $\phi = 1.0$ (no coverage).
+*   **Linear Tax**: Force $\tau = 0$ (from `tax_single/married` params) and solve for $\lambda$ such that revenue is neutral.
+
+#### 6. Numerical Stability Considerations
+*   **Relaxation**: Update variables using $X_{next} = \omega X_{calc} + (1-\omega) X_{old}$ to prevent oscillations in the high-dimensional GE space.
+*   **Damping**: Especially important for the interest rate $r$ and the premium rate $t$, which are highly sensitive to $K$ and $N$.
+*   **Consistency**: Ensure the `SimulationEngine` uses the same survival probabilities and health transitions used in the `HouseholdSolver`.

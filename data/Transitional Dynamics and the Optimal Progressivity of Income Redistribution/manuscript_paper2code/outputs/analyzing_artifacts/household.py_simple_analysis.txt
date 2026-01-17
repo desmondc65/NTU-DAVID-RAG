@@ -1,0 +1,69 @@
+The `household.py` file is the computational engine of the model. It implements the **Endogenous Gridpoint Method (EGM)** to solve the dynastic household's optimization problem under non-linear taxation. This logic analysis follows the design specifications and ensures alignment with the research paper's methodology.
+
+### 1. Mathematical Foundation
+
+The household solves a dynamic programming problem. The Bellman equation is:
+$$V(k, z; \Gamma) = \max_{c, k', h} \left\{ \frac{c^{1-\sigma}}{1-\sigma} - \theta \frac{h^{1+\epsilon}}{1+\epsilon} + \beta E [V(k', z'; \Gamma')] \right\}$$
+Subject to:
+1.  **Budget Constraint:** $c + k' = y^d(y) + k$
+2.  **Gross Income:** $y = zwh + rk$
+3.  **Disposable Income:** $y^d = \lambda y^{1-\tau}$
+4.  **Borrowing Constraint:** $k' \geq 0$
+
+#### Optimality Conditions
+*   **Intratemporal FOC (Labor):** $\theta h^\epsilon = c^{-\sigma} \cdot \frac{\partial y^d}{\partial h} = c^{-\sigma} \cdot \left[ \lambda (1-\tau) y^{-\tau} zw \right]$
+*   **Intertemporal FOC (Euler Equation):** $c^{-\sigma} = \beta E \left[ \frac{\partial V(k', z')}{\partial k'} \right]$
+*   **Envelope Condition:** $\frac{\partial V(k, z)}{\partial k} = c^{-\sigma} \left[ \frac{\partial y^d}{\partial k} + 1 \right] = c^{-\sigma} \left[ \lambda (1-\tau) y^{-\tau} r + 1 \right]$
+
+### 2. Logic for `HouseholdSolver`
+
+The class handles both the steady-state policy determination and the backward induction steps required for transitional dynamics.
+
+#### A. Core Functionality: `solve_labor_supply`
+Given the non-linearity of the tax system, $h$ and $k$ are solved simultaneously in the EGM step. This method implements the root-finding logic to find gross income $y$ (or hours $h$) given a target consumption level $c$ and end-of-period assets $k'$.
+
+1.  **Input:** Marginal utility of future wealth $M$, state variables $(z, r, w)$, and tax parameters $(\lambda, \tau)$.
+2.  **Equation to solve:** From the FOCs, define the residual of the budget constraint as a function of $y$:
+    $$f(y) = \lambda y^{1-\tau} + k(y) - c - k' = 0$$
+    where $k(y) = \frac{1}{r} \left[ y - zw \left( \frac{M \lambda (1-\tau) zw}{\theta y^\tau} \right)^{1/\epsilon} \right]$
+3.  **Bisection:** Search for $y$ in a range such that $f(y)$ crosses zero. The lower bound is the $y$ corresponding to $h=0$, and the upper bound is determined by the maximum feasible income.
+
+#### B. The EGM Step: `solve_backward_step`
+This method calculates the policies for time $t$ given the expected value/marginal utility at time $t+1$.
+
+1.  **Expected Marginal Utility:** Compute $E_{z'|z} [V_k(k', z'; \Gamma_{t+1})]$ for every point on the $k'$ grid and every state $z$. Note the transition matrix $P = \mu D + (1-\mu)S$.
+2.  **Consumption and Labor:** 
+    *   Set $M = \beta E[V_k]$.
+    *   Calculate $c = M^{-1/\sigma}$.
+    *   For each $(k'_{grid}, z)$, solve for gross income $y$ using the bisection logic in `solve_labor_supply`.
+    *   Recover $h = (y - rk)/zw$ (actually, use the labor FOC to recover $h$ precisely).
+    *   Recover the endogenous grid of beginning-of-period assets: $k_{endo} = c + k'_{grid} - \lambda y^{1-\tau}$.
+3.  **Interpolation:** Map the solved policies $(h, c, k'_{grid})$ from the endogenous grid $k_{endo}$ back to the fixed `EconomyConfig.k_grid`.
+4.  **Handling the Constraint:** If $k_{grid} < \min(k_{endo})$, the borrowing constraint $k'=0$ binds. In this case, solve the intratemporal FOC for $h$ where $k'$ is fixed at 0 and $c = \lambda (zwh + rk)^{1-\tau} + k$.
+5.  **Marginal Value Update:** Compute the new $V_k$ for the next iteration: $V_k = c^{-\sigma} [ \lambda (1-\tau) y^{-\tau} r + 1 ]$.
+
+#### C. Steady State Solver: `solve_steady_state_policy`
+1.  **Initialize:** Start with a guess for the marginal value function $V_k$ (e.g., from a simplified model or the analytical steady state).
+2.  **Iterate:** Call `solve_backward_step` repeatedly until the policy functions $k'(k, z)$ and $h(k, z)$ stabilize.
+3.  **Convergence:** Measure the maximum absolute difference between successive policy iterations against `numerical.tol_ss`.
+
+### 3. Alignment with `config.yaml`
+*   **Grid Specs:** Use `k_min`, `k_max`, and `k_size` with the exponential scaling factor `k_grid_exp` to create a grid that is dense near zero (where the borrowing constraint is most relevant).
+*   **Productivity:** Iterate over the combined 4-state space ($f \in \{L, H\} \times a \in \{L, H\}$).
+*   **Period Adjustment:** 
+    *   `beta = beta_annual ** period_years`
+    *   `delta = 1 - (1 - delta_annual) ** period_years`
+
+### 4. Computational Efficiency (Numba Integration)
+Since the `solve_backward_step` involves nested loops (states $z \times$ grid points $k$) and a non-linear solver (bisection) within each point, use `@njit` from `Numba`.
+*   Vectorize the calculation of expected marginal utility across $z$ using matrix multiplication.
+*   The bisection should be implemented as a fast, low-level function to minimize overhead.
+
+### 5. Data Interface
+The class returns a `HouseholdPolicy` object containing:
+*   `k_prime`: Optimal savings $k'(k, z)$.
+*   `hours`: Optimal labor $h(k, z)$.
+*   `consumption`: Resulting $c(k, z)$.
+*   `value_function`: (Optional) $V(k, z)$ for welfare analysis.
+
+This analysis ensures that the `HouseholdSolver` handles the non-linearities introduced by the tax parameter $\tau$ while maintaining the performance required for GE iterations.

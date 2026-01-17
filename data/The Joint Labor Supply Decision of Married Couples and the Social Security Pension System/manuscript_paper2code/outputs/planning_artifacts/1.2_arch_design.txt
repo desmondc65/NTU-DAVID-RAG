@@ -1,0 +1,28 @@
+----------------------------------------
+[Implementation approach]
+The software will implement a general-equilibrium overlapping-generations (OLG) model using a modular architecture. We will use a nested-loop approach to solve for the steady-state: an inner loop for the household's dynamic programming problem (backward induction) and an outer loop for market-clearing factor prices (K/L ratio) and government budget balance. For the household problem, we will solve Kuhn-Tucker conditions for labor supply and consumption using a Newton-type solver (scipy.optimize.root) and multi-linear interpolation for wealth and historical earnings. The earning ability AR(1) processes will be discretized using the Rouwenhorst method. Transition paths will be solved by iterating on the entire time-path of factor prices and policy variables, utilizing backward induction over the time dimension and forward simulation of the population distribution. Parallelization via Python's 'multiprocessing' will be used to speed up the solve-time for the large individual state space.
+
+----------------------------------------
+[File list]
+- config.py
+- discretization.py
+- household_solver.py
+- social_security.py
+- economy_simulator.py
+- steady_state.py
+- transition_path.py
+- evaluation.py
+- main.py
+
+----------------------------------------
+[Data structures and interfaces]
+classDiagramclass Config {+gamma: float+alpha: float+delta: float+theta: float+mu: float+nu: float+lambda_joint: float+wealth_nodes: int+earning_nodes: int+shock_nodes: int+get_policy_params() : dict}class Discretizer {+rouwenhorst(rho: float, sigma: float, n: int) : tuple+create_wealth_grid(min_a: float, max_a: float, n: int) : ndarray}class SocialSecurity {+calculate_pia(aime: float, thresholds: list) : float+get_benefit(m: int, pia1: float, pia2: float, policy_type: str) : float+get_marginal_benefit(m: int, pia1: float, pia2: float) : float}class HouseholdSolver {+config: Config+ss: SocialSecurity+value_functions: ndarray+policy_functions: dict+solve_terminal_period() : void+solve_backward_induction(prices: dict, policy: dict) : void+objective_function(vars: list, state: tuple, v_next: interp) : float}class EconomySimulator {+distribution: ndarray+simulate_forward(policy_functions: dict) : void+aggregate_k_l() : tuple+calculate_tax_revenue() : float}class SteadyStateSolver {+hs: HouseholdSolver+es: EconomySimulator+find_equilibrium() : dict+check_market_clearing(guess: list) : list}class TransitionSolver {+hs: HouseholdSolver+es: EconomySimulator+solve_path(initial_ss: dict, final_ss: dict) : ndarray}class Evaluation {+calculate_cev(v_base: ndarray, v_new: ndarray) : float+plot_macro_results(results: dict) : void}SteadyStateSolver --> HouseholdSolverSteadyStateSolver --> EconomySimulatorTransitionSolver --> HouseholdSolverTransitionSolver --> EconomySimulatorHouseholdSolver --> SocialSecurityHouseholdSolver --> ConfigSteadyStateSolver --> Discretizer
+
+----------------------------------------
+[Program call flow]
+sequenceDiagramparticipant M as Mainparticipant C as Configparticipant D as Discretizerparticipant SS as SteadyStateSolverparticipant HS as HouseholdSolverparticipant ES as EconomySimulatorparticipant TS as TransitionSolverparticipant EV as EvaluationM->>C: Initialize parameters()M->>D: Generate grids and transitions()M->>SS: find_equilibrium(guess_k_l, guess_bequests)loop until convergenceSS->>HS: solve_backward_induction(prices)HS->>HS: solve_terminal_period(age=100)loop age from 99 to 21HS->>HS: Solve Kuhn-Tucker via scipy.optimizeendHS-->>SS: Return policy_functionsSS->>ES: simulate_forward(policy_functions)ES-->>SS: Return aggregated K, L, tax_revenueSS->>SS: Update K/L and Bequests (Broyden/Bisection)endSS-->>M: Return baseline_steady_stateM->>TS: solve_path(baseline_ss, reform_type)loop until path convergenceTS->>HS: solve_time_dependent_backward(path_prices)HS-->>TS: time_path_policy_functionsTS->>ES: simulate_population_forward(initial_dist)ES-->>TS: aggregate_path_resultsTS->>TS: Update price pathsendTS-->>M: Return transition_resultsM->>EV: calculate_metrics(baseline, transition)EV->>EV: Compute CEV WelfareEV->>EV: Plot results (LFP, GDP, etc.)EV-->>M: Final report
+
+----------------------------------------
+[Anything UNCLEAR]
+1. The exact convergence criteria for the transition path (price path dampening factors) are not specified. 2. The mapping between the 2013 SCF data and the model's normalized efficiency units requires careful calibration of the 'one model unit' value ($87,766). 3. The specific Newton-type solver parameters for the nonlinear complementarity problem (Appendix A.1) might need tuning (e.g., choice of Fischer-Burmeister epsilon).
+

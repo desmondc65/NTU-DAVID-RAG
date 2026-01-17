@@ -1,0 +1,63 @@
+The `config.py` file serves as the central repository for all parameters and structural settings of the OLG model. Its primary responsibility is to load the `config.yaml` file, perform necessary conversions (especially from annual to 5-year period rates), and define the dimensions and bounds for the numerical grids used in the Value Function Iteration (VFI).
+
+### 1. Demographic and Temporal Structure
+*   **Life Cycle Mapping**: The model spans ages 25 to 99. With 1 period = 5 years, the total number of periods $J = 15$.
+    *   **Working Periods**: $j \in \{1, \dots, 8\}$ (Ages 25–64).
+    *   **Retirement Period**: $j \in \{9, \dots, 15\}$ (Ages 65–99).
+    *   **Retirement Threshold ($J_r$)**: Set to 9 (corresponds to age 65).
+*   **Time-Aggregation**: 
+    *   **Discount Factor ($\beta$):** The `beta_annual` from `config.yaml` must be converted to $\beta_{period} = (\beta_{annual})^5$.
+    *   **Depreciation ($\delta$):** The `delta_annual` must be converted to $\delta_{period} = 1 - (1 - \delta_{annual})^5$.
+
+### 2. Preference and Technology Parameters
+*   **Utility Constants**:
+    *   **$\sigma = 1.8$**: Inverse Frisch elasticity of labor supply.
+    *   **$v_g$**: Gender-specific utility constants (`vg_male`, `vg_female`) to ensure positive utility, preventing agents from preferring death over low-health states.
+    *   **$\eta = 1.7$**: Equivalence scale for married households (as per OECD scale).
+*   **Production**:
+    *   **$\alpha = 0.29$**: Capital share of income.
+    *   **$\Psi = 1.45$**: Total Factor Productivity (TFP), chosen to normalize the baseline wage $w=1$.
+    *   **Target $K/Y$**: 3.2 (used to calibrate $\beta$ in the outer loop).
+
+### 3. Government and Policy parameters
+*   **Taxation**:
+    *   **$\tau_c = 0.10$**: Flat consumption tax.
+    *   **Benabou/Heathcote Progressive Tax**: Parameters $\lambda$ and $\tau$ are stored separately for `tax_single` and `tax_married`. 
+    *   **Disposable Income Formula**: $y_d = \lambda y^{1-\tau}$.
+*   **Insurance & Pensions**:
+    *   **$\phi = 0.20$**: Out-of-pocket medical copayment rate (80% coverage).
+    *   **$G\_ratio = 0.116$**: Exogenous government spending as a share of GDP.
+    *   **Pension Replacement**: Targets a pension/GDP ratio of 9.5%.
+
+### 4. Health and Productivity
+*   **Health Parameters**: $\gamma$ (return to scale) and $H$ (productivity) for medical spending.
+*   **Productivity Process**: 
+    *   Annual persistence 0.898 and $\sigma_z = 0.77$.
+    *   `intra_family_corr = 0.1`: Correlation for married couples' productivity.
+    *   `college_premium = 0.34`: Used to scale the permanent component of the productivity grid.
+
+### 5. Numerical Grid Settings (`get_grid_settings()`)
+To solve the model accurately via VFI, the following grids must be defined:
+
+| Grid | Type | Logic |
+| :--- | :--- | :--- |
+| **Asset ($k$)** | Log-spaced | Since utility is concave, a denser grid at lower asset levels is required to capture borrowing constraints ($k \geq 0$). Range: $[0, K_{max}]$. |
+| **Avg. Earnings ($\tilde{e}$)** | Linear | Tracks career earnings for pension calculation. Range based on max possible productivity. |
+| **Health ($h$)** | Discrete | Exactly 5 states as per Section 4.6 ($h \in \{0, 1, 2, 3, 4\}$). |
+| **Productivity ($z$)** | Markov Chain | 6 states (3 transitory $\times$ 2 permanent) derived via the Rouwenhorst method. |
+
+### 6. Logic Analysis of `config.py` Implementation
+*   **Initialization**: The class should read `config.yaml` using a YAML parser and store values in a flattened `params` dictionary for easy access by `EquilibriumSolver` and `HouseholdSolver`.
+*   **Validation**: Ensure that $J$, $J_r$, and the period length are consistent with the paper's ages (25-99, retirement at 65).
+*   **Interface Fidelity**: `get_grid_settings()` must provide the number of points (e.g., `n_k = 100`, `n_e = 50`) and bounds to the `ParamsGenerator`.
+
+### 7. Parameter Reference Summary (from config.yaml)
+*   **$\beta$ (Annual)**: 0.98.
+*   **$\sigma$**: 1.8.
+*   **$\alpha$**: 0.29.
+*   **$\delta$ (Annual)**: 0.07.
+*   **$\tau_c$**: 0.10.
+*   **$\phi$**: 0.20.
+*   **$G/GDP$**: 0.116.
+*   **$\eta$**: 1.7.
+*   **Grid Dimensions**: Defined for `k`, `e_tilde`, and `h`.

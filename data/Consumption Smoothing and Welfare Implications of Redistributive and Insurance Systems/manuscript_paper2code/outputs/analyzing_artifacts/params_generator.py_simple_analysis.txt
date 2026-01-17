@@ -1,0 +1,55 @@
+Based on the research paper, the technical design, and the `config.yaml` settings, here is the logic analysis for `params_generator.py`.
+
+### 1. Purpose and Role
+The `ParamsGenerator` class is responsible for the pre-computation of all exogenous stochastic and deterministic processes. This includes discretizing the labor income process, constructing health transition matrices, calculating survival probabilities, and defining age-gender deterministic wage profiles. These parameters are essential inputs for the `HouseholdSolver` and `EquilibriumSolver`.
+
+### 2. Logic Analysis by Method
+
+#### A. Labor Productivity Discretization (`generate_productivity_matrix`)
+The paper models labor productivity as a combination of a permanent component ($f$) and a transitory component ($a$).
+*   **Transitory Component ($a$):**
+    *   **Process:** AR(1) with annual persistence $\rho_a = 0.898$ and long-run variance $\sigma^2_z = 0.77^2$.
+    *   **Period Conversion:** Since 1 model period = 5 years, the 5-year persistence is $\rho = \rho_a^5$. The innovation variance for the 5-year process is adjusted to preserve the long-run variance: $\sigma^2_{\epsilon, 5} = \sigma^2_z(1 - \rho^2)$.
+    *   **Discretization:** Use the **Rouwenhorst method** to create a 3-state Markov chain ($a_L, a_M, a_H$).
+*   **Permanent Component ($f$):**
+    *   **Process:** Fixed over the lifecycle, determined at entry ($j=1$).
+    *   **Levels:** Based on the college premium (34% from `config.yaml`). If $f_L$ is the base, then $f_H = f_L + \ln(1.34)$.
+*   **Full 6-State Grid ($z$):**
+    *   Combine $f \in \{f_L, f_H\}$ and $a \in \{a_L, a_M, a_H\}$ to form 6 states: $[f_L+a_L, f_L+a_M, f_L+a_H, f_H+a_L, f_H+a_M, f_H+a_H]$.
+    *   **Transition Matrix ($\Pi$):** A $6 \times 6$ block-diagonal matrix. Since $f$ is permanent, agents in the $f_L$ block cannot transition to the $f_H$ block.
+*   **Initial Distribution:** Implement the distribution from the last row of Table 4 using $\zeta=0.181$ and $\kappa$ (tertiary education share for males/females).
+*   **Married Correlation:** Implement the intrafamily wage correlation logic from Section 4.3 using $\omega = 0.1$ to create a joint $36 \times 36$ transition matrix for couples.
+
+#### B. Deterministic Wage Profiles (`get_deterministic_wages`)
+*   **Structure:** Generate an array of size `(num_periods, 2)` (one for each gender).
+*   **Logic:** According to Appendix B, the deterministic component $\epsilon_{g,j}$ follows a cubic polynomial in experience: $ln(\epsilon_{g,j}) = a_0 + a_1 j + a_2 j^2 + a_3 j^3$. 
+*   **Implementation:** Although the specific polynomial coefficients are from the JHPS residuals, the function will provide the evaluated values for each age $j \in [1, 8]$ (pre-retirement).
+
+#### C. Health Accumulation and Transitions (`generate_health_transitions`)
+*   **States:** Discretize health status $h$ into 5 levels (0-4), where 4 is the best health.
+*   **Matrices:** Define the transition matrices $H_j$ provided in Table 5.
+    *   One matrix for ages 65-74.
+    *   One matrix for ages 75+.
+*   **Endogenous Interaction:** Note that while the transition matrices are exogenous, the "effective" health state $h_{t+1}$ is influenced by medical spending $m_j$ via the production function $I(m_j) = H m_j^\gamma$. The logic here must prepare the base probabilities which will be shifted by $I(m_j)$ in the `HouseholdSolver`.
+
+#### D. Survival Probabilities (`calculate_survival_probs`)
+*   **Functional Form:** $s_{j,g,h} = \frac{1}{1 + \exp(\omega_0 + \omega_1 j + \omega_2 j^2 + \omega_3 h)}$.
+*   **Parameter Calibration:** 
+    *   The 4 parameters $(\omega_0, \dots, \omega_3)$ must be solved to match the 4 ratios described in Section 4.2 (relative survival rates for age brackets 75-79, 80-84, 90-94, and curvature).
+    *   The method will use `scipy.optimize.minimize` or a root-finder to ensure the logistic function aligns with the "Abridged Life Table" data mentioned in Section 2.
+*   **Constraints:** Ensure $\omega_3 < 0$ so that higher $h$ (better health) leads to higher $s$.
+
+### 3. Alignment with config.yaml
+*   **Productivity:** Uses `persistence_annual`, `sigma_z`, `zeta`, and `intra_family_corr`.
+*   **Demographics:** Uses `num_periods` and `period_length`.
+*   **Technology/Normalization:** Uses `psi_tfp` and `college_premium`.
+
+### 4. Implementation Details (Data Structures)
+*   `z_states`: `ndarray` of shape `(6,)` representing $\ln(\text{productivity})$.
+*   `trans_matrix`: `ndarray` of shape `(6, 6)`.
+*   `health_trans`: `dict` or `ndarray` of shape `(2, 5, 5)` (splitting by age cohorts).
+*   `survival_params`: `ndarray` of shape `(4,)` containing the $\omega$ coefficients.
+*   `eps_age_profile`: `ndarray` of shape `(15, 2)` for gender-specific deterministic shifts.
+
+### 5. Numerical Efficiency Note
+Since `params_generator.py` is called primarily at initialization or when resetting the environment for counterfactuals, standard NumPy is sufficient. However, the resulting matrices should be in a format compatible with `Numba` (C-contiguous arrays) for use in the `HouseholdSolver`.

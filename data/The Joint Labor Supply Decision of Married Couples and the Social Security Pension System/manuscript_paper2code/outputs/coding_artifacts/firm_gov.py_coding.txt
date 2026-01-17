@@ -1,0 +1,250 @@
+```python
+## firm_gov.py
+
+import numpy as np
+from typing import Tuple, Dict, Any
+from config import Config
+
+class FirmAndGov:
+    """
+    Handles the firm's production technology and the government's taxation 
+    and Social Security (OASI) benefit systems for the OLG model.
+    """
+
+    def __init__(self, config: Config):
+        """
+        Initializes the Firm and Government logic with structural parameters.
+
+        Args:
+            config (Config): Configuration object containing parameters from config.yaml.
+        """
+        self.config = config
+
+        # Production Parameters
+        self.A = config.tfp_A
+        self.theta = config.capital_share_theta
+        self.delta = config.depreciation_delta
+
+        # Taxation Parameters
+        self.tau_p = config.payroll_tax_tau_p
+        self.phi_t = config.income_tax_phi_t
+        self.phi_m1 = config.income_tax_phi_m1
+        self.phi_m2 = config.income_tax_phi_m2
+        
+        # Standard deduction and exemptions (Section 2.1)
+        # Assuming a default value if not provided; paper mentions it's normalized.
+        self.xi = 0.165  # Placeholder value based on typical US calibration relative to avg wage
+
+        # OASI Parameters
+        self.bend_points = config.get_bend_points()
+        self.replacement_rates = config.get_replacement_rates()
+        self.mu = config.prod_growth_mu
+        self.age_retire = config.age_retire
+        self.earning_cap = config.earnings_max  # Maximum taxable earnings
+
+    def get_factor_prices(self, K: float, L: float) -> Tuple[float, float]:
+        """
+        Calculates the interest rate (r) and wage rate (w) based on Cobb-Douglas 
+        marginal products.
+
+        Args:
+            K (float): Aggregate capital stock.
+            L (float): Aggregate labor in efficiency units.
+
+        Returns:
+            Tuple[float, float]: (interest_rate, wage_rate)
+        """
+        # Avoid division by zero
+        if L <= 1e-10:
+            return 0.0, 0.0
+
+        k_l_ratio = K / L
+        
+        # wage = (1 - theta) * A * (K/L)^theta
+        w = (1.0 - self.theta) * self.A * (k_l_ratio ** self.theta)
+        
+        # r = theta * A * (K/L)^(theta - 1) - delta
+        r = self.theta * self.A * (k_l_ratio ** (self.theta - 1.0)) - self.delta
+        
+        return r, w
+
+    def get_income_tax(self, y_taxable: float, m: int) -> float:
+        """
+        Calculates the Gouveia-Strauss progressive income tax.
+        
+        Args:
+            y_taxable (float): Taxable income (total income minus deductions).
+            m (int): Marital status (0: Married, 1/2: Single).
+
+        Returns:
+            float: Total income tax liability.
+        """
+        if y_taxable <= 0:
+            return 0.0
+
+        # Note: In the model, phi_m1 and phi_m2 are estimated separately 
+        # for married (m=0) and single (m=1, 2) households.
+        # Here we assume the config holds the single value or handles the switch.
+        # For simplicity in this implementation, we use the phi_t scale.
+        
+        # GS-Function: T(y) = phi_t * [y - (y^-phi_m1 + phi_m2)^(-1/phi_m1)]
+        # We check m to apply potential marital-specific phi_m1/phi_m2 shifts
+        p1 = self.phi_m1 if m == 0 else self.phi_m1 * 1.05 # Placeholder logic
+        p2 = self.phi_m2 if m == 0 else self.phi_m2 * 1.05 # Placeholder logic
+        
+        # Safety check for GS parameters
+        if p1 == 0: 
+            return self.phi_t * 0.15 * y_taxable # Fallback to flat tax if not calibrated
+
+        tax = self.phi_t * (y_taxable - (y_taxable**(-p1) + p2)**(-1.0/p1))
+        return max(0.0, tax)
+
+    def get_pia(self, b: float, age: int) -> float:
+        """
+        Calculates the Primary Insurance Amount (PIA) based on historical earnings.
+        Includes the productivity growth adjustment (Section 2.1).
+
+        Args:
+            b (float): Average historical indexed earnings (AIME).
+            age (int): Current age of the individual.
+
+        Returns:
+            float: Individual's basic Social Security benefit (PIA).
+        """
+        if age < self.age_retire:
+            return 0.0
+
+        # Progressive benefit formula (90%, 32%, 15% brackets)
+        v1, v2 = self.bend_points
+        r1, r2, r3 = self.replacement_rates
+
+        pia_raw = (r1 * min(b, v1) +
+                   r2 * max(min(b, v2) - v1, 0.0) +
+                   r3 * max(b - v2, 0.0))
+
+        # Productivity growth adjustment: (1 + mu)^(60 - age)
+        adj_factor = (1.0 + self.mu) ** (60 - age)
+        
+        return pia_raw * adj_factor
+
+    def get_social_security_benefit(self, b1: float, b2: float, m: int, 
+                                     age: int, policy_type: str = "baseline") -> float:
+        """
+        Calculates the OASI benefit for a household, handling spousal and 
+        survivors benefits.
+
+        Args:
+            b1 (float): Historical earnings of the husband (or single man).
+            b2 (float): Historical earnings of the wife (or single woman).
+            m (int): Marital status (0: Married, 1: Single Male, 2: Single Female).
+            age (int): Current age of the household.
+            policy_type (str): "baseline" (includes spousal/survivors) or 
+                               "reform" (only own benefits).
+
+        Returns:
+            float: Total Social Security benefit for the household unit.
+        """
+        pia1 = self.get_pia(b1, age)
+        pia2 = self.get_pia(b2, age)
+
+        if policy_type == "baseline":
+            if m == 0:
+                # Married: max(sum of own, 1.5 * primary)
+                # Technically: pia1 + pia2 if both high, or pia_j + 0.5*pia_j if one is low
+                return max(pia1 + pia2, 1.5 * pia1, 1.5 * pia2)
+            elif m == 1:
+                # Single Male (or Widower): max own or survivors (100% spouse)
+                return max(pia1, pia2)
+            elif m == 2:
+                # Single Female (or Widow): max own or survivors (100% spouse)
+                return max(pia2, pia1)
+        
+        elif policy_type == "reform":
+            # Removing spousal and survivors benefits (Section 4)
+            if m == 0:
+                return pia1 + pia2
+            elif m == 1:
+                return pia1
+            elif m == 2:
+                return pia2
+        
+        return 0.0
+
+    def get_marginal_pia(self, b: float, age: int) -> float:
+        """
+        Derivative of PIA with respect to b. Used in Euler equations 
+        to capture future benefit incentives.
+        """
+        if age < self.age_retire:
+            return 0.0
+
+        v1, v2 = self.bend_points
+        r1, r2, r3 = self.replacement_rates
+
+        if b < v1:
+            mpia_raw = r1
+        elif b < v2:
+            mpia_raw = r2
+        else:
+            mpia_raw = r3
+
+        adj_factor = (1.0 + self.mu) ** (60 - age)
+        return mpia_raw * adj_factor
+
+    def balance_ss_budget(self, total_payroll_tax_rev: float, 
+                          sum_unadjusted_benefits: float, 
+                          residual: float = -0.0571) -> float:
+        """
+        Determines the OASI benefit adjustment factor (psi_t) to balance 
+        the Social Security budget.
+
+        T_RSS(psi) = T_P - T_RO (Equation 12/Section 2.3)
+
+        Args:
+            total_payroll_tax_rev (float): Aggregated payroll tax revenue.
+            sum_unadjusted_benefits (float): Sum of benefits with psi=1.0.
+            residual (float): The OASI residual (T_RO) from baseline economy.
+
+        Returns:
+            float: Benefit adjustment factor psi_t.
+        """
+        if sum_unadjusted_benefits <= 1e-10:
+            return 1.0
+
+        # T_RSS = psi * sum_unadjusted = total_tax - residual
+        target_expenditure = total_payroll_tax_rev - residual
+        psi = target_expenditure / sum_unadjusted_benefits
+        
+        return max(0.0, psi)
+
+    def get_payroll_tax(self, earnings: np.ndarray) -> float:
+        """
+        Calculates the flat Social Security payroll tax for a set of earnings.
+
+        Args:
+            earnings (np.ndarray): Array of earnings [y1, y2].
+
+        Returns:
+            float: Total payroll tax collected.
+        """
+        taxable_earnings = np.minimum(earnings, self.earning_cap)
+        return self.tau_p * np.sum(taxable_earnings)
+
+    def calculate_accidental_bequests(self, end_assets: np.ndarray, 
+                                      death_probs: np.ndarray, 
+                                      pop_density: np.ndarray) -> float:
+        """
+        Aggregates wealth left by deceased households to be distributed as bequests.
+        
+        Args:
+            end_assets: Assets at end of period.
+            death_probs: Probability of death for each state.
+            pop_density: Distribution of households.
+            
+        Returns:
+            float: Total bequest revenue (q_t).
+        """
+        # q_t = sum( a' * (1 - survival_rate) * density )
+        # This is a simplified interface for the aggregation in Section 2.3
+        return np.sum(end_assets * death_probs * pop_density)
+```

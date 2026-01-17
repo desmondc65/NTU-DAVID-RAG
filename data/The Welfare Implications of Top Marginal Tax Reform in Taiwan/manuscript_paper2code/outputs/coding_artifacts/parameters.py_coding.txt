@@ -1,0 +1,184 @@
+```python
+## parameters.py
+import numpy as np
+import yaml
+from typing import Dict, Any
+
+class ModelParams:
+    """
+    Central repository for all structural and calibrated parameters governing 
+    the Taiwanese lifecycle economy model.
+    
+    This class handles the conversion of annual data into 5-year period metrics,
+    initializes the superstar Markov productivity process, and constructs 
+    non-linear grids for state variables.
+    """
+
+    def __init__(self, config_path: str = "config.yaml"):
+        """
+        Initializes parameters from the provided YAML configuration file.
+        
+        Args:
+            config_path: Path to the config.yaml file.
+        """
+        with open(config_path, 'r') as f:
+            self.config = yaml.safe_load(f)
+
+        # 1. Demographic and Temporal parameters
+        self.J: int = self.config['demographics']['total_periods']  # 15
+        self.Jr: int = self.config['demographics']['retirement_period']  # 9
+        self.period_length: int = self.config['demographics']['period_length']  # 5 years
+
+        # 2. Production parameters
+        self.alpha: float = self.config['production']['alpha']
+        self.delta_annual: float = self.config['production']['delta_annual']
+        # 5-year depreciation: 1 - (1 - delta_a)^5
+        self.delta: float = 1.0 - (1.0 - self.delta_annual) ** self.period_length
+        self.psi: float = self.config['production']['tfp_psi']
+
+        # 3. Preference parameters
+        self.beta_annual: float = self.config['preferences']['beta_annual']
+        # 5-year discount factor: beta_a^5
+        self.beta: float = self.beta_annual ** self.period_length
+        
+        # Curvature of labor disutility sigma = 1 / Frisch_elasticity
+        self.sigma_m: float = 1.0 / self.config['preferences']['frisch_m']
+        self.sigma_f: float = 1.0 / self.config['preferences']['frisch_f']
+        self.sigma_g: Dict[str, float] = {'m': self.sigma_m, 'f': self.sigma_f}
+        
+        self.eta: float = self.config['preferences']['equivalence_scale']
+        
+        # Initial calibration guesses for participation costs and disutility
+        # These will be updated via update_calibrated_params in the calibration loop
+        self.phi: Dict[str, float] = {
+            's_m': self.config['preferences']['fixed_cost_participation']['single_m'],
+            'm_m': self.config['preferences']['fixed_cost_participation']['married_m'],
+            's_f': self.config['preferences']['fixed_cost_participation']['single_f'],
+            'm_f': self.config['preferences']['fixed_cost_participation']['married_f']
+        }
+        # Disutility of hours (theta) - targets for calibration
+        self.theta: Dict[str, float] = {'m': 0.5, 'f': 0.6}  # Initial guesses
+
+        # 4. Taxation parameters
+        self.tau_c: float = self.config['taxation']['consumption_tax']
+        self.tau_max_benchmark: float = self.config['taxation']['benchmark_top_rate']
+        self.tau_max: float = self.tau_max_benchmark  # Default to benchmark
+        
+        self.tau_s: float = self.config['taxation']['progressivity']['single']
+        self.tau_m: float = self.config['taxation']['progressivity']['married']
+        
+        # Benabou Lambda parameter (tax level) - typically calibrated or estimated
+        # Initial values to be adjusted to match average tax rates
+        self.lambda_tax: Dict[str, float] = {'s': 0.85, 'm': 0.82}
+        
+        # Threshold multiplier (relative to average income)
+        self.y_b_multiplier: float = self.config['taxation']['threshold_multiplier']
+
+        # 5. Social Security and Transfers
+        self.psi_ss: float = 0.4  # Initial replacement rate guess (psi in paper)
+        self.tr_gdp_share: float = 0.092  # Target social transfers share
+        self.t_premium: float = 0.05      # Insurance premium rate (calibrated to balance budget)
+
+        # 6. Productivity process (Superstar states)
+        self._init_productivity_process()
+
+        # 7. Grids for state variables
+        self._generate_grids()
+
+    def _init_productivity_process(self):
+        """
+        Initializes the 5-state Markov transition matrix for labor productivity,
+        including the 'superstar' state (z5) as described in the Appendix (Table 11).
+        """
+        # Productivity levels z1 to z5
+        self.z_states: np.ndarray = np.array([1.0, 2.0, 2.85, 5.91, 70.59], dtype=np.float64)
+        
+        # Transition probabilities matrix A[i, j] = Pr(z' = z_j | z = z_i)
+        # Probabilities from TABREF7 (Appendix)
+        self.z_transition: np.ndarray = np.array([
+            [0.383, 0.254, 0.215, 0.146, 0.002],
+            [0.353, 0.250, 0.231, 0.164, 0.002],
+            [0.357, 0.240, 0.228, 0.172, 0.002],
+            [0.393, 0.244, 0.209, 0.152, 0.002],
+            [0.038, 0.038, 0.038, 0.038, 0.850]
+        ], dtype=np.float64)
+
+        # Survival probabilities (simplified placeholders, usually loaded from data_handler)
+        self.survival_m: np.ndarray = np.ones(self.J)
+        self.survival_f: np.ndarray = np.ones(self.J)
+
+    def _generate_grids(self):
+        """
+        Constructs non-linear grids for assets (k) and average historical earnings (e_tilde).
+        The asset grid uses an exponential scale to be dense at the bottom.
+        """
+        k_min = self.config['grids']['k_min']
+        k_max = self.config['grids']['k_max']
+        k_size = self.config['grids']['k_size']
+        
+        # Generate asset grid: dense at bottom, sparse at top (capturing superstars)
+        # Using a curvature parameter to concentrate points near k_min
+        phi_k = 1.1
+        self.k_grid: np.ndarray = np.zeros(k_size)
+        for i in range(k_size):
+            self.k_grid[i] = k_min + (k_max - k_min) * (pow(phi_k, i) - 1.0) / (pow(phi_k, k_size - 1) - 1.0)
+            
+        # Average earnings grid (e_tilde) - linear or log-spaced
+        e_tilde_size = self.config['grids']['e_tilde_size']
+        # Max earnings based on superstar z5 and w=1
+        e_max = self.z_states[-1] * 1.5  # 1.5 is approx max of epsilon profile
+        self.e_tilde_grid: np.ndarray = np.linspace(0.0, e_max, e_tilde_size)
+
+    def update_calibrated_params(self, params_dict: Dict[str, Any]):
+        """
+        Updates parameters that are part of the model calibration process.
+        
+        Args:
+            params_dict: Dictionary containing parameter names and new values.
+                         Supported keys: beta, theta_m, theta_f, phi_s_m, phi_m_m, 
+                         phi_s_f, phi_m_f, psi_ss, lambda_s, lambda_m, psi_tfp.
+        """
+        if 'beta' in params_dict:
+            self.beta = params_dict['beta']
+        if 'theta_m' in params_dict:
+            self.theta['m'] = params_dict['theta_m']
+        if 'theta_f' in params_dict:
+            self.theta['f'] = params_dict['theta_f']
+        if 'phi_s_m' in params_dict:
+            self.phi['s_m'] = params_dict['phi_s_m']
+        if 'phi_m_m' in params_dict:
+            self.phi['m_m'] = params_dict['phi_m_m']
+        if 'phi_s_f' in params_dict:
+            self.phi['s_f'] = params_dict['phi_s_f']
+        if 'phi_m_f' in params_dict:
+            self.phi['m_f'] = params_dict['phi_m_f']
+        if 'psi_ss' in params_dict:
+            self.psi_ss = params_dict['psi_ss']
+        if 'lambda_s' in params_dict:
+            self.lambda_tax['s'] = params_dict['lambda_s']
+        if 'lambda_m' in params_dict:
+            self.lambda_tax['m'] = params_dict['lambda_m']
+        if 'psi_tfp' in params_dict:
+            self.psi = params_dict['psi_tfp']
+
+    def set_tax_policy(self, tau_max: float):
+        """
+        Updates the top marginal tax rate for policy analysis.
+        
+        Args:
+            tau_max: The new top marginal tax rate (e.g., 0.40 or 0.69).
+        """
+        self.tau_max = tau_max
+
+    @property
+    def r_annual(self) -> float:
+        """Helper to get annual interest rate from 5-year r if needed."""
+        # This would be derived in the steady state solver
+        return 0.04 # Placeholder
+
+    def get_survival_probs(self, gender: str) -> np.ndarray:
+        """Returns survival probabilities for a specific gender."""
+        if gender == 'm':
+            return self.survival_m
+        return self.survival_f
+```

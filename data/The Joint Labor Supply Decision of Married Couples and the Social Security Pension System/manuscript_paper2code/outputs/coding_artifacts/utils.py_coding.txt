@@ -1,0 +1,235 @@
+```python
+## utils.py
+
+import numpy as np
+from numba import njit
+from typing import Tuple, Dict
+
+"""
+Utility functions for the Overlapping-Generations (OLG) model.
+
+This module provides mathematical primitives for:
+1. Discretizing stochastic processes using the Rouwenhorst method.
+2. Calculating joint transition probabilities for married households.
+3. Fischer-Burmeister functions for solving complementarity problems.
+4. Optimized N-dimensional linear interpolation using Numba.
+5. Gamma distribution utilities for random utility modeling.
+"""
+
+@njit
+def rouwenhorst(rho: float, sigma_eps: float, n: int) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Implements the Rouwenhorst method to discretize an AR(1) process.
+    
+    ln(z_t) = rho * ln(z_{t-1}) + eps_t, where eps_t ~ N(0, sigma_eps^2).
+
+    Args:
+        rho (float): Autocorrelation parameter.
+        sigma_eps (float): Standard deviation of the innovation.
+        n (int): Number of grid points.
+
+    Returns:
+        Tuple[np.ndarray, np.ndarray, np.ndarray]: (grid, transition_matrix, stationary_dist)
+    """
+    # Standard deviation of the stationary distribution of the AR(1)
+    sigma_z = sigma_eps / np.sqrt(1.0 - rho**2)
+    
+    # Grid construction: Symmetric around 0 in logs
+    psi = sigma_z * np.sqrt(float(n - 1))
+    log_grid = np.linspace(-psi, psi, n)
+    grid = np.exp(log_grid)
+    
+    # Base transition matrix for n=2
+    p = (1.0 + rho) / 2.0
+    q = p
+    
+    P = np.array([[p, 1.0 - p], [1.0 - q, q]])
+    
+    # Recursive construction for n > 2
+    for i in range(3, n + 1):
+        P_old = P
+        P = np.zeros((i, i))
+        
+        P[0:i-1, 0:i-1] += p * P_old
+        P[0:i-1, 1:i]   += (1.0 - p) * P_old
+        P[1:i, 0:i-1]   += (1.0 - q) * P_old
+        P[1:i, 1:i]     += q * P_old
+        
+        # Normalize interior rows (rows 1 to i-2)
+        P[1:i-1, :] /= 2.0
+
+    # Calculate stationary distribution
+    # Solve pi * P = pi => (P.T - I) * pi.T = 0
+    val, vec = np.linalg.eig(P.T)
+    idx = np.argmin(np.abs(val - 1.0))
+    pi = np.real(vec[:, idx])
+    pi = pi / np.sum(pi)
+    
+    return grid, P, pi
+
+@njit
+def get_joint_ability_probs(P_marginal: np.ndarray, pi_marginal: np.ndarray, 
+                             omega: float) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Calculates joint unconditional and transition probabilities for married couples.
+    
+    Based on Section 3.4: Wages are perfectly correlated with probability omega 
+    and uncorrelated with probability 1 - omega.
+
+    Args:
+        P_marginal (np.ndarray): N x N transition matrix for a single person.
+        pi_marginal (np.ndarray): N stationary distribution.
+        omega (float): Wage correlation parameter (wage_corr_omega).
+
+    Returns:
+        Tuple[np.ndarray, np.ndarray]: (pi_joint (N*N), P_joint (N*N x N*N))
+    """
+    n = P_marginal.shape[0]
+    
+    # Unconditional joint distribution pi(e1, e2)
+    # pi_joint = omega * diag(pi) + (1 - omega) * (pi_marginal outer pi_marginal)
+    pi_joint = np.zeros((n, n))
+    for i in range(n):
+        for j in range(n):
+            if i == j:
+                pi_joint[i, j] = omega * pi_marginal[i] + (1.0 - omega) * pi_marginal[i] * pi_marginal[j]
+            else:
+                pi_joint[i, j] = (1.0 - omega) * pi_marginal[i] * pi_marginal[j]
+    
+    pi_joint_flat = pi_joint.flatten()
+
+    # Joint transition matrix P(e1', e2' | e1, e2)
+    # Row index (i, j) -> Column index (i', j')
+    P_joint = np.zeros((n * n, n * n))
+    
+    for i in range(n):
+        for j in range(n):
+            row_idx = i * n + j
+            for ip in range(n):
+                for jp in range(n):
+                    col_idx = ip * n + jp
+                    
+                    # Uncorrelated transition
+                    prob_uncorr = P_marginal[i, ip] * P_marginal[j, jp]
+                    
+                    # Perfectly correlated transition (only moves along diagonal)
+                    prob_corr = 0.0
+                    if i == j and ip == jp:
+                        prob_corr = P_marginal[i, ip]
+                    
+                    # Mixture probability
+                    # Note: omega is only applied if the current state is on the diagonal
+                    if i == j:
+                        P_joint[row_idx, col_idx] = omega * prob_corr + (1.0 - omega) * prob_uncorr
+                    else:
+                        P_joint[row_idx, col_idx] = prob_uncorr
+
+    return pi_joint_flat, P_joint
+
+@njit
+def fischer_burmeister(u: float, v: float, eps: float = 1e-8) -> float:
+    """
+    Differentiable Fischer-Burmeister function for solving complementarity problems.
+    phi(u, v) = u + v - sqrt(u^2 + v^2 + eps).
+    Useful for Kuhn-Tucker conditions: phi(u, v) = 0 <=> u >= 0, v >= 0, uv = 0.
+    """
+    return u + v - np.sqrt(u**2 + v**2 + eps)
+
+@njit
+def fischer_burmeister_plus(u: float, v: float, eps: float = 1e-8) -> float:
+    """
+    Variation of the Fischer-Burmeister function (phi+) used in Appendix A.1.
+    phi+(u, v) = u + v + sqrt(u^2 + v^2 + eps).
+    """
+    return u + v + np.sqrt(u**2 + v**2 + eps)
+
+@njit
+def interp_3d(x_grid: np.ndarray, y_grid: np.ndarray, z_grid: np.ndarray, 
+              values: np.ndarray, x: float, y: float, z: float) -> float:
+    """
+    Fast trilinear interpolation for a 3D grid.
+    Used for value function interpolation on (Assets, Earnings1, Earnings2).
+
+    Args:
+        x_grid, y_grid, z_grid (np.ndarray): Coordinate grids.
+        values (np.ndarray): Value function on the grid.
+        x, y, z (float): Target points.
+
+    Returns:
+        float: Interpolated value.
+    """
+    # Find bounding indices for each dimension
+    ix = np.searchsorted(x_grid, x) - 1
+    iy = np.searchsorted(y_grid, y) - 1
+    iz = np.searchsorted(z_grid, z) - 1
+    
+    # Boundary constraints
+    ix = max(0, min(ix, len(x_grid) - 2))
+    iy = max(0, min(iy, len(y_grid) - 2))
+    iz = max(0, min(iz, len(z_grid) - 2))
+    
+    # Weights
+    wx = (x - x_grid[ix]) / (x_grid[ix+1] - x_grid[ix])
+    wy = (y - y_grid[iy]) / (y_grid[iy+1] - y_grid[iy])
+    wz = (z - z_grid[iz]) / (z_grid[iz+1] - z_grid[iz])
+    
+    # Trilinear interpolation formula
+    v000 = values[ix, iy, iz]
+    v100 = values[ix+1, iy, iz]
+    v010 = values[ix, iy+1, iz]
+    v001 = values[ix, iy, iz+1]
+    v110 = values[ix+1, iy+1, iz]
+    v101 = values[ix+1, iy, iz+1]
+    v011 = values[ix, iy+1, iz+1]
+    v111 = values[ix+1, iy+1, iz+1]
+    
+    val = (v000 * (1.0 - wx) * (1.0 - wy) * (1.0 - wz) +
+           v100 * wx * (1.0 - wy) * (1.0 - wz) +
+           v010 * (1.0 - wx) * wy * (1.0 - wz) +
+           v001 * (1.0 - wx) * (1.0 - wy) * wz +
+           v110 * wx * wy * (1.0 - wz) +
+           v101 * wx * (1.0 - wy) * wz +
+           v011 * (1.0 - wx) * wy * wz +
+           v111 * wx * wy * wz)
+    
+    return val
+
+@njit
+def gamma_expectation_stay_home(expected_chi: float, theta: float = 2.0) -> float:
+    """
+    Calculates the shape parameter 'a' for the Gamma distribution such that E[chi] = a * theta.
+    Returns the expected additional utility from staying at home (Section 2.1).
+    """
+    if expected_chi <= 0:
+        return 0.0
+    
+    # shape parameter alpha_bar = E(chi) / theta
+    # In the paper, theta is fixed at 2.0 (config.yaml)
+    # The actual realization of utility from staying home follows chi ~ Gamma(alpha_bar, theta)
+    # Appendix A mentions E[chi - d | chi > d]. Here we provide a helper to map targets to params.
+    return expected_chi # Simplification for base usage in value function
+
+def get_survival_matrix(phi_1: np.ndarray, phi_2: np.ndarray) -> np.ndarray:
+    """
+    Constructs the 3x3 transition matrix for marital status m based on survival rates.
+    States: 0: Married, 1: Single Male (Widowered), 2: Single Female (Widowed).
+    
+    Args:
+        phi_1 (float): Survival rate of husband.
+        phi_2 (float): Survival rate of wife.
+    """
+    # p_m,i(0|0) = phi1 * phi2
+    # p_m,i(1|0) = phi1 * (1 - phi2)
+    # p_m,i(2|0) = (1 - phi1) * phi2
+    # p_m,i(1|1) = phi1
+    # p_m,i(2|2) = phi2
+    # Others are 0
+    mat = np.zeros((3, 3))
+    mat[0, 0] = phi_1 * phi_2
+    mat[0, 1] = phi_1 * (1.0 - phi_2)
+    mat[0, 2] = (1.0 - phi_1) * phi_2
+    mat[1, 1] = phi_1
+    mat[2, 2] = phi_2
+    return mat
+
+```

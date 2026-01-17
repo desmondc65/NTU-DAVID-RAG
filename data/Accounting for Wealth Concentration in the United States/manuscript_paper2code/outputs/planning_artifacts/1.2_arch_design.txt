@@ -1,0 +1,27 @@
+----------------------------------------
+[Implementation approach]
+The solution implements a lifecycle Overlapping Generations (OLG) model with heterogeneous agents to study wealth concentration. We will use a modular Python architecture centered around an 'Endogenous Grid Method' (EGM) to solve the household's consumption-savings-labor problem efficiently. The system is divided into an empirical module (processing SCF data and imputing labor shares), a household solver module (backward induction for 16 periods), and a general equilibrium module (solving for market clearing $K$ and $N$). Performance will be optimized using Numba for the nested loops in value function iteration. The experiment runner will programmatically disable model features (bequests, superearners, return heterogeneity) to conduct the decomposition analysis described in the paper.
+
+----------------------------------------
+[File list]
+- main.py
+- config.py
+- empirical_processor.py
+- household_solver.py
+- equilibrium_solver.py
+- simulation.py
+- experiments.py
+- utils.py
+
+----------------------------------------
+[Data structures and interfaces]
+classDiagramclass Config {+dict params+dict calibration_targets+load_config(path: str)}class EmpiricalProcessor {+__init__(scf_data_path: str)+impute_business_labor_income() : DataFrame+calculate_implied_returns() : dict+get_calibration_moments() : dict}class HouseholdProblem {+__init__(params: dict)+solve_lifecycle(w: float, r: float, tr: float) : dict+egm_step(age: int, next_v: ndarray, prices: dict) : ndarray+labor_supply_choice(net_wage: float, assets: float) : float}class Economy {+__init__(config: Config)+firm_production(K: float, N: float) : dict+government_budget(tax_rev: float, benefits: float) : float}class EquilibriumSolver {+__init__(problem: HouseholdProblem, economy: Economy)+solve_ge() : dict+compute_excess_demand(guess: list) : list}class ExperimentRunner {+__init__(base_model: EquilibriumSolver)+run_counterfactual(type: str) : dict+calculate_marginal_effects() : list}class Simulator {+__init__(policies: dict)+compute_stationary_distribution() : ndarray+calculate_metrics(dist: ndarray) : dict}Main --> ConfigMain --> EmpiricalProcessorMain --> EquilibriumSolverMain --> ExperimentRunnerEquilibriumSolver --> HouseholdProblemEquilibriumSolver --> EconomyEquilibriumSolver --> SimulatorExperimentRunner --> EquilibriumSolver
+
+----------------------------------------
+[Program call flow]
+sequenceDiagramparticipant M as Mainparticipant EP as EmpiricalProcessorparticipant ES as EquilibriumSolverparticipant HP as HouseholdProblemparticipant SIM as Simulatorparticipant ER as ExperimentRunnerM->>EP: impute_business_labor_income()EP-->>M: return calibration_momentsM->>HP: initialize with calibrated paramsM->>ES: solve_ge()loop Until Market Clearing (K, N, Tr)ES->>HP: solve_lifecycle(prices)HP->>HP: backward induction (EGM)HP-->>ES: return policy_functionsES->>SIM: compute_stationary_distribution(policy_functions)SIM-->>ES: return K_agg, N_agg, tax_revES->>ES: update K, N, Tr guessesendES-->>M: return benchmark_economyM->>ER: calculate_marginal_effects()ER->>ES: run_counterfactual('no_superearners')ES->>HP: update productivity_gridES->>ES: solve_ge()ES-->>ER: counterfactual_resultsER-->>M: return table_5_data
+
+----------------------------------------
+[Anything UNCLEAR]
+The transition probabilities for 'extraordinary states' ($'lambda_{in}, 'lambda_{out}$) and the specific values for the 3-state return process ($r'kappa_L, r'kappa_H, r'kappa_{top}$) are mentioned as being in the 'Supplemental Appendix' rather than the main text. I will need to assume or search for these specific calibrated values to achieve exact numerical replication. Additionally, the exact 'low vs high' productivity threshold used to assign stochastic bequests needs a specific percentile definition (e.g., bottom 50% vs top 50%).
+

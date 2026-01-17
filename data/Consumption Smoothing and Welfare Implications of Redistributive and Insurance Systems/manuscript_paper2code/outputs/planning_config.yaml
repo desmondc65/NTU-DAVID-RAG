@@ -1,0 +1,55 @@
+## config.yaml
+# Parameters for the OLG Model of Japan
+demographics:
+  start_age: 25
+  retirement_age: 65
+  max_age: 99
+  period_length: 5
+  num_periods: 15 # (99 - 25 + 1) / 5 rounded
+
+preferences:
+  beta_annual: 0.98 # Calibrated to target 2% interest rate
+  sigma: 1.8 # Inverse Frisch elasticity
+  frisch_elasticity: 0.56
+  eta: 1.7 # Equivalence scale for married households
+  vg_male: 0.5 # Constant to ensure positive utility
+  vg_female: 0.5
+
+technology:
+  alpha: 0.29 # Capital share
+  psi_tfp: 1.45 # TFP to normalize wage to 1
+  delta_annual: 0.07 # Annual depreciation
+  target_ky_ratio: 3.2
+
+productivity:
+  persistence_annual: 0.898
+  sigma_z: 0.77
+  zeta: 0.181
+  intra_family_corr: 0.1
+  college_premium: 0.34
+  kappa_male: 0.571
+  kappa_female: 0.626
+
+government:
+  tau_c: 0.10 # Consumption tax
+  g_to_gdp: 0.116 # Exogenous government expenditure
+  phi_copay: 0.20 # Medical insurance copayment
+  target_pension_to_gdp: 0.095
+  # Tax parameters (Holter et al. 2019 estimates for Japan)
+  tax_single:
+    lambda: 0.85
+    tau: 0.10
+  tax_married:
+    lambda: 0.88
+    tau: 0.12
+
+health:
+  gamma: 0.5 # Return to scale for medical spending
+  h_productivity: 1.0 # Scale H
+  target_med_exp_gdp: 0.0774
+  target_med_exp_income: 0.085
+
+simulation:
+  num_agents: 50000
+  tolerance_ge: 1e-4
+  max_iter_ge: 50
