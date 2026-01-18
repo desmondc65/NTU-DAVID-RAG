@@ -33,7 +33,8 @@ class GeminiClient:
         user_prompt: str,
         system_prompt: Optional[str] = None,
         response_schema: Optional[Union[Type[BaseModel], Any]] = None,
-        response_mime_type: str = "application/json"
+        response_mime_type: str = "application/json",
+        return_usage: bool = False
     ) -> Any:
         """
         Generates content based on user and system prompts, with optional structured output.
@@ -45,9 +46,12 @@ class GeminiClient:
                                                                Can be a Pydantic model or a raw schema dict.
             response_mime_type (str): The MIME type for the response. Defaults to "application/json".
                                       Use "text/plain" for unstructured text.
+            return_usage (bool): If True, return a tuple of (response_text, usage_metadata).
+                                Defaults to False for backward compatibility.
 
         Returns:
             Any: The parsed response object if schema is provided, or the response text.
+                 If return_usage=True, returns tuple of (response, usage_metadata).
         """
         
         config_kwargs = {
@@ -67,13 +71,21 @@ class GeminiClient:
                 config=config_kwargs
             )
             
+            # Extract the response content
             # If a Pydantic model was passed as schema, the SDK might return a parsed object
             # or we might need to handle parsing depending on the SDK version nuances.
             # With google-genai SDK, usually response.parsed is available if schema is provided.
             if response_schema and hasattr(response, 'parsed'):
-                 return response.parsed
+                response_content = response.parsed
+            else:
+                response_content = response.text
             
-            return response.text
+            # Return with usage metadata if requested
+            if return_usage:
+                usage_metadata = response.usage_metadata if hasattr(response, 'usage_metadata') else None
+                return response_content, usage_metadata
+            
+            return response_content
                 
         except Exception as e:
             print(f"Error generating content: {e}")

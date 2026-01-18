@@ -70,6 +70,24 @@ pip install -r requirements.txt
 
 > **Note:** Advanced tools located in `utils/data_preprocess/` (specifically `Dolphin`, `Paper2Code`, and `s2orc-doc2json`) have their own `requirements.txt` or setup files. **It is highly recommended to create and use separate virtual environments for these tools** to prevent dependency conflicts. Please refer to the `README.md` within each tool's directory for specific installation instructions.
 
+#### LaTeX Rendering Environment (for vlm_formula_to_latex)
+
+If you plan to use the `vlm_formula_to_latex` tool with quality comparison features, you need to install LaTeX:
+
+```bash
+# On Ubuntu/Debian
+sudo apt-get update
+sudo apt-get install -y texlive-latex-base texlive-latex-extra
+
+# On macOS (using Homebrew)
+brew install --cask mactex
+
+# On Windows
+# Download and install MiKTeX from https://miktex.org/download
+```
+
+This enables the tool to render transcribed LaTeX formulas back to PNG for visual quality comparison.
+
 ### 3. Verify Setup
 
 ```bash
@@ -139,9 +157,15 @@ The `utils/data_preprocess/` directory contains specialized tools for extracting
 
 #### 4. **vlm_formula_to_latex/** - VLM Formula to LaTeX
 
-- **Purpose**: Uses Vision Language Models (VLMs) to accurately extract mathematical formulas as LaTeX.
+- **Purpose**: Uses Vision Language Models (VLMs) to accurately extract mathematical formulas as LaTeX, with quality verification.
+- **Pipeline**:
+  1. Convert PDF pages to PNG images
+  2. Crop formulas using Docling bounding boxes
+  3. Transcribe formulas to LaTeX using Gemini Vision API
+  4. Render LaTeX back to PNG for quality comparison
+  5. Generate interactive HTML comparison page
 - **Conversion Script**: `run_all.sh`
-  - Automates batch processing to convert formulas.
+  - Automates the complete pipeline from PDF to quality-verified LaTeX.
 
   ```bash
   # Run for all papers
@@ -154,7 +178,28 @@ The `utils/data_preprocess/` directory contains specialized tools for extracting
   ./utils/data_preprocess/vlm_formula_to_latex/run_all.sh --skip-existing
   ```
 
-- **Output**: JSON and Markdown files with corrected LaTeX formulas.
+- **Output Structure**:
+
+  ```
+  data/[Paper Name]/vlm_formula_latex/
+  ├── formula_latex.json           # Transcribed formulas with metadata
+  ├── formula_latex.md             # Human-readable markdown view
+  ├── cost_info.log                # API cost tracking
+  ├── accumulated_cost.json        # Cost summary
+  ├── png/                         # Rendered LaTeX → PNG
+  │   └── page_*_formula_*.png
+  └── quality_comparison/          # Visual quality assessment
+      └── comparison.html          # Interactive comparison page
+  ```
+
+- **Quality Comparison**: The generated HTML file displays original vs transcribed formulas side-by-side with LaTeX code, allowing visual verification of transcription accuracy. The HTML is self-contained and can be shared with others.
+
+- **Requirements**:
+  - Python packages: `pdf2image`, `Pillow`, `google-generativeai`
+  - System: LaTeX distribution (texlive-latex-base, texlive-latex-extra)
+  - API: Gemini API key
+
+- **Cost**: ~$0.01–$0.05 per paper (varies by formula count)
 
 #### 5. **s2orc-doc2json/** - Scientific Paper Parsing
 
