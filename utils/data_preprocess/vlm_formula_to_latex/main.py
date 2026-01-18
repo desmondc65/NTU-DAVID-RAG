@@ -14,6 +14,9 @@ try:
     from pdf_to_png import convert_pdf_to_png
     from cropper import crop_formulas
     from formula_png_to_latex import png_to_latex
+    from cost_utils import cal_gemini_cost, aggregate_costs, save_accumulated_cost
+    from latex_to_png import batch_render_formulas
+    from generate_comparison import generate_comparison_html
 except ImportError as e:
     print(f"Import Error: {e}")
     sys.exit(1)
@@ -80,14 +83,20 @@ def orchestrate_extraction(
             formula_idx = -1
             
         try:
-            # Call the transcription function
-            latex_code = png_to_latex(img_path)
+            # Call the transcription function with cost tracking
+            latex_code, usage_metadata = png_to_latex(img_path, return_cost=True)
+            
+            # Calculate cost for this formula
+            cost_info = None
+            if usage_metadata:
+                cost_info = cal_gemini_cost(usage_metadata, model_name="gemini-3-flash-preview")
             
             return {
                 "page_no": page_no,
                 "formula_index": formula_idx,
                 "image_name": filename,
-                "latex": latex_code
+                "latex": latex_code,
+                "cost_info": cost_info
             }
         except Exception as e:
             print(f"Error processing {filename}: {e}")
@@ -98,6 +107,7 @@ def orchestrate_extraction(
     from tqdm import tqdm
 
     results = []
+    cost_list = []
     # Adjust max_workers as needed. Gemini has rate limits, so don't set this too high (e.g., 5-10 is usually safe).
     MAX_WORKERS = 10 
     
@@ -109,18 +119,64 @@ def orchestrate_extraction(
         for future in tqdm(as_completed(future_to_file), total=total_formulas, desc="Transcribing"):
             res = future.result()
             if res:
+                # Collect cost information
+                if res.get('cost_info'):
+                    cost_list.append(res['cost_info'])
+                # Remove cost_info from results before saving to JSON
+                cost_info = res.pop('cost_info', None)
                 results.append(res)
     
     # Sort results by page_no then formula_index because parallel execution scrambles order
     results.sort(key=lambda x: (x['page_no'], x['formula_index']))
-            
-    # 4. Save to JSON
-    print("\n[Step 4/4] Saving results to JSON...")
     
-    # Ensure directory exists for output json
+    # Ensure directory exists for output json (needed for cost logs)
     output_json_dir = os.path.dirname(os.path.abspath(output_formula_latex_json_path))
     if not os.path.exists(output_json_dir):
         os.makedirs(output_json_dir, exist_ok=True)
+    
+    # Display cost summary
+    if cost_list:
+        print("\n" + "="*50)
+        print("💰 Cost Summary")
+        print("="*50)
+        aggregated_cost = aggregate_costs(cost_list)
+        print(f"🛠️  Model: {aggregated_cost['model_name']}")
+        print(f"📊 Total formulas processed: {len(results)}")
+        print(f"📥 Total input tokens: {aggregated_cost['prompt_tokens']:,}")
+        print(f"📤 Total output tokens: {aggregated_cost['output_tokens']:,}")
+        print(f"💵 Total input cost: ${aggregated_cost['input_cost']:.6f}")
+        print(f"💵 Total output cost: ${aggregated_cost['output_cost']:.6f}")
+        print(f"💰 Total cost: ${aggregated_cost['total_cost']:.6f}")
+        print("="*50 + "\n")
+        
+        # Save cost information to file
+        cost_log_path = os.path.join(output_json_dir, "cost_info.log")
+        try:
+            with open(cost_log_path, 'w', encoding='utf-8') as f:
+                f.write("="*50 + "\n")
+                f.write("💰 VLM Formula to LaTeX - Cost Summary\n")
+                f.write("="*50 + "\n")
+                f.write(f"Model: {aggregated_cost['model_name']}\n")
+                f.write(f"Total formulas processed: {len(results)}\n")
+                f.write(f"Total input tokens: {aggregated_cost['prompt_tokens']:,}\n")
+                f.write(f"Total output tokens: {aggregated_cost['output_tokens']:,}\n")
+                f.write(f"Total input cost: ${aggregated_cost['input_cost']:.6f}\n")
+                f.write(f"Total output cost: ${aggregated_cost['output_cost']:.6f}\n")
+                f.write(f"Total cost: ${aggregated_cost['total_cost']:.6f}\n")
+                f.write("="*50 + "\n")
+            print(f"💾 Cost information saved to: {cost_log_path}")
+        except Exception as e:
+            print(f"Warning: Could not save cost log: {e}")
+        
+        # Save accumulated cost to JSON
+        cost_json_path = os.path.join(output_json_dir, "accumulated_cost.json")
+        try:
+            save_accumulated_cost(cost_json_path, aggregated_cost['total_cost'])
+        except Exception as e:
+            print(f"Warning: Could not save accumulated cost JSON: {e}")
+            
+    # 4. Save to JSON
+    print("\n[Step 4/4] Saving results to JSON...")
         
     try:
         with open(output_formula_latex_json_path, 'w', encoding='utf-8') as f:
@@ -132,7 +188,7 @@ def orchestrate_extraction(
 
     # 5. Save to Markdown (Optional)
     if output_formula_latex_md_path:
-        print(f"\n[Step 5/5] Saving results to Markdown: {output_formula_latex_md_path}...")
+        print(f"\n[Step 5/7] Saving results to Markdown: {output_formula_latex_md_path}...")
         try:
              # Ensure directory exists for output md
             output_md_dir = os.path.dirname(os.path.abspath(output_formula_latex_md_path))
@@ -158,6 +214,33 @@ def orchestrate_extraction(
             print(f"Successfully saved Markdown to {output_formula_latex_md_path}")
         except Exception as e:
             print(f"Error saving Markdown: {e}")
+    
+    # 6. Render LaTeX back to PNG for quality comparison
+    print(f"\n[Step 6/7] Rendering LaTeX back to PNG...")
+    output_png_folder = os.path.join(output_json_dir, "png")
+    try:
+        batch_render_formulas(output_formula_latex_json_path, output_png_folder, dpi=300)
+        print(f"Successfully rendered formulas to {output_png_folder}")
+    except Exception as e:
+        print(f"Error rendering LaTeX to PNG: {e}")
+        print("Skipping quality comparison generation.")
+        return
+    
+    # 7. Generate quality comparison HTML
+    print(f"\n[Step 7/7] Generating quality comparison HTML...")
+    comparison_folder = os.path.join(output_json_dir, "quality_comparison")
+    comparison_html = os.path.join(comparison_folder, "comparison.html")
+    try:
+        generate_comparison_html(
+            output_formula_latex_json_path,
+            output_formula_png_folder,
+            output_png_folder,
+            comparison_html
+        )
+        print(f"Successfully generated comparison HTML at {comparison_html}")
+        print(f"\n🎉 Pipeline complete! Open the comparison HTML in your browser to review transcription quality.")
+    except Exception as e:
+        print(f"Error generating comparison HTML: {e}")
 
 
 def main():
