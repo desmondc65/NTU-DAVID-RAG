@@ -18,16 +18,20 @@ def generate_comparison_html(
     json_path: str,
     original_folder: str,
     transcribed_folder: str,
-    output_html: str
+    output_html: str,
+    docling_formulas: List[Dict] = None,
+    docling_png_folder: str = None
 ):
     """
-    Generates an HTML file comparing original and transcribed formula images.
+    Generates an HTML file comparing original, VLM transcribed, and Docling formula images.
     
     Args:
         json_path (str): Path to formula_latex.json
         original_folder (str): Folder containing original formula PNGs
-        transcribed_folder (str): Folder containing transcribed formula PNGs
+        transcribed_folder (str): Folder containing VLM transcribed formula PNGs
         output_html (str): Path to save the output HTML file
+        docling_formulas (List[Dict], optional): List of Docling formulas with metadata
+        docling_png_folder (str, optional): Folder containing Docling rendered PNGs
     """
     # Load formula data
     if not os.path.exists(json_path):
@@ -145,7 +149,7 @@ def generate_comparison_html(
         
         .image-comparison {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr;
             gap: 20px;
             margin-bottom: 20px;
         }
@@ -200,16 +204,6 @@ def generate_comparison_html(
             color: #555;
             margin-bottom: 10px;
         }
-        
-        @media (max-width: 768px) {
-            .image-comparison {
-                grid-template-columns: 1fr;
-            }
-            
-            h1 {
-                font-size: 1.8em;
-            }
-        }
     </style>
 </head>
 <body>
@@ -239,6 +233,15 @@ def generate_comparison_html(
     success_count = 0
     fail_count = 0
     
+    # Create a lookup for Docling formulas by page
+    docling_by_page = {}
+    if docling_formulas:
+        for df in docling_formulas:
+            page = df.get('page_no', -1)
+            if page not in docling_by_page:
+                docling_by_page[page] = []
+            docling_by_page[page].append(df)
+    
     # Generate comparison cards
     for formula in formulas:
         image_name = formula.get('image_name', '')
@@ -261,6 +264,22 @@ def generate_comparison_html(
         # Encode images to base64
         original_b64 = image_to_base64(original_path) if original_exists else ""
         transcribed_b64 = image_to_base64(transcribed_path) if transcribed_exists else ""
+        
+        # Find matching Docling formula
+        docling_match = None
+        docling_b64 = ""
+        docling_latex = ""
+        
+        if page_no in docling_by_page and isinstance(formula_idx, int):
+            docling_on_page = docling_by_page[page_no]
+            if 0 <= formula_idx - 1 < len(docling_on_page):
+                docling_match = docling_on_page[formula_idx - 1]
+                docling_latex = docling_match.get('latex', '')
+                rendered_filename = docling_match.get('rendered_filename')
+                if rendered_filename and docling_png_folder:
+                    docling_path = os.path.join(docling_png_folder, rendered_filename)
+                    if os.path.exists(docling_path):
+                        docling_b64 = image_to_base64(docling_path)
         
         # Build card HTML
         html_content += f"""
@@ -285,22 +304,49 @@ def generate_comparison_html(
                     </div>
                     
                     <div class="image-box">
-                        <div class="image-label">Transcribed (VLM → LaTeX → PNG)</div>
+                        <div class="image-label">VLM Transcribed (VLM → LaTeX → PNG)</div>
                         <div class="image-container">
 """
         
         if transcribed_exists and transcribed_b64:
-            html_content += f'                            <img src="data:image/png;base64,{transcribed_b64}" alt="Transcribed formula">\n'
+            html_content += f'                            <img src="data:image/png;base64,{transcribed_b64}" alt="VLM transcribed formula">\n'
         else:
             html_content += '                            <div class="missing-image">Rendering failed</div>\n'
         
-        html_content += f"""                        </div>
+        html_content += """                        </div>
                     </div>
-                </div>
+"""
+        
+        # Add Docling column if available
+        if docling_match:
+            html_content += """                    
+                    <div class="image-box">
+                        <div class="image-label">Docling Extracted (Docling → LaTeX → PNG)</div>
+                        <div class="image-container">
+"""
+            if docling_b64:
+                html_content += f'                            <img src="data:image/png;base64,{docling_b64}" alt="Docling extracted formula">\n'
+            else:
+                html_content += '                            <div class="missing-image">Rendering failed</div>\n'
+            
+            html_content += """                        </div>
+                    </div>
+"""
+        
+        html_content += """                </div>
                 
-                <div class="latex-label">LaTeX Code:</div>
-                <div class="latex-code">{latex_code if latex_code else 'N/A'}</div>
-            </div>
+                <div class="latex-label">VLM LaTeX Code:</div>
+                <div class="latex-code">{vlm_latex}</div>
+""".format(vlm_latex=latex_code if latex_code else 'N/A')
+        
+        # Add Docling LaTeX if available
+        if docling_match and docling_latex:
+            html_content += f"""                
+                <div class="latex-label" style="margin-top: 15px;">Docling LaTeX Code:</div>
+                <div class="latex-code">{docling_latex}</div>
+"""
+        
+        html_content += """            </div>
 """
     
     # Close HTML

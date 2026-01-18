@@ -15,8 +15,9 @@ try:
     from cropper import crop_formulas
     from formula_png_to_latex import png_to_latex
     from cost_utils import cal_gemini_cost, aggregate_costs, save_accumulated_cost
-    from latex_to_png import batch_render_formulas
+    from latex_to_png import batch_render_formulas, render_latex_to_png
     from generate_comparison import generate_comparison_html
+    from extract_docling_formulas import extract_docling_formulas, match_formulas_by_page_and_position
 except ImportError as e:
     print(f"Import Error: {e}")
     sys.exit(1)
@@ -188,7 +189,7 @@ def orchestrate_extraction(
 
     # 5. Save to Markdown (Optional)
     if output_formula_latex_md_path:
-        print(f"\n[Step 5/7] Saving results to Markdown: {output_formula_latex_md_path}...")
+        print(f"\n[Step 5/9] Saving results to Markdown: {output_formula_latex_md_path}...")
         try:
              # Ensure directory exists for output md
             output_md_dir = os.path.dirname(os.path.abspath(output_formula_latex_md_path))
@@ -215,19 +216,61 @@ def orchestrate_extraction(
         except Exception as e:
             print(f"Error saving Markdown: {e}")
     
-    # 6. Render LaTeX back to PNG for quality comparison
-    print(f"\n[Step 6/7] Rendering LaTeX back to PNG...")
+    # 6. Render VLM LaTeX back to PNG for quality comparison
+    print(f"\n[Step 6/9] Rendering VLM LaTeX back to PNG...")
     output_png_folder = os.path.join(output_json_dir, "png")
     try:
         batch_render_formulas(output_formula_latex_json_path, output_png_folder, dpi=300)
-        print(f"Successfully rendered formulas to {output_png_folder}")
+        print(f"Successfully rendered VLM formulas to {output_png_folder}")
     except Exception as e:
-        print(f"Error rendering LaTeX to PNG: {e}")
-        print("Skipping quality comparison generation.")
+        print(f"Error rendering VLM LaTeX to PNG: {e}")
+        print(f"Skipping quality comparison generation.")
         return
     
-    # 7. Generate quality comparison HTML
-    print(f"\n[Step 7/7] Generating quality comparison HTML...")
+    # 7. Extract Docling formulas
+    print(f"\n[Step 7/9] Extracting Docling formulas...")
+    try:
+        docling_formulas = extract_docling_formulas(parsed_json_path)
+        print(f"Found {len(docling_formulas)} Docling formulas")
+    except Exception as e:
+        print(f"Warning: Could not extract Docling formulas: {e}")
+        docling_formulas = []
+    
+    # 8. Render Docling LaTeX to PNG
+    docling_png_folder = os.path.join(output_json_dir, "docling_png")
+    if docling_formulas:
+        print(f"\n[Step 8/9] Rendering Docling LaTeX to PNG...")
+        os.makedirs(docling_png_folder, exist_ok=True)
+        
+        docling_success = 0
+        docling_fail = 0
+        
+        for i, formula in enumerate(docling_formulas):
+            latex_code = formula.get('latex', '')
+            page_no = formula.get('page_no', -1)
+            
+            if not latex_code:
+                docling_fail += 1
+                continue
+            
+            # Generate filename matching VLM format: page_{page_no}_formula_{idx}.png
+            # We'll use sequential numbering per page
+            output_file = os.path.join(docling_png_folder, f"page_{page_no}_docling_{i+1}.png")
+            
+            success = render_latex_to_png(latex_code, output_file, dpi=300)
+            if success:
+                docling_success += 1
+                formula['rendered_filename'] = os.path.basename(output_file)
+            else:
+                docling_fail += 1
+                formula['rendered_filename'] = None
+        
+        print(f"Rendered {docling_success}/{len(docling_formulas)} Docling formulas successfully")
+    else:
+        print(f"\n[Step 8/9] Skipping Docling rendering (no formulas found)")
+    
+    # 9. Generate three-way quality comparison HTML
+    print(f"\n[Step 9/9] Generating three-way quality comparison HTML...")
     comparison_folder = os.path.join(output_json_dir, "quality_comparison")
     comparison_html = os.path.join(comparison_folder, "comparison.html")
     try:
@@ -235,7 +278,9 @@ def orchestrate_extraction(
             output_formula_latex_json_path,
             output_formula_png_folder,
             output_png_folder,
-            comparison_html
+            comparison_html,
+            docling_formulas=docling_formulas,
+            docling_png_folder=docling_png_folder
         )
         print(f"Successfully generated comparison HTML at {comparison_html}")
         print(f"\n🎉 Pipeline complete! Open the comparison HTML in your browser to review transcription quality.")
