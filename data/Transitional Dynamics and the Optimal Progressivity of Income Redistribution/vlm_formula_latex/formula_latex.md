@@ -7,7 +7,7 @@ Total Formulas: 18
 **Image:** `page_3_formula_1.png`
 
 $$ 
-V(k, z; \Gamma) = \max_{c, k' \geq 0, h \in (0,1)} \left\{ \frac{c^{1-\sigma}}{1-\sigma} - \theta \frac{h^{1+\epsilon}}{1+\epsilon} + \beta \mathbb{E} \left[ V(k', z'; \Gamma') \mid z \right] \right\} \qquad (1)
+V(k, z; \Gamma) = \max_{c, k' \geq 0, h \in (0, 1)} \left\{ \frac{c^{1-\sigma}}{1-\sigma} - \theta \frac{h^{1+\epsilon}}{1+\epsilon} + \beta \mathbb{E} \left[ V(k', z'; \Gamma') \mid z \right] \right\} \quad (1)
  $$
 
 ---
@@ -28,8 +28,8 @@ c + k' = y^d(y) + k \\
 **Image:** `page_4_formula_1.png`
 
 $$ 
-r(\Gamma) = \alpha(K/N)^{\alpha - 1} - \delta \\
-w(\Gamma) = (1 - \alpha)(K/N)^{\alpha}
+r(\Gamma) = \alpha(K/N)^{\alpha-1} - \delta \\
+w(\Gamma) = (1 - \alpha)(K/N)^\alpha
  $$
 
 ---
@@ -47,7 +47,7 @@ w(\Gamma) = (1 - \alpha)(K/N)^{1-\alpha}.
 **Image:** `page_4_formula_3.png`
 
 $$ 
-K' = \int k'(k, z) d\Gamma(k, z) \quad \text{and} \quad N = \int zh(k, z) d\Gamma(k, z).
+K' = \int k'(k, z) d \Gamma(k, z) \quad \text{and} \quad N = \int z h(k, z) d \Gamma(k, z).
  $$
 
 ---
@@ -74,7 +74,7 @@ y^d = \lambda(zwh + rk)^{1-\tau}. \tag{2}
 **Image:** `page_4_formula_6.png`
 
 $$ 
-\ln z_{igt} = m_z + f_{ig} + a_{it}, \tag{3}
+\ln z_{igt} = m_z + f_{ig} + a_{it}, \quad (3)
  $$
 
 ---
@@ -83,7 +83,7 @@ $$
 **Image:** `page_4_formula_7.png`
 
 $$ 
-S = \left( \begin{array}{c|cccc} & f_L + a_L & f_L + a_H & f_H + a_L & f_H + a_H \\ \hline f_L + a_L & A_{11} & A_{12} & 0 & 0 \\ f_L + a_H & A_{21} & A_{22} & 0 & 0 \\ f_H + a_L & 0 & 0 & A_{11} & A_{12} \\ f_H + a_H & 0 & 0 & A_{21} & A_{22} \end{array} \right)
+S = \left( \begin{array}{c|cccc} & f_L+a_L & f_L+a_H & f_H+a_L & f_H+a_H \\ \hline f_L+a_L & A_{11} & A_{12} & 0 & 0 \\ f_L+a_H & A_{21} & A_{22} & 0 & 0 \\ f_H+a_L & 0 & 0 & A_{11} & A_{12} \\ f_H+a_H & 0 & 0 & A_{21} & A_{22} \end{array} \right)
  $$
 
 ---
@@ -103,8 +103,8 @@ D = \left( \begin{array}{c|cccc} & f_L + a_L & f_L + a_H & f_H + a_L & f_H + a_H
 **Image:** `page_5_formula_1.png`
 
 $$ 
-g = \int [y - y^d(y; \lambda, \tau)] d\Gamma^{ss}(k, z) \tag{4}
-y = wzh(k, z; \Gamma^{ss}) + rk \tag{5}
+g = \int [y - y^d(y; \lambda, \tau)] d\Gamma^{ss}(k, z) \tag{4} \\
+y = wzh(k, z; \Gamma^{ss}) + rk'(k^-, z^-; \Gamma^{ss}) \tag{5}
  $$
 
 ---
@@ -113,7 +113,7 @@ y = wzh(k, z; \Gamma^{ss}) + rk \tag{5}
 **Image:** `page_5_formula_2.png`
 
 $$ 
-y = wzh(k, z; \Gamma^{ss}) + rk'(k^{-}, z^{-}; \Gamma^{ss}), \quad (5)
+y = w z h(k, z; \Gamma^{ss}) + r k'(k, z; \Gamma^{ss}), \quad (5)
  $$
 
 ---
@@ -122,7 +122,7 @@ y = wzh(k, z; \Gamma^{ss}) + rk'(k^{-}, z^{-}; \Gamma^{ss}), \quad (5)
 **Image:** `page_5_formula_3.png`
 
 $$ 
-\max_{\lambda, \tau} \int V_0(k, z; \Gamma_0) d \Gamma_0(k, z) + \mu \sum_{t=1}^{\infty} \beta_g^t \int V_t(k, z; \Gamma_t) d \tilde{\Gamma}_t(k, z) \tag{6}
+\max_{\lambda, \tau} \int V_{0}\left(k, z ; \Gamma_{0}\right) d \Gamma_{0}(k, z)+\mu \sum_{t=1}^{\infty} \beta_{g}^{t} \int V_{t}\left(k, z ; \Gamma_{t}\right) d \tilde{\Gamma}_{t}(k, z)
  $$
 
 ---
@@ -133,8 +133,10 @@ $$
 **Image:** `page_6_formula_1.png`
 
 $$ 
-V_0^c(k, z) = \mathbb{E} \sum_{t=0}^\infty \beta^t \frac{c(k_t, z_t)^{1-\sigma}}{1-\sigma} = \frac{1}{1-\beta} \frac{\tilde{c}(k, z)^{1-\sigma}}{1-\sigma} \\
-V_0^l(k, z) = \theta \mathbb{E} \sum_{t=0}^\infty \beta^t \frac{h(k_t, z_t)^{1+\epsilon}}{1+\epsilon} = \frac{1}{1-\beta} \frac{\tilde{n}(k, z)^{1+\epsilon}}{1+\epsilon}.
+\begin{aligned}
+V_{0}^{c}(k, z) & =\mathbb{E} \sum_{t=0}^{\infty} \beta^{t} \frac{c\left(k_{t}, z_{t}\right)^{1-\sigma}}{1-\sigma}=\frac{1}{1-\beta} \frac{\tilde{c}(k, z)^{1-\sigma}}{1-\sigma} \\
+V_{0}^{l}(k, z) & =\theta \mathbb{E} \sum_{t=0}^{\infty} \beta^{t} \frac{h\left(k_{t}, z_{t}\right)^{1+\epsilon}}{1+\epsilon}=\frac{1}{1-\beta} \frac{\tilde{n}(k, z)^{1+\epsilon}}{1+\epsilon}.
+\end{aligned}
  $$
 
 ---
@@ -143,7 +145,7 @@ V_0^l(k, z) = \theta \mathbb{E} \sum_{t=0}^\infty \beta^t \frac{h(k_t, z_t)^{1+\
 **Image:** `page_6_formula_2.png`
 
 $$ 
-\mathcal{W}^E = \frac{1}{1-\sigma} \left( \int \tilde{c}(k, z) d\Gamma_0(k, z) \right)^{1-\sigma} - \frac{\theta}{1+\epsilon} \left( \int \tilde{n}(k, z) d\Gamma_0(k, z) \right)^{1+\epsilon} .
+\mathcal{W}^E = \frac{1}{1-\sigma} \left( \int \tilde{c}(k, z) d\Gamma_0(k, z) \right)^{1-\sigma} - \frac{\theta}{1+\epsilon} \left( \int \tilde{n}(k, z) d\Gamma_0(k, z) \right)^{1+\epsilon}. \tag{7}
  $$
 
 ---
