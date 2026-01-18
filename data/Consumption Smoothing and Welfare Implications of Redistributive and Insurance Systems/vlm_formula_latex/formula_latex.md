@@ -7,7 +7,7 @@ Total Formulas: 29
 **Image:** `page_10_formula_1.png`
 
 $$ 
-\max_{K,N} [\Psi K^{\alpha} N^{1-\alpha} - wN - (r + \delta) K]
+\max_{K,N} [\Psi K^{\alpha} N^{1-\alpha} - wN - (r + \delta)K]
  $$
 
 ---
@@ -18,7 +18,7 @@ $$
 **Image:** `page_11_formula_1.png`
 
 $$ 
-V^S(j,k,z,\tilde{e},g) = \max_{c,k',n} \left\{ u(c,n) - F^S \mathbb{I}_{g=f,n>0} + \beta \mathbb{E} \left[ V^S(j+1,k',z',\tilde{e}',g) | z \right] \right\}
+V^S(j, k, z, \tilde{e}, g) = \max_{c, k', n} \left\{ u(c, n) - F^S \mathbf{I}_{g=f, n>0} + \beta \mathbb{E} \left[ V^S(j+1, k', z', \tilde{e}', g) | z \right] \right\}
  $$
 
 ---
@@ -29,7 +29,7 @@ V^S(j,k,z,\tilde{e},g) = \max_{c,k',n} \left\{ u(c,n) - F^S \mathbb{I}_{g=f,n>0}
 **Image:** `page_12_formula_1.png`
 
 $$ 
-(1 + \tau_c) c + \pi + k' = k + y_S^d (w z \varepsilon_{g, j} n + r k)
+(1 + \tau_c)c + \pi + k' = k + y_S^d(wz\varepsilon_{g,j}n + rk)
  $$
 
 ---
@@ -38,7 +38,7 @@ $$
 **Image:** `page_12_formula_2.png`
 
 $$ 
-\tilde{e}' = [(j-1)\tilde{e} + e]/j
+\tilde{e}' = [(j - 1)\tilde{e} + e] / j
  $$
 
 ---
@@ -47,7 +47,7 @@ $$
 **Image:** `page_12_formula_3.png`
 
 $$ 
-V^S(j, k, h, \tilde{e}, g) = \max_{c, k', m} [u(c, 0) + \beta s_{j,g,h} V^S(j+1, k', h', \tilde{e}', g)]
+V^S(j, k, h, \tilde{e}, g) = \max_{c, k', m} [u(c, 0) + \beta s_{j, g, h} V^S(j + 1, k', h', \tilde{e}', g)]
  $$
 
 ---
@@ -74,7 +74,7 @@ U(c, n_m, n_f) = u(c/\eta, n_m) + u(c/\eta, n_f)
 **Image:** `page_12_formula_6.png`
 
 $$ 
-V^M(j, k, z_m, z_f, \tilde{e}) = \max_{c, k', n_m, n_f} \left\{ U(c, n_m, n_f) - F^M \mathbf{I}_{g=f, n>0} + \beta \mathbb{E} \left[ V^M(j+1, k', z'_m, z'_f, \tilde{e}') | z_m, z_f \right] \right\}
+V^M(j,k,z_m,z_f,\tilde{e}) = \max_{c,k',n_m,n_f} \left\{ U(c,n_m,n_f) - F^M \mathbf{I}_{g=f,n>0} + \beta \mathbb{E} \left[ V^M(j+1,k',z'_m,z'_f,\tilde{e}') \mid z_m,z_f \right] \right\}
  $$
 
 ---
@@ -85,7 +85,7 @@ V^M(j, k, z_m, z_f, \tilde{e}) = \max_{c, k', n_m, n_f} \left\{ U(c, n_m, n_f) -
 **Image:** `page_13_formula_1.png`
 
 $$ 
-(1 + \tau_c)c + \pi + k' = k + y_M^d(wz_m\varepsilon_{m,j}n_m + rk/2) + y_M^d(wz_f\varepsilon_{f,j}n_f + rk/2)
+(1 + \tau_c)c + \pi + k' = k + y_M^d(w z_m \varepsilon_{m,j} n_m + rk/2) + y_M^d(w z_f \varepsilon_{f,j} n_f + rk/2)
  $$
 
 ---
@@ -103,7 +103,7 @@ $$
 **Image:** `page_13_formula_3.png`
 
 $$ 
-V^M(j, k, h, \tilde{e}) = \max_{c, k', m} [U(c, 0, 0) + \beta s_{j, m, h} s_{j, f, h} V^M(j + 1, k', h', \tilde{e}') + \beta s_{j, m, h} (1 - s_{j, f, h}) V^S(j + 1, k', h', \tilde{e}', m) + \beta s_{j, f, h} (1 - s_{j, m, h}) V^S(j + 1, k', h', \tilde{e}', f)]
+V^M(j,k,h,\tilde{e}) = \max_{c,k',m} [U(c,0,0) + \beta s_{j,m,h}s_{j,f,h}V^M(j+1,k',h',\tilde{e}') + \beta s_{j,m,h}(1-s_{j,f,h})V^S(j+1,k',h',\tilde{e}',m) + \beta s_{j,f,h}(1-s_{j,m,h})V^S(j+1,k',h',\tilde{e}',f)]
  $$
 
 ---
@@ -112,7 +112,7 @@ V^M(j, k, h, \tilde{e}) = \max_{c, k', m} [U(c, 0, 0) + \beta s_{j, m, h} s_{j, 
 **Image:** `page_13_formula_4.png`
 
 $$ 
-(1 + \tau_c)c + \phi m + k' = k + y_M^d(2SS(\tilde{e}) + rk)
+(1 + \tau_c) c + \phi m + k' = k + y_M^d (2SS(\tilde{e}) + rk)
  $$
 
 ---
@@ -121,7 +121,7 @@ $$
 **Image:** `page_13_formula_5.png`
 
 $$ 
-= \alpha \Psi (K / N)^{\alpha - 1} - \delta
+= \alpha \Psi (K/N)^{\alpha-1} - \delta
  $$
 
 ---
@@ -131,7 +131,7 @@ $$
 
 $$ 
 r = \alpha \Psi (K/N)^{\alpha-1} - \delta \\
-w = (1 - \alpha) \Psi (K/N)^{\alpha}
+w = (1 - \alpha) \Psi (K/N)^\alpha
  $$
 
 ---
@@ -144,8 +144,8 @@ w = (1 - \alpha) \Psi (K/N)^{\alpha}
 $$ 
 \begin{aligned}
 K &= \int k'^M(\omega^M) d\Gamma^M(\omega^M) + \int k'^S(\omega^S) d\Gamma^S(\omega^S) \\
-N &= \int [z_m \varepsilon_{m,j} n_m^M(\omega^M) + z_f \varepsilon_{f,j} n_f^M(\omega^M)] d\Gamma_{j < J_r}^M(\omega^M) \\
-&\quad + \int z_m \varepsilon_{m,j} n_m^S(\omega^S) d\Gamma_{j < J_r}^S(\omega^S) + \int z_f \varepsilon_{f,j} n_f^S(\omega^S) d\Gamma_{j < J_r}^S(\omega^S)
+N &= \int [z_m \varepsilon_{m,j} n_m^M(\omega^M) + z_f \varepsilon_{f,j} n_f^M(\omega^M)] d\Gamma_{j<J_r}^M(\omega^M) \\
+&+ \int z_m \varepsilon_{m,j} n_m^S(\omega^S) d\Gamma_{j<J_r}^S(\omega^S) + \int z_f \varepsilon_{f,j} n_f^S(\omega^S) d\Gamma_{j<J_r}^S(\omega^S)
 \end{aligned}
  $$
 
@@ -155,11 +155,7 @@ N &= \int [z_m \varepsilon_{m,j} n_m^M(\omega^M) + z_f \varepsilon_{f,j} n_f^M(\
 **Image:** `page_14_formula_2.png`
 
 $$ 
-\begin{aligned}
-G + SS(\tilde{e}) \left[ 2 \int d\Gamma_{j \ge J_r}^M + \int d\Gamma_{j \ge J_r}^S \right] &= \tau_c \left[ \int c^M(\omega^M) d\Gamma^M + \int c^S(\omega^S) d\Gamma^S \right] \\
-&\quad + \phi \left[ \int m^M(\omega^M) d\Gamma_{j \ge J_r}^M + \int m^S(\omega^S) d\Gamma_{j \ge J_r}^S \right] \\
-&\quad + \int T^M(y) d\Gamma^M + \int T^S(y) d\Gamma^S + \pi \left[ \int d\Gamma^M + \int d\Gamma^S \right]
-\end{aligned}
+G + SS(\tilde{e}) \left[ 2 \int d\Gamma_{j \geq J_r}^M + \int d\Gamma_{j \geq J_r}^S \right] = \tau_c \left[ \int c^M(\omega^M) d\Gamma^M + \int c^S(\omega^S) d\Gamma^S \right] \\ + \phi \left[ \int m^M(\omega^M) d\Gamma_{j \geq J_r}^M + \int m^S(\omega^S) d\Gamma_{j \geq J_r}^S \right] + \int T^M(y) d\Gamma^M + \int T^S(y) d\Gamma^S + \pi \left[ \int d\Gamma^M + \int d\Gamma^S \right]
  $$
 
 ---
@@ -170,7 +166,7 @@ G + SS(\tilde{e}) \left[ 2 \int d\Gamma_{j \ge J_r}^M + \int d\Gamma_{j \ge J_r}
 **Image:** `page_15_formula_1.png`
 
 $$ 
-u(c,n) = \log c - \theta_g \frac{n^{1+\sigma}}{1+\sigma} + \bar{v}_g
+u(c, n) = \log c - \theta_g \frac{n^{1+\sigma}}{1+\sigma} + \bar{v}_g
  $$
 
 ---
@@ -190,7 +186,7 @@ s_{j,h} = \frac{1}{1 + \exp(\omega_0 + \omega_1 j + \omega_2 j^2 + \omega_3 h)}
 **Image:** `page_17_formula_1.png`
 
 $$ 
-\pi_{m,f} = \omega \mathrm{diag}(\pi_m) + (1 - w) \pi_m \pi_f'
+\pi_{m,f} = w \mathrm{diag}(\pi_{m}) + (1 - w) \pi_{m} \pi_{f}'
  $$
 
 ---
@@ -201,7 +197,7 @@ $$
 **Image:** `page_18_formula_1.png`
 
 $$ 
-\Pi_{m,f} = \begin{cases} \hat{\omega} \mathbb{1}_{\{z'_m = z'_f\}} \pi(z'_m | z_m) + (1 - \hat{\omega}) \pi(z'_m | z_m) \pi(z'_f | z_f) & \text{if } z_m = z_f \\ \pi(z'_m | z_m) \pi(z'_f | z_f) & \text{if } z_m \neq z_f \end{cases}
+\Pi_{m, f}=\begin{cases}\hat{\omega} 1_{\left\{z_{m}^{\prime}=z_{f}^{\prime}\right\}} \pi\left(z_{m}^{\prime} | z_{m}\right)+(1-\hat{\omega}) \pi\left(z_{m}^{\prime} | z_{m}\right) \pi\left(z_{f}^{\prime} | z_{f}\right) & \text { if } z_{m}=z_{f} \\ \pi\left(z_{m}^{\prime} | z_{m}\right) \pi\left(z_{f}^{\prime} | z_{f}\right) & \text { if } z_{m} \neq z_{f}\end{cases}
  $$
 
 ---
@@ -250,7 +246,7 @@ h_{t+1} = I(m_j) + (1 - \delta_{h_j})h_t
 **Image:** `page_20_formula_2.png`
 
 $$ 
-\delta_{h_j} = \frac{1}{1 + \exp(-d_0 - d_{1j})}
+\delta_{h_{j}}=\frac{1}{1+\exp(-d_{0}-d_{1j})}
  $$
 
 ---

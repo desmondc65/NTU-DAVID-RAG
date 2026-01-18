@@ -7,7 +7,7 @@ Total Formulas: 23
 **Image:** `page_6_formula_1.png`
 
 $$ 
-V^S(j, k, z, \tilde{e}, g) = \max_{c, k', n} \left\{ u(c, n) + \beta \mathbb{E} \left[ V^S(j + 1, k', z', \tilde{e}', g) | z \right] \right\}
+V^S(j, k, z, \tilde{e}, g) = \max_{c, k', n} \{ u(c, n) + \beta \mathbb{E} [ V^S(j+1, k', z', \tilde{e}', g) | z ] \}
  $$
 
 ---
@@ -16,7 +16,7 @@ V^S(j, k, z, \tilde{e}, g) = \max_{c, k', n} \left\{ u(c, n) + \beta \mathbb{E} 
 **Image:** `page_6_formula_2.png`
 
 $$ 
-(1 + \tau_c)c + k' + \pi(w z \varepsilon_{g,j} n) = k + y_S^d(w z \varepsilon_{g,j} n + rk) + Tr + b
+(1 + \tau_c)c + k' + \pi(wz\varepsilon_{g,j}n) = k + y_S^d(wz\varepsilon_{g,j}n + rk) + Tr + b
  $$
 
 ---
@@ -25,7 +25,7 @@ $$
 **Image:** `page_6_formula_3.png`
 
 $$ 
-\tilde{e}' = [(j - 1) \tilde{e} + e] / j
+\tilde{e}' = [(j - 1)\tilde{e} + e] / j
  $$
 
 ---
@@ -36,7 +36,7 @@ $$
 **Image:** `page_7_formula_1.png`
 
 $$ 
-R^S(j, k, \tilde{e}, g) = \max_{c, k'} [u(c, 0) + \beta s_{g,j} R^S(j + 1, k', \tilde{e}', g)]
+R^S(j, k, \tilde{e}, g) = \max_{c, k'} [u(c, 0) + \beta s_{g, j} R^S(j + 1, k', \tilde{e}', g)]
  $$
 
 ---
@@ -63,7 +63,7 @@ U(c, n_m, n_f) = u(c/\eta, n_m) + u(c/\eta, n_f)
 **Image:** `page_7_formula_4.png`
 
 $$ 
-V^M(j, k, z_m, z_f, \tilde{e}) = \max_{c, k', n_m, n_f} \{ U(c, n_m, n_f) + \beta \mathbb{E} [ V^M(j+1, k', z'_m, z'_f, \tilde{e}') | z_m, z_f ] \}
+V^M(j, k, z_m, z_f, \tilde{e}) = \max_{c, k', n_m, n_f} \{U(c, n_m, n_f) + \beta \mathbb{E} [V^M(j+1, k', z'_m, z'_f, \tilde{e}') | z_m, z_f]\}
  $$
 
 ---
@@ -72,7 +72,7 @@ V^M(j, k, z_m, z_f, \tilde{e}) = \max_{c, k', n_m, n_f} \{ U(c, n_m, n_f) + \bet
 **Image:** `page_7_formula_5.png`
 
 $$ 
-(1 + \tau_c)c + k' + \pi(w z_m \varepsilon_{m,j} n_m + w z_f \varepsilon_{f,j} n_f) = k + y_M^d (w z_m \varepsilon_{m,j} n_m + w z_f \varepsilon_{f,j} n_f + rk) + 2(Tr + b)
+(1 + \tau_c)c + k' + \pi(w z_m \varepsilon_{m,j} n_m + w z_f \varepsilon_{f,j} n_f) = k + y_M^d(w z_m \varepsilon_{m,j} n_m + w z_f \varepsilon_{f,j} n_f + r k) + 2(Tr + b)
  $$
 
 ---
@@ -92,7 +92,7 @@ $$
 **Image:** `page_8_formula_1.png`
 
 $$ 
-R^M(j, k, \tilde{e}) = \max_{c, k'} [U(c, 0, 0) + \beta s_{m,j} s_{f,j} R^M(j + 1, k', \tilde{e}') + \beta s_{m,j}(1 - s_{f,j}) R^S(j + 1, k', \tilde{e}', m) \\ + \beta s_{f,j}(1 - s_{m,j}) R^S(j + 1, k', \tilde{e}', f)]
+R^M(j, k, \tilde{e}) = \max_{c, k'} [U(c, 0, 0) + \beta s_{m,j} s_{f,j} R^M(j + 1, k', \tilde{e}') + \beta s_{m,j}(1 - s_{f,j}) R^S(j + 1, k', \tilde{e}', m) + \beta s_{f,j}(1 - s_{m,j}) R^S(j + 1, k', \tilde{e}', f)]
  $$
 
 ---
@@ -120,11 +120,9 @@ w = (1 - \alpha) \Psi (K/N)^{\alpha}
 **Image:** `page_8_formula_4.png`
 
 $$ 
-\begin{aligned}
-K &= \int k'^M(\omega^M) d\Gamma^M(\omega^M) + \int k'^S(\omega^S) d\Gamma^S(\omega^S) \\
-N &= \int [z_m \varepsilon_{m,j} n_m^M(\omega^M) + z_f \varepsilon_{f,j} n_f^M(\omega^M)] d\Gamma^M(\omega^M) \\
-&+ \int z_m \varepsilon_{m,j} n_m^S(\omega^S) d\Gamma^S(\omega^S) + \int z_f \varepsilon_{f,j} n_f^S(\omega^S) d\Gamma^S(\omega^S)
-\end{aligned}
+K = \int k'^M(\omega^M)d\Gamma^M(\omega^M) + \int k'^S(\omega^S)d\Gamma^S(\omega^S) \\
+N = \int [z_m \varepsilon_{m,j} n_m^M(\omega^M) + z_f \varepsilon_{f,j} n_f^M(\omega^M)] d\Gamma^M(\omega^M) \\
++ \int z_m \varepsilon_{m,j} n_m^S(\omega^S) d\Gamma^S(\omega^S) + \int z_f \varepsilon_{f,j} n_f^S(\omega^S) d\Gamma^S(\omega^S)
  $$
 
 ---
@@ -136,10 +134,10 @@ N &= \int [z_m \varepsilon_{m,j} n_m^M(\omega^M) + z_f \varepsilon_{f,j} n_f^M(\
 
 $$ 
 \begin{aligned}
-G+2 \int_{j \geq J_{r}} S S(\tilde{e}) d \Gamma^{M}\left(\omega^{M}\right)+\int_{j \geq J_{r}} S S(\tilde{e}) d \Gamma^{S}\left(\omega^{S}\right) & =\tau_{c}\left[\int c^{M}\left(\omega^{M}\right) d \Gamma^{M}\left(\omega^{M}\right)+\int c^{S}\left(\omega^{S}\right) d \Gamma^{S}\left(\omega^{S}\right)\right] \\
-& +\int\left[y\left(\omega^{M}\right)-y_{M}^{d}\left(y\left(\omega^{M}\right)\right)\right] d \Gamma^{M}\left(\omega^{M}\right) \\
-& +\int\left[y\left(\omega^{S}\right)-y_{S}^{d}\left(y\left(\omega^{S}\right)\right)\right] d \Gamma^{S}\left(\omega^{S}\right) \\
-& +\left(\int_{j<J_{r}} \pi\left(\omega^{M}\right) d \Gamma^{M}\left(\omega^{M}\right)+\int_{j<J_{r}} \pi\left(\omega^{S}\right) d \Gamma^{S}\left(\omega^{S}\right)\right)
+G+2 \int_{j \ge J_r} S S(\tilde{e}) d \Gamma^M\left(\omega^M\right)+\int_{j \ge J_r} S S(\tilde{e}) d \Gamma^S\left(\omega^S\right)= & \tau_c\left[\int c^M\left(\omega^M\right) d \Gamma^M\left(\omega^M\right)+\int c^S\left(\omega^S\right) d \Gamma^S\left(\omega^S\right)\right] \\
+& +\int\left[y\left(\omega^M\right)-y_M^d\left(y\left(\omega^M\right)\right)\right] d \Gamma^M\left(\omega^M\right) \\
+& +\int\left[y\left(\omega^S\right)-y_S^d\left(y\left(\omega^S\right)\right)\right] d \Gamma^S\left(\omega^S\right) \\
+& +\left(\int_{j<J_r} \pi\left(\omega^M\right) d \Gamma^M\left(\omega^M\right)+\int_{j<J_r} \pi\left(\omega^S\right) d \Gamma^S\left(\omega^S\right)\right)
 \end{aligned}
  $$
 
@@ -160,7 +158,7 @@ $$
 **Image:** `page_10_formula_1.png`
 
 $$ 
-\mathcal{W}^U = \underbrace{\sum_{g=m,f} \left[ \int V^S(j, k, z, \tilde{e}, g) d\Gamma(j, k, z, \tilde{e}, g) + \int R^S(j, k, \tilde{e}, g) d\Gamma(j, k, \tilde{e}, g) \right]}_{\text{single households}} \\ + \underbrace{\int V^M(j, k, z_m, z_f, \tilde{e}) d\Gamma(j, k, z_m, z_f, \tilde{e}) + \int R^M(j, k, \tilde{e}) d\Gamma(j, k, \tilde{e})}_{\text{married households}}
+\mathcal{W}^U = \underbrace{\sum_{g=m,f} \left[ \int V^S(j, k, z, \tilde{e}, g) d\Gamma(j, k, z, \tilde{e}, g) + \int R^S(j, k, \tilde{e}, g) d\Gamma(j, k, \tilde{e}, g) \right]}_{\text{single households}} + \underbrace{\int V^M(j, k, z_m, z_f, \tilde{e}) d\Gamma(j, k, z_m, z_f, \tilde{e}) + \int R^M(j, k, \tilde{e}) d\Gamma(j, k, \tilde{e})}_{\text{married households}}
  $$
 
 ---
@@ -193,8 +191,7 @@ u(c, n) = \log c - \theta_g \frac{n^{1+\sigma_g}}{1+\sigma_g} - \phi_g^\iota \ma
 **Image:** `page_14_formula_1.png`
 
 $$ 
-y_f = zw\epsilon_j h + rk \quad \forall j < J_r \\
-y_f = SS(\tilde{e}) + rk \quad \forall j \geq J_r
+y_f = z w \epsilon_j h + r k \quad \forall j < J_r \\ y_f = SS(\tilde{e}) + r k \quad \forall j \geq J_r
  $$
 
 ---
@@ -203,7 +200,7 @@ y_f = SS(\tilde{e}) + rk \quad \forall j \geq J_r
 **Image:** `page_14_formula_2.png`
 
 $$ 
-y^d = \lambda_{\iota} \min\{y_b, y_f\}^{1-\tau_{\iota}} + (1 - \tau_{max}) \max\{0, y_f - y_b\} + Tr - \pi(y_f) \text{ for } \iota \in \{S, M\}
+y^d = \lambda_\iota \min\{y_b, y_f\}^{1-\tau_\iota} + (1 - \tau_{max}) \max\{0, y_f - y_b\} + Tr - \pi(y_f) \text{ for } \iota \in \{S, M\}
  $$
 
 ---
@@ -234,7 +231,7 @@ $$
 **Image:** `page_18_formula_1.png`
 
 $$ 
-SS(\tilde{e}) = \psi\tilde{e}
+SS(\tilde{e}) = \psi \tilde{e}
  $$
 
 ---
