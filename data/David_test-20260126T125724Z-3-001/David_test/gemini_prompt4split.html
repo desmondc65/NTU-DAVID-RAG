@@ -1,0 +1,42 @@
+I have a large Fortran file (`main_code.f90`) that I need to split for a RAG system.
+
+Please act as a **Fortran Expert** and a **Python Tool Maker**.
+1. Analyze the Fortran code I provide below.
+2. Write a **Python script** that I can run locally to split the file and inject detailed comments.
+
+**Specific Requirements for the Python Script:**
+The script must perform the following actions:
+
+A. **Read** `main_code.f90`.
+
+B. **Split** the code into these 6 files (using robust string matching):
+   1. `00_Global_Context.f90` (Start of file until `CONTAINS`)
+   2. `01_Main_Driver.f90` (Main loop logic)
+   3. `02_Policy_Solvers.f90` (Subroutines: `SRCHFIVE01`, `A_SRCHFIVE01`, `N_SRCHFIVE01`, `BRACKET01`, `check_BRACKET01`, `utility`)
+   4. `03_Policy_Iterator.f90` (Subroutine: `DECRULE01`)
+   5. `04_Distribution_Calc.f90` (Subroutines: `INVAR01`, `compute_distributions`)
+   6. `05_Analysis_Stats.f90` (Extract ALL remaining analysis subroutines: `PROFILE01`, `wealthshare`, `compute_gini`, `age_wealth_gini`, `wageshare`, `totalincomeshare`, `consumptionshare`, `avg_return_wealthgroups`, `skewness`, `AGE_PARTITION`, `income_partition`, `bequest`, `joint_dist`, `tax_moment`, `correlation`, `Calidiff`, `beq_distribution`, `avg_return`)
+
+C. **Inject Subroutine-Level Summaries (Crucial Step):**
+   * For **File 6 (`05_Analysis_Stats.f90`)**, do not just save the raw code.
+   * In the Python script, create a **Dictionary** where:
+       * Key = Subroutine Name (e.g., "compute_gini")
+       * Value = A specific "! [SUMMARY]" comment block describing that subroutine.
+   * *The Python script must iterate through this dictionary and inject the summary immediately before the `SUBROUTINE` line in the file content.*
+   * *Example:* The script should replace `SUBROUTINE compute_gini` with:
+       ```fortran
+       ! [SUBROUTINE SUMMARY]
+       ! FUNCTION: compute_gini
+       ! DESCRIPTION: Calculates the Gini coefficient for wealth inequality.
+       ! ---------------------------------------------------
+       SUBROUTINE compute_gini
+       ```
+
+D. **Save** all files to a folder named `RAG_Chunks`.
+
+**Constraint:**
+- Do NOT output the Fortran code in the chat.
+- ONLY output the Python script.
+
+**Input Code:**
+[PASTE YOUR FULL MAIN_CODE.F90 HERE]

@@ -1,69 +1,66 @@
-### Logic Analysis: `config.py`
+The `config.py` file serves as the central repository for all parameters, structural constants, and empirical targets required for the Overlapping-Generations (OLG) model. It ensures consistency across the data processing, model solution, and calibration phases by loading values from `config.yaml` and defining the target moments extracted from the research paper.
 
-The `config.py` module serves as the central repository for all parameters, transition matrices, and grid definitions. It must align with the parameters specified in `config.yaml` and the structural details provided in Section IV and Supplemental Appendix B of the paper.
+### 1. Structural Design and Initialization
+As per the class diagram, the `Config` class will be initialized with a path to `config.yaml`. 
+*   **YAML Parsing**: Use `yaml.safe_load` to ingest raw settings.
+*   **Parameter Organization**: Data will be partitioned into two primary dictionaries: `params` (model constants and initial guesses) and `targets` (empirical moments).
+*   **Period Conversion**: Since the model operates on 5-year periods (as per `config.yaml`: `annual_to_period_factor: 5`), the `Config` class must handle the conversion of annual rates (depreciation, discount factor, interest rates) into period equivalents.
+    *   *Period Discount Factor*: $\beta_{period} = \beta_{annual}^5$.
+    *   *Period Depreciation*: $\delta_{period} = 1 - (1 - \delta_{annual})^5$.
 
-#### 1. Configuration Class Structure
-Following the design, the `Config` class will handle parameter initialization and storage.
+### 2. Logic Analysis of Parameters (`params`)
+The `params` dictionary must encompass all components described in Section IV of the paper:
 
-*   **`params`**: A dictionary containing scalars from `config.yaml` (e.g., `sigma_c`, `beta`, `alpha`) and derived values (e.g., 5-year rates, survival probabilities).
-*   **`calibration_targets`**: Target values used in the SMM (Simulated Method of Moments) loop.
-*   **`load_config(path)`**: Logic to parse `config.yaml` and perform initial derivations.
+*   **Demographics**:
+    *   Total periods ($J=16$), Retirement period ($J_r=10$).
+    *   Survival probabilities ($s_j$): Coefficients for the logistic function $\text{logit}(s_j) = \omega_0 + \omega_1 j + \omega_2 j^2$ from Halliday et al. (2019).
+*   **Preferences**:
+    *   Utility function exponents: $\sigma_c = 1.5$, $\sigma_l = 1.22$.
+    *   Calibratable parameters: $\theta$ (labor disutility), $\beta$ (discounting), $\phi_1, \phi_2, \sigma_b$ (bequest motive).
+*   **Production and Technology**:
+    *   $\alpha$: Capital share (targeted to match net labor income share).
+    *   $\Psi$: TFP (normalized to 1.55 to achieve $w=1$).
+*   **Labor Productivity Process**:
+    *   Ordinary states (1-6): AR(1) parameters (persistence 0.97, variance 0.81).
+    *   Extraordinary states (7-8): Values for $z_7, z_8$ and transitions $\lambda_{in}, \lambda_{out}$.
+    *   Initial distribution: Parameters for $\zeta$ (initial worker distribution).
+*   **Return Process**:
+    *   States: $\kappa_L, \kappa_H, \kappa_{top}$ and the productivity-dependent transition matrix $\Pi_\kappa(z)$.
+*   **Tax and Transfer System**:
+    *   $\tau_s = 0.05$ (Sales).
+    *   $\tau_c = 0.236$ (Corporate).
+    *   Estate tax: 20% rate on the top 2% of estates.
+    *   Progressive income tax: Log-linear parameters to match the 12.4% gap between top 1% and bottom 99% (Piketty and Saez, 2007).
+*   **Computational Grids**:
+    *   Asset grid constants: `size=500`, `min=0`, `max=5000`. Logic requires a non-linear (log-like) distribution to provide high density at low wealth levels and sufficient coverage for the 0.1% tail.
 
-#### 2. Demographics and Survival Probabilities
-*   **Model Horizon**: 16 periods (5 years each), covering ages 20–99.
-*   **Survival Logic**: The survival probability $s(j)$ for age $j$ is calculated using the logistic function:
-    $$s(j) = [1 + \exp(\omega_0 + \omega_1 j + \omega_2 j^2)]^{-1}$$
-    Parameters $(\omega_0, \omega_1, \omega_2)$ are sourced from Halliday et al. (2019) as recommended by the paper.
-*   **Retirement**: Period $j=10$ (age 65) marks the transition from worker to retiree states.
+### 3. Logic Analysis of Empirical Targets (`targets`)
+The `targets` dictionary stores the moments the `Calibrator` will attempt to match, primarily derived from Tables 1, 3, and 4:
 
-#### 3. Labor Productivity Process ($z$)
-The model uses an 8-state process (6 ordinary, 2 extraordinary).
+*   **Wealth Concentration**:
+    *   Top 0.1% Share: 13%
+    *   Top 1% Share: 35%
+    *   Top 5% Share: 62%
+    *   Gini Coefficient: 0.84 (or 0.81 for non-negative).
+*   **Earnings Concentration**:
+    *   Top 0.1% Share: 6%
+    *   Top 1% Share: 17%
+*   **Joint Distribution/Labor Shares** (Section V.A):
+    *   Labor share of Top 0.1% Income: 49%
+    *   Labor share of Top 1.0% Income: 59%
+*   **Macro/Mobility Aggregates**:
+    *   Capital-to-Income Ratio ($K/Y$): 3.0.
+    *   Bequest-to-Wealth Ratio.
+    *   Intergenerational wealth correlation: 0.37 (Charles and Hurst, 2003).
 
-*   **Ordinary States ($z_1 \dots z_6$)**:
-    *   Composed of a permanent component $f \in \{f_L, f_H\}$ and a transitory component $a \in \{a_L, a_M, a_H\}$.
-    *   $f$ is determined at birth ($j=1$). $a$ follows an AR(1) process.
-    *   **Logic for $A$ (3x3 Matrix)**: Use the Rouwenhorst approximation for annual persistence of 0.97 (referenced from Heathcote et al., 2010). Scale probabilities by $(1 - \lambda_{in})$ to allow transitions to extraordinary states.
-*   **Extraordinary States ($z_7, z_8$)**:
-    *   $z_7$ and $z_8$ represent "superearners".
-    *   **Transition Matrix (8x8)**: Must strictly follow the structure in **Table 3**.
-        *   Rows 1–6 (Ordinary): Transition to other ordinary states via $A$ or to $z_7$ with probability $\lambda_{in}$.
-        *   Row 7 ($z_7$): Transition to any ordinary state with probability $\lambda_{out}$, or stay/move within extraordinary states $(\lambda_{ll}, \lambda_{lh})$.
-        *   Row 8 ($z_8$): Transitions determined by $(\lambda_{hl}, \lambda_{hh})$.
-*   **Initial Distribution**: As per the last row of Table 3, $z_7$ and $z_8$ are not assigned to agents entering the economy.
+### 4. Interface Logic
+The `Config` class must support the `update_params(new_params)` method.
+*   **Purpose**: During the calibration loop, the optimizer (Differential Evolution) will propose `trial_params`. This method must update the internal `params` dict, specifically parameters like `beta`, `theta`, `phi1`, `phi2`, and `extraordinary_productivity`.
+*   **Validation**: Ensure updated parameters remain within economically meaningful bounds (e.g., $\beta < 1$, $\theta > 0$).
 
-#### 4. Rate of Return Process ($\kappa$)
-*   **States**: 3-state idiosyncratic returns: $\kappa \in \{\kappa_L, \kappa_H, \kappa_{top}\}$.
-*   **Values**: Annualized rates from `config.yaml` (0.0, 0.067, 0.227) are converted to 5-year returns: $R_{5yr} = (1 + r_{ann})^5$.
-*   **Correlation with Productivity**: The transition matrix $\Pi_\kappa(z)$ depends on whether $z$ is ordinary or extraordinary.
-    *   $\pi_{in}(z)$ is higher for $z \in \{z_7, z_8\}$, creating the empirical correlation between top earners and top investors.
-    *   Specific transitions: $\Pi_\kappa$ involves persistence $\pi_{ll}, \pi_{hh}$ and the entry probability $\pi_{in}(z)$.
+### 5. Data Paths
+Consistent with the `DataHandler` design, `config.py` will define the paths for:
+*   `SCF_WAVES`: List of CSV files for 2001-2019.
+*   `IRS_DATA`: Reference path for Piketty-Saez (2003) update.
 
-#### 5. Grid Definitions
-*   **Asset Grid ($k$)**: A non-linear grid is essential.
-    *   **Density**: High density near $k=0$ (precautionary savings motive) and sparse at high wealth levels.
-    *   **Method**: Use a power-spaced grid or exponential grid: $k_i = \text{max\_k} \cdot \left(\frac{i}{N_k-1}\right)^p$, where $p > 1$.
-*   **State Space**: The total state space for policy functions is $16 \text{ (age)} \times N_k \text{ (assets)} \times 8 \text{ (z)} \times 3 \text{ (kappa)}$.
-
-#### 6. Tax and Transfer Systems
-*   **Corporate Tax**: $\tau_c = 0.236$ applied to capital income above threshold $d_c$. $d_c$ is calibrated to ensure revenue is 2.5% of GDP.
-*   **Personal Income Tax**: Disposable income $y_d$ is modeled as:
-    $$y_d = \min(\lambda y^{1-\tau_{prog}}, y - \tau_{max} y)$$
-    *   $\tau_{prog}$ is calibrated to the 12.4% gap between top 1% and bottom 99% (Piketty & Saez).
-    *   $\lambda$ is adjusted in the equilibrium loop to balance the government budget.
-*   **Estate Tax**: Flat rate $\tau_b = 0.20$ on the top 2% of estates (calibrated via the threshold for $k'$).
-
-#### 7. Bequest Motive Parameters
-*   **Utility Function**: $\phi(k') = \phi_1 [ (k' + \phi_2)^{1-\sigma_b} - 1 ]$.
-*   **Calibration Logic**: 
-    *   $\phi_1$ (altruism) targets the bequest-to-wealth ratio.
-    *   $\phi_2$ (non-homotheticity) targets the share of top 2% bequests (40%).
-    *   $\sigma_b$ (curvature) targets the age-wealth profile.
-
-#### 8. Integration with `config.yaml`
-The logic in `config.py` will prioritize values from the YAML:
-1.  **Preferences**: Load `sigma_c`, `sigma_l`, `beta`, and `theta`.
-2.  **Production**: Load `alpha`, `delta`, and `aggregate_tfp`.
-3.  **Returns**: Load annual return targets for conversion.
-4.  **Taxes**: Map the rates directly to the tax functions.
-
-This structured analysis ensures that the parameters in `config.py` are not just static values but part of a logically consistent economic environment defined by the paper's calibration strategy.
+This centralized structure ensures that when `OLGEngine` or `EquilibriumSolver` access a parameter (e.g., `config.params['tau_s']`), they are using the exact same value defined by the researcher, facilitating reproducibility.

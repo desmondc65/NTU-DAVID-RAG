@@ -1,11 +1,11 @@
 ----------------------------------------
 [Required packages]
 - numpy==1.24.3
-- pandas==2.0.3
 - scipy==1.10.1
-- numba==0.57.1
-- matplotlib==3.7.2
-- statsmodels==0.14.0
+- pandas==2.0.2
+- numba==0.57.0
+- matplotlib==3.7.1
+- seaborn==0.12.2
 
 ----------------------------------------
 [Required Other language third-party packages]
@@ -13,23 +13,23 @@
 
 ----------------------------------------
 [Logic Analysis]
-- ['config.py', 'Defines all exogenous parameters (sigma_c=1.5, sigma_l=1.22, theta, delta=0.045) and calibrated grids. Contains the 8x8 labor productivity transition matrix and the 3x3 return transition matrix. Includes tax schedules (corporate 23.6%, estate, progressive income) and demographics (16 periods, survival probabilities).']
-- ['utils.py', 'Contains helper functions for interpolation (linear and spline), root-finding for labor supply equations, and the Rouwenhorst approximation for the AR(1) ordinary labor productivity states.']
-- ['empirical_processor.py', 'Processes raw SCF data (2001-2019). Implements the labor income imputation: regressing business income on equity with controls to find the 0.25 capital share. Calculates the target moments: top wealth/income/earnings shares and implied returns using the labor share ratio method (Equation 2).']
-- ['household_solver.py', "Core engine using the Endogenous Grid Method (EGM). Implements backward induction from period 16 to 1. At each step, it solves the FOC for consumption, savings (k'), and labor (h). Uses Numba decorators to speed up the multi-dimensional interpolation over the asset grid (k), productivity (z), and return (kappa)."]
-- ['simulation.py', 'Computes the stationary distribution of households over the state space (age, assets, z, kappa). Uses the policy functions from HouseholdProblem to iterate on the distribution until it reaches a fixed point. Aggregates individual assets and labor units to find total K and N.']
-- ['equilibrium_solver.py', 'Outer loop to find General Equilibrium. Iterates on (r, w, Tr) guesses. Calls HouseholdProblem and Simulator. Adjusts prices based on marginal products of the Cobb-Douglas firm (Y = K^alpha N^(1-alpha)) and ensures the government budget balances with respect to transfers (Tr) and pension benefits.']
-- ['experiments.py', 'Executes the decomposition analysis. Defines methods to modify the model environment: (a) Equalizing bequests, (b) Removing superearners (setting z7, z8 = z6), and (c) Homogenizing returns. Runs these in all combinations to produce the marginal effects for Figure 7.']
-- ['main.py', 'Entry point. Orchestrates the flow: 1. Empirical data processing. 2. Calibration of internal parameters. 3. Benchmarking the economy. 4. Running counterfactuals and generating Table 5 and Figure 7 outputs.']
+- ['config.py', 'Defines the global parameters and structural constants of the model. Includes: demographics (J=16, Jr=10), preferences (sigma_c, sigma_l, beta), production parameters (alpha, delta), and the paths to SCF datasets. It acts as a single source of truth for the OLG engine and calibrator.']
+- ['utils.py', "Contains numerical utility functions. 1) 'create_asset_grid': Generates a non-linear (log-spaced) grid to handle the skewed wealth distribution. 2) 'survival_probs': Implements the logistic function from Halliday et al. (2019). 3) 'tax_system': Implements the progressive income tax function, corporate tax, and estate tax logic. 4) 'rouwenhorst': Approximates the AR(1) process for ordinary labor productivity."]
+- ['data_handler.py', "Handles empirical data processing. Classes: 'DataHandler'. Methods: 'load_scf_waves' to aggregate 2001-2019 data; 'impute_labor_income' to apply the 75% labor / 25% capital split for active business owners; 'get_moments' to calculate the Gini coefficients and top fractile shares (0.1%, 1%) for wealth, income, and earnings."]
+- ['olg_engine.py', "The core solver for the household's problem. Class: 'OLGEngine'. Uses 'numba.jit' for performance. Logic: Implements backward induction from age J to 1. Workers solve for consumption, savings, and hours worked. Retirees solve for consumption and savings (with bequest motives). Inputs: Interest rate (r), wage (w), and tax parameters. Returns: Policy functions (optimal savings, consumption, and labor supply) for every point in the state space."]
+- ['equilibrium_solver.py', "Solves for the stationary equilibrium. Class: 'EquilibriumSolver'. Logic: 1) Given policy functions, iterates on the distribution Gamma(s) until convergence. 2) Computes aggregate K (capital supply) and N (labor supply). 3) Uses a root-finder (e.g., scipy.optimize.brentq) to find the interest rate 'r' that clears the capital market."]
+- ['calibrator.py', "Internal calibration routine. Class: 'Calibrator'. Uses global optimization (e.g., 'scipy.optimize.differential_evolution'). Logic: Iteratively adjusts parameters (beta, theta, superearner productivity levels z7/z8, return states kappa) to minimize the weighted squared error between model-generated moments and SCF empirical targets."]
+- ['experiments.py', "Implements the decomposition analysis. Methods: 'run_no_superearners' (sets z7=z8=z6), 'run_equal_returns' (homogenizes kappa), and 'run_equal_bequests'. It re-runs the 'EquilibriumSolver' for each scenario to capture general equilibrium effects (changes in r and w)."]
+- ['main.py', 'Entry point. Orchestrates the flow: 1) Loads configuration and SCF data. 2) Runs calibration. 3) Executes the suite of counterfactual experiments. 4) Generates tables and plots (reproducing Figure 7 and Table 5).']
 
 ----------------------------------------
 [Task list]
 - config.py
 - utils.py
-- empirical_processor.py
-- household_solver.py
-- simulation.py
+- data_handler.py
+- olg_engine.py
 - equilibrium_solver.py
+- calibrator.py
 - experiments.py
 - main.py
 
@@ -39,9 +39,9 @@
 
 ----------------------------------------
 [Shared Knowledge]
-Transition matrices and asset grids are shared across HouseholdProblem and Simulator. The asset grid 'k' should be non-linearly spaced (dense near zero, sparse at high levels) to capture both precautionary savings and the extreme tail. The productivity states (z7, z8) and return states (kappa_top) must be sourced from the Supplemental Appendix B. All modules utilize the same demographic profile (16 periods of 5 years each).
+1. Numerical Speed: The OLG engine must use 'numba' or 'cython' for the Bellman step; otherwise, the nested loops (age x asset_grid x labor_states x return_states) will be too slow for calibration. 2. Asset Grid: The grid must extend to values several hundred times the average income to capture the top 0.1% of the wealth distribution. 3. Transition Matrix: The labor productivity matrix is 8x8 (6 ordinary, 2 extraordinary), and transitions to extraordinary states (lambda_in) are very rare but critical for the tail. 4. Accounting: Bequests received in the model must be balanced with estates left by deceased agents in the stationary distribution.
 
 ----------------------------------------
 [Anything UNCLEAR]
-The specific numerical values for the transition probabilities of extraordinary states (lambda_in, lambda_out) are not in the main text; they require extraction from the paper's Supplemental Appendix. The exact 'high-return/low-return' threshold for the intergenerational bequest correlation needs to be confirmed (typically the median or the specific return states κL vs κH/κtop).
+1. Specific weights for the calibration objective function are not provided in the paper. 2. The exact threshold 'dc' for corporate tax revenue (2.5% of GDP) requires an iterative guess during the general equilibrium solve. 3. Implementation of the 'joint draw' of bequests based on parental characteristics (gamma_z, gamma_kappa) requires a specific mapping of the deceased distribution to the entrant distribution.
 
