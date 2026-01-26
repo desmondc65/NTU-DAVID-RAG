@@ -1,0 +1,233 @@
+[
+  {
+    "vlm": {
+      "page_no": 9,
+      "formula_index": 1,
+      "image_name": "page_9_formula_1.png",
+      "latex": "(1) \\quad \\lambda_{i}=\\frac{e_{i}}{e_{i}+r_{i} k_{i}}=\\frac{\\lambda_{0}}{\\lambda_{0}+\\frac{k_{i / 0}}{e_{i / 0}} \\frac{r_{i}}{r_{0}}\\left(1-\\lambda_{0}\\right)}."
+    },
+    "docling": {
+      "latex": "^ { 7 } \\lambda _ { i } = \\frac { e _ { i / 0 } e _ { 0 } } { e _ { i / 0 } e _ { 0 } + r _ { i / 0 } k _ { 0 } } = \\frac { e _ { 0 } } { e _ { 0 } + \\frac { k _ { 0 } } { e _ { i , 0 } } r _ { i } } = \\frac { e _ { 0 } } { e _ { 0 } + r _ { 0 } k _ { 0 } } \\frac { e _ { 0 } + r _ { 0 } k _ { 0 } } { e _ { 0 } + \\frac { k _ { 0 } / r _ { 0 } } { e _ { i , 0 } \\frac { r _ { 0 } } { r _ { 0 } } r _ { 0 } } r _ { 0 } } = \\frac { \\lambda _ { 0 } } { \\lambda _ { 0 } + \\frac { k _ { 0 } / r _ { 0 } } { e _ { i , 0 } \\frac { r _ { 0 } } { r _ { 0 } } r _ { 0 } } r _ { 0 } } \\, .",
+      "orig": "7 λ i = e i / 0 e 0 ___________ e i / 0 e 0 + r i k i / 0 k 0 = e 0 _ e 0 + k i / 0 _ e i / 0 r i k 0 = e 0 _ e 0 + r 0 k 0 e 0 + r 0 k 0 _ e 0 + k i / 0 _ e i / 0 r i _ r 0 r 0 k 0 = λ 0 _____________ λ 0 + k i / 0 _ e i / 0 r i _ r 0 ( 1 -λ 0 ) .",
+      "page_no": 9,
+      "bbox": {
+        "l": 93.0,
+        "t": 88.00700000000006,
+        "r": 360.547,
+        "b": 66.48699999999997,
+        "coord_origin": "BOTTOMLEFT"
+      },
+      "self_ref": "#/texts/180"
+    }
+  },
+  {
+    "vlm": {
+      "page_no": 9,
+      "formula_index": 2,
+      "image_name": "page_9_formula_2.png",
+      "latex": "(2) \\frac{r_i}{r_0} = \\frac{e_{i/0}}{k_{i/0}} \\cdot \\frac{1/\\lambda_i - 1}{1/\\lambda_0 - 1}."
+    },
+    "docling": {
+      "latex": "\\frac { r _ { i } } { r _ { 0 } } = \\frac { e _ { i / 0 } } { k _ { i / 0 } } \\cdot \\frac { 1 / \\lambda _ { i } - 1 } { 1 / \\lambda _ { 0 } - 1 } .",
+      "orig": "( 2 ) r i _ r 0 = e i / 0 _ k i / 0 ⋅ 1 / λ i -1 1 _ / λ 0 -1 .",
+      "page_no": 9,
+      "bbox": {
+        "l": 81.003,
+        "t": 176.04099999999994,
+        "r": 323.573,
+        "b": 148.06500000000005,
+        "coord_origin": "BOTTOMLEFT"
+      },
+      "self_ref": "#/texts/178"
+    }
+  },
+  {
+    "vlm": {
+      "page_no": 9,
+      "formula_index": 3,
+      "image_name": "page_9_formula_3.png",
+      "latex": "{}^7 \\lambda_i = \\frac{e_{i/0} e_0}{e_{i/0} e_0 + r_i k_{i/0} k_0} = \\frac{e_0}{e_0 + \\frac{k_{i/0}}{e_{i/0}} r_i k_0} = \\frac{e_0}{e_0 + r_0 k_0} \\frac{e_0 + r_0 k_0}{e_0 + \\frac{k_{i/0}}{e_{i/0}} \\frac{r_i}{r_0} r_0 k_0} = \\frac{\\lambda_0}{\\lambda_0 + \\frac{k_{i/0}}{e_{i/0}} \\frac{r_i}{r_0} (1 - \\lambda_0)}."
+    },
+    "docling": {
+      "latex": "\\lambda _ { i } = \\frac { e _ { i } } { e _ { i } + r _ { i } k _ { i } } = \\frac { \\lambda _ { 0 } } { \\lambda _ { 0 } + \\frac { k _ { i / 0 } } { e _ { i / 0 } } \\frac { r _ { i } } { r _ { 0 } } ( 1 - \\lambda _ { 0 } ) } .",
+      "orig": "( 1 ) λ i = e i _ e i + r i k i = λ 0 ________________ λ 0 + k i / 0 _ e i / 0 r i _ r 0 ( 1 -λ 0 ) .",
+      "page_no": 9,
+      "bbox": {
+        "l": 81.0,
+        "t": 337.454,
+        "r": 362.64,
+        "b": 302.941,
+        "coord_origin": "BOTTOMLEFT"
+      },
+      "self_ref": "#/texts/176"
+    }
+  },
+  {
+    "vlm": {
+      "page_no": 11,
+      "formula_index": 1,
+      "image_name": "page_11_formula_1.png",
+      "latex": "V(j, k, z, \\kappa) = \\max_{c, k' \\geq 0, h \\in [0,1]} \\left\\{ \\frac{c^{1-\\sigma_c}}{1-\\sigma_c} - \\theta \\frac{h^{1+\\sigma_l}}{1+\\sigma_l} + \\beta(1 - s(j)) \\phi(k') + \\beta s(j) \\mathbb{E} \\left[ V(j+1, k' + \\Phi', z', \\kappa') | j, z, \\kappa \\right] \\right\\},"
+    },
+    "docling": {
+      "latex": "\\left ( 1 + \\tau _ { s } \\right ) c + k ^ { \\prime } \\, = \\, y ^ { d } ( z w \\, \\varepsilon _ { j } h , r \\kappa k ) + k + T r ,",
+      "orig": "( 1 + τ s ) c + k ′ = y d ( zw ε j h , r κ k ) + k + Tr ,",
+      "page_no": 11,
+      "bbox": {
+        "l": 166.536,
+        "t": 195.49700000000007,
+        "r": 364.214,
+        "b": 181.274,
+        "coord_origin": "BOTTOMLEFT"
+      },
+      "self_ref": "#/texts/209"
+    }
+  },
+  {
+    "vlm": {
+      "page_no": 11,
+      "formula_index": 2,
+      "image_name": "page_11_formula_2.png",
+      "latex": "(1 + \\tau_s) c + k' = y^d(z w \\varepsilon_j h, r \\kappa k) + k + Tr,"
+    },
+    "docling": {
+      "latex": "V ( j , k , z , \\kappa ) = \\max _ { c , k ^ { \\prime } \\geq 0 , h \\in [ 0 , 1 ] } \\left \\{ \\frac { c ^ { 1 - \\sigma _ { c } } } { 1 - \\sigma _ { c } } - \\theta \\frac { h ^ { 1 + \\sigma _ { l } } } { 1 + \\sigma _ { l } } + \\beta ( 1 - s ( j ) ) \\phi ( k ^ { \\prime } ) \\\\ + \\beta s ( j ) \\mathbb { E } \\left [ V ( j + 1 , k ^ { \\prime } + \\Phi ^ { \\prime } , z ^ { \\prime } , \\kappa ^ { \\prime } ) | j , z , \\kappa | \\right \\} ,",
+      "orig": "V ( j , k , z , κ ) = max c , k ′ ≥ 0, h ∈ [ 0,1 ] { c 1 -σ c 1  _ -σ c -θ h 1 + σ l 1  _ + σ l + β ( 1 -s ( j ) ) ϕ ( k ′ ) + β s ( j ) /u1D53C [ V ( j + 1, k ′ + Φ ′ , z ′ , κ ′ ) | j , z , κ ] } ,",
+      "page_no": 11,
+      "bbox": {
+        "l": 110.925,
+        "t": 291.414,
+        "r": 434.858,
+        "b": 232.418,
+        "coord_origin": "BOTTOMLEFT"
+      },
+      "self_ref": "#/texts/207"
+    }
+  },
+  {
+    "vlm": {
+      "page_no": 12,
+      "formula_index": 1,
+      "image_name": "page_12_formula_1.png",
+      "latex": "V(j,k,z,\\kappa) = \\max_{c,k' \\geq 0} \\left\\{ \\frac{c^{1-\\sigma_c}}{1-\\sigma_c} + \\beta s(j) \\mathbb{E} \\left[ V(j+1, k' + \\Phi', z, \\kappa') \\mid j, \\kappa, z \\right] + \\beta (1 - s(j)) \\phi(k') \\right\\},"
+    },
+    "docling": {
+      "latex": "G + \\int _ { b ( z ) d \\Gamma _ { j \\geq J , } ( s ) } & = \\tau _ { s } [ \\int _ { c ( s ) d \\Gamma ( s ) } ] \\\\ & + \\int [ y - y ^ { d } ( z w \\varepsilon _ { j } h , r \\kappa k ) ] d \\Gamma _ { j < J , } ( s ) \\\\ & + \\int [ y - y ^ { d } ( b ( z ) , r \\kappa k ) ] d \\Gamma _ { j \\geq J , } ( s ) \\\\ & + \\int ( 1 - s ( j ) ) \\tau _ { b } ( k ^ { \\prime } ) d \\Gamma ( s ) ; \\\\ \\intertext { d } \\Gamma ( s ) \\text { is consistent with the policy functions and is stationary}",
+      "orig": "G + ∫ b ( z ) /u1D451 Γ j ≥ J r ( s ) = τ s [ ∫ c ( s ) /u1D451 Γ ( s ) ] +   ∫ [ y -y d ( zw ε j h , r κ k ) ] /u1D451 Γ j < J r ( s ) +   ∫ [ y -y d ( b ( z ) , r κ k ) ] /u1D451 Γ j ≥ J r ( s ) + ∫ ( 1 -s ( j ) ) τ b ( k ′ ) /u1D451 Γ ( s ) ;",
+      "page_no": 12,
+      "bbox": {
+        "l": 135.998,
+        "t": 327.27,
+        "r": 405.51,
+        "b": 218.91100000000006,
+        "coord_origin": "BOTTOMLEFT"
+      },
+      "self_ref": "#/texts/226"
+    }
+  },
+  {
+    "vlm": {
+      "page_no": 12,
+      "formula_index": 2,
+      "image_name": "page_12_formula_2.png",
+      "latex": "(1 + \\tau_s)c + k' = y^d(b(z), r\\kappa k) + k + Tr."
+    },
+    "docling": {
+      "latex": "K = \\int _ { k ( s ) d \\Gamma ( s ) N } = \\int _ { z \\varepsilon _ { j } h ( s ) d \\Gamma _ { j < J _ { r } } ( s ) ;",
+      "orig": "K = ∫ k ( s ) /u1D451 Γ ( s ) N = ∫ z ε j h ( s ) /u1D451 Γ j < J r ( s ) ;",
+      "page_no": 12,
+      "bbox": {
+        "l": 163.583,
+        "t": 379.27,
+        "r": 367.163,
+        "b": 360.911,
+        "coord_origin": "BOTTOMLEFT"
+      },
+      "self_ref": "#/texts/224"
+    }
+  },
+  {
+    "vlm": {
+      "page_no": 12,
+      "formula_index": 3,
+      "image_name": "page_12_formula_3.png",
+      "latex": "K = \\int k(s) d\\Gamma(s) N = \\int z \\varepsilon_j h(s) d\\Gamma_{j < J_r}(s);"
+    },
+    "docling": {
+      "latex": "( 1 + \\tau _ { s } ) c + k ^ { \\prime } \\, = \\, y ^ { d } ( b ( z ) , r \\kappa k ) + k + T r .",
+      "orig": "( 1 + τ s ) c + k ′ = y d ( b ( z ) , r κ k ) + k + Tr .",
+      "page_no": 12,
+      "bbox": {
+        "l": 169.911,
+        "t": 520.497,
+        "r": 358.089,
+        "b": 505.993,
+        "coord_origin": "BOTTOMLEFT"
+      },
+      "self_ref": "#/texts/221"
+    }
+  },
+  {
+    "vlm": {
+      "page_no": 12,
+      "formula_index": 4,
+      "image_name": "page_12_formula_4.png",
+      "latex": "\\begin{aligned}\nG+\\int b(z) d \\Gamma_{j \\geq J_{r}}(s)= & \\tau_{s}\\left[\\int c(s) d \\Gamma(s)\\right] \\\\\n& +\\int\\left[y-y^{d}\\left(z w \\varepsilon_{j} h, r \\kappa k\\right)\\right] d \\Gamma_{j<J_{r}}(s) \\\\\n& +\\int\\left[y-y^{d}(b(z), r \\kappa k)\\right] d \\Gamma_{j \\geq J_{r}}(s) \\\\\n& +\\int(1-s(j)) \\tau_{b}\\left(k^{\\prime}\\right) d \\Gamma(s) ;\n\\end{aligned}"
+    },
+    "docling": {
+      "latex": "V ( j , k , z , \\kappa ) & = \\max _ { c , k ^ { \\prime } \\geq 0 } \\left \\{ \\frac { c ^ { 1 - \\sigma _ { c } } } { 1 - \\sigma _ { c } } + \\beta s ( j ) \\mathbb { E } \\left [ V ( j + 1 , k ^ { \\prime } + \\Phi ^ { \\prime } , z , \\kappa ^ { \\prime } ) \\left | j , \\kappa , z \\right ] \\\\ & + \\beta \\left ( 1 - s ( j ) \\right ) \\phi ( k ^ { \\prime } ) \\right \\} ,",
+      "orig": "V ( j , k , z , κ ) = max c , k ′ ≥ 0 { c 1 -σ c 1  _ -σ c + β s ( j ) /u1D53C [ V ( j + 1, k ′ + Φ ′ , z , κ ′ ) | j , κ , z ] + β ( 1 -s ( j ) ) ϕ ( k ′ ) } ,",
+      "page_no": 12,
+      "bbox": {
+        "l": 107.815,
+        "t": 616.414,
+        "r": 420.184,
+        "b": 562.148,
+        "coord_origin": "BOTTOMLEFT"
+      },
+      "self_ref": "#/texts/219"
+    }
+  },
+  {
+    "vlm": {
+      "page_no": 15,
+      "formula_index": 1,
+      "image_name": "page_15_formula_1.png",
+      "latex": "\\Pi_{\\kappa}(z) = \\left( \\begin{array}{c|ccc} & \\kappa_{L} & \\kappa_{H} & \\kappa_{top} \\\\ \\cline{2-4} \\kappa_{L} & \\pi_{ll} & 1 - \\pi_{ll} - \\pi_{in}(z) & \\pi_{in}(z) \\\\ \\kappa_{H} & 1 - \\pi_{hh} - \\pi_{in}(z) & \\pi_{hh} & \\pi_{in}(z) \\\\ \\kappa_{top} & 0 & 1 - \\pi_{top,top} & \\pi_{top,top} \\end{array} \\right)."
+    },
+    "docling": {
+      "latex": "\\Pi _ { \\kappa } ( z ) \\, = \\, \\left ( \\begin{array} { c | c c c } \\frac { \\kappa _ { L } } { \\kappa _ { H } } & \\kappa _ { H } & \\kappa _ { \\text {top} } \\\\ \\frac { \\kappa _ { L } } { \\kappa _ { H } } & \\pi _ { u } & 1 - \\pi _ { u } - \\pi _ { \\text {im} } ( z ) & \\frac { \\kappa _ { \\text {top} } } { \\pi _ { \\text {im} } ( z ) } \\\\ 1 - \\pi _ { u } h - \\pi _ { \\text {im} } ( z ) & \\pi _ { H } & \\pi _ { \\text {im} } ( z ) & \\\\ 0 & 1 - \\pi _ { \\text {top} } \\text {, } \\pi _ { \\text {top} } & \\pi _ { \\text {top} } \\text {, } \\pi _ { \\text {top} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im} } \\text {, } \\pi _ { \\text {im } } \\text {, } \\pi _ { \\text {im } } \\text {, } \\pi _ { \\text {im } } \\text {, } \\pi _ { \\text {im } } \\text {, } \\pi _ { \\text {im } } \\text {, } \\pi _ { \\text {im } } \\text {, } \\pi _ { \\text {im } } \\text {, } \\pi _ { \\text {im } } \\text {, } \\pi _ { \\text {im } } \\text {, } \\pi _ { \\text {im } } \\text {, } \\pi _ { \\text {im } } \\text {, } \\pi _ { \\text {im } } \\text {, } \\pi _ { \\text {im } } \\text {, } \\pi _ { \\text {im } } \\text {, } \\pi _ { \\text {im } } \\text {, } \\pi _ { \\text {im } } \\text {, } \\pi _ { \\text {im } } \\text {, } \\pi _ { \\text {im } } \\text {, } \\pi _ { \\text {im } } \\text {, } \\pi _ { \\text {im } } \\text {, } \\pi _ { \\text {im } } \\text {, } \\pi _ { \\text {im } } \\text {, } \\pi _ { \\text {im } } \\text {, } \\pi _ { \\text {im } } \\text {, } \\pi _ { \\text {im } } \\text {, } \\pi _ { \\text {im } } \\text {, } \\pi _ { \\text {im } } \\text {, } \\pi _ { \\text {im } } \\text {, } \\pi _ { \\text {im } } \\text {, } \\pi _ { \\text {im } } \\text {, } \\pi _ { \\text {im } } \\text {, } \\pi _ { \\text {im } } \\text {, } \\pi _ { \\text {im } } \\text {, } \\pi _ { \\text {im } } \\text {, } \\pi _ { \\text",
+      "orig": "Π κ ( z ) = ( κ L κ H κ top ) . κ L π ll 1 -π ll -π in ( z ) π in ( z ) κ H 1 -π hh -π in ( z ) π hh π in ( z ) κ top 0 1 -π top , top π top , top",
+      "page_no": 15,
+      "bbox": {
+        "l": 134.5,
+        "t": 466.0,
+        "r": 389.5,
+        "b": 406.159,
+        "coord_origin": "BOTTOMLEFT"
+      },
+      "self_ref": "#/texts/262"
+    }
+  },
+  {
+    "vlm": {
+      "page_no": 32,
+      "formula_index": 1,
+      "image_name": "page_32_formula_1.png",
+      "latex": "\\ln Y_i = cons. + \\alpha \\ln K_i + \\beta \\ln L_i + \\epsilon_i,"
+    },
+    "docling": {
+      "latex": "\\ln Y _ { i } \\, = \\, c o n s \\, . + \\, \\alpha \\ln K _ { i } + \\beta \\ln L _ { i } + \\epsilon _ { i } ,",
+      "orig": "ln Y i = cons . + α ln K i + β ln L i + /uni03F5 i ,",
+      "page_no": 32,
+      "bbox": {
+        "l": 180.954,
+        "t": 427.513,
+        "r": 349.791,
+        "b": 415.274,
+        "coord_origin": "BOTTOMLEFT"
+      },
+      "self_ref": "#/texts/794"
+    }
+  }
+]

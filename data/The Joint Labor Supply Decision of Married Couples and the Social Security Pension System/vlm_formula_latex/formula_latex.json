@@ -3,13 +3,13 @@
     "page_no": 4,
     "formula_index": 1,
     "image_name": "page_4_formula_1.png",
-    "latex": "\\mathbf{s} = (t, a, b_1, b_2, e_1, e_2, m), \\qquad \\mathbf{s}_t = (x(\\mathbf{s}), w_{G,t},"
+    "latex": "\\mathbf{s} = (i, a, b_1, b_2, e_1, e_2, m), \\quad \\mathbf{S}_t = (x(\\mathbf{s}), W_{G,t}),"
   },
   {
     "page_no": 4,
     "formula_index": 2,
     "image_name": "page_4_formula_2.png",
-    "latex": "\\Psi_t = \\{ C_{G,s}, tr_{LS,s}, \\tau_{I,s}(\\cdot), \\tau_{P,s}(\\cdot), tr_{SS,s}(\\cdot), W_{G,s+1}, q_s \\}_{s=t}^\\infty"
+    "latex": "\\mathbf{\\Psi}_t = \\{C_{G,s}, tr_{LS,s}, \\tau_{I,s}(\\cdot), \\tau_{P,s}(\\cdot), tr_{SS,s}(\\cdot), W_{G,s+1}, q_s\\}_{s=t}^\\infty"
   },
   {
     "page_no": 4,
@@ -21,205 +21,205 @@
     "page_no": 4,
     "formula_index": 4,
     "image_name": "page_4_formula_4.png",
-    "latex": "0 < h_1 < 1 \\text{ if } m \\neq 2, \\quad h_1 = 0 \\text{ if } m = 2 \\qquad (3)"
+    "latex": "c > 0, \\hfill (2)"
   },
   {
     "page_no": 4,
     "formula_index": 5,
     "image_name": "page_4_formula_5.png",
-    "latex": "\\begin{align}\n0 \\le h_1 < 1 & \\text{ if } m \\ne 2, & h_1 = 0 & \\text{ if } m = 2, \\tag{3} \\\\\n0 \\le h_2 < 1 - \\kappa n_{m,i} & \\text{ if } m \\ne 1, & h_2 = 0 & \\text{ if } m = 1, \\tag{4}\n\\end{align}"
+    "latex": "\\begin{aligned}\n0 \\le h_1 < 1 & \\quad \\text{if } m \\neq 2, & h_1 = 0 & \\quad \\text{if } m = 2, & (3) \\\\\n0 \\le h_2 < 1 - \\kappa \\rho, & \\quad \\text{if } m \\neq 1, & h_2 = 0 & \\quad \\text{if } m = 1, & (4)\n\\end{aligned}"
   },
   {
     "page_no": 4,
     "formula_index": 6,
     "image_name": "page_4_formula_6.png",
-    "latex": "0 \\le n_2 < 1 - \\kappa n_{m,i} \\text{ if } m \\neq 1, \\quad n_2 = 0 \\text{ if } m = 1,"
+    "latex": "0 \\leq h_2 < 1 - \\kappa n_{m,i} \\quad \\text{if } m \\neq 1, \\quad h_2 = 0 \\quad \\text{if } m = 1, \\qquad (4)"
   },
   {
     "page_no": 4,
     "formula_index": 7,
     "image_name": "page_4_formula_7.png",
-    "latex": "\\mathbf{s}' = (t + 1, a', b'_1, b'_2, e'_1, e'_2, m'), \\tag{5}\na' = \\frac{1}{1 + \\gamma} [(1 + r_t)a + w_t e_1 h_1 + w_t e_2 h_2 - \\tau_{I,t}(r_t a + w_t e_1 h_1 + w_t e_2 h_2; m, n_{m,i})] \\tag{6}"
+    "latex": "\\mathbf{s}' = (i + 1, a', b'_1, b'_2, e'_1, e'_2, m'), \\tag{5}\nr' = \\frac{1}{i + 1} [ (1 + r_{c,i}) a_i + b_{1,i} + b_{2,i} - c_i (e_{1,i} + e_{2,i} + m_i) ], \\tag{6}"
   },
   {
     "page_no": 4,
     "formula_index": 8,
     "image_name": "page_4_formula_8.png",
-    "latex": "\\begin{align}\n& -\\tau_{P,t}(w_t e_1 h_1, w_t e_2 h_2) + tr_{SS,t}(i, b_1, b_2, m) + (1 + \\mathbf{1}_{\\{m=0\\}})(tr_{LS,t} + \\mathbf{1}_{\\{i < I_R\\}} q_t) - c] \\geq a'_{\\min}(\\mathbf{s}), \\nonumber \\\\\nb'_1 & = \\mathbf{1}_{\\{i < I_R, m \\neq 2\\}} \\frac{1}{i - 20} [(i - 21)b_1 + \\min(w_t e_1 h_1, \\vartheta_{\\max})] + \\mathbf{1}_{\\{i \\geq I_R \\text{ or } m = 2\\}} b_1, \\tag{7} \\\\\nb'_2 & = \\mathbf{1}_{\\{i < I_R, m \\neq 1\\}} \\frac{1}{i - 20} [(i - 21)b_2 + \\min(w_t e_2 h_2, \\vartheta_{\\max})] + \\mathbf{1}_{\\{i \\geq I_R \\text{ or } m = 1\\}} b_2, \\tag{8}\n\\end{align}"
+    "latex": "\\begin{aligned}\n&-\\tau_{P,t}(w_t e_1 h_1, w_t e_2 h_2) + tr_{SS,t}(i, b_1, b_2, m) + (1 + \\mathbf{1}_{\\{m=0\\}})(tr_{LS,t} + \\mathbf{1}_{\\{i < I_R\\}} q_t) - c] \\ge a'_{\\min}(\\mathbf{s}), \\\\\nb'_1 &= \\mathbf{1}_{\\{i < I_R, m \\neq 2\\}} \\frac{1}{i - 20} [(i - 21) b_1 + \\min(w_t e_1 h_1, \\vartheta_{\\max})] + \\mathbf{1}_{\\{i \\ge I_R \\text{ or } m = 2\\}} b_1, \\qquad (7) \\\\\nb'_2 &= \\mathbf{1}_{\\{i < I_R, m \\neq 1\\}} \\frac{1}{i - 20} [(i - 21) b_2 + \\min(w_t e_2 h_2, \\vartheta_{\\max})] + \\mathbf{1}_{\\{i \\ge I_R \\text{ or } m = 1\\}} b_2, \\qquad (8)\n\\end{aligned}"
   },
   {
     "page_no": 4,
     "formula_index": 9,
     "image_name": "page_4_formula_9.png",
-    "latex": "\\begin{aligned} a' = \\frac{1}{1 + \\mu} [ & (1 + r_t) a + w_t e_1 h_1 + w_t e_2 h_2 - \\tau_{I,t}(r_t a + w_t e_1 h_1 + w_t e_2 h_2; m, n_{m,i}) \\\\ & - \\tau_{P,t}(w_t e_1 h_1, w_t e_2 h_2) + tr_{SS,t}(i, b_1, b_2, m) + (1 + \\mathbf{1}_{\\{m=0\\}})(tr_{LS,t} + \\mathbf{1}_{\\{i < I_R\\}} q_t) - c ] \\geq a'_{\\min}(\\mathbf{s}), \\end{aligned} \\tag{6}"
+    "latex": "\\begin{aligned} a' = \\frac{1}{1 + \\mu} [ & (1 + r_t) a + w_t e_1 h_1 + w_t e_2 h_2 - \\tau_{I,t} (r_t a + w_t e_1 h_1 + w_t e_2 h_2; m, n_{m,i}) \\\\ & - \\tau_{P,t} (w_t e_1 h_1, w_t e_2 h_2) + tr_{SS,t} (i, b_1, b_2, m) + (1 + \\mathbf{1}_{\\{m=0\\}}) (tr_{LS,t} + \\mathbf{1}_{\\{i < I_R\\}} q_t) - c ] \\ge a'_{\\min}(\\mathbf{s}), \\end{aligned} \\tag{6}"
   },
   {
     "page_no": 4,
     "formula_index": 10,
     "image_name": "page_4_formula_10.png",
-    "latex": "b'_2 = \\mathbf{1}_{\\{i < I_R, m \\neq 1\\}} \\frac{1}{i - 20} [ (i - 21) b_2 + \\min(w_t e_2 h_2, \\vartheta_{\\max}) ] + \\mathbf{1}_{\\{i \\geq I_R \\text{ or } m = 1\\}} b_2, \\quad (8)"
+    "latex": "b_2' = \\mathbf{1}_{\\{i < I_R, m \\neq 1\\}} \\frac{1}{i - 20} [(i - 21)b_2 + \\min(w_t e_2 h_2, \\vartheta_{\\max})] + \\mathbf{1}_{\\{i \\geq I_R \\text{ or } m = 1\\}} b_2,"
   },
   {
     "page_no": 5,
     "formula_index": 1,
     "image_name": "page_5_formula_1.png",
-    "latex": "u(c, h_1, h_2; m = j, n_{m,i}) = \\tilde{u}_j(c, h_j; n_{j,i}) = \\begin{cases} \\frac{\\left[ c^\\alpha (1 - h_1)^{1-\\alpha} \\right]^{1-\\gamma}}{1 - \\gamma} & \\text{if } j = 1 \\\\ \\frac{\\left[ c^\\alpha (1 - \\kappa n_{2,i} - h_2)^{1-\\alpha} \\right]^{1-\\gamma}}{1 - \\gamma} & \\text{if } j = 2 \\end{cases}"
+    "latex": "u(c, h_1, h_2; m = j, n_{m,i}) = \\tilde{u}_j(c, h_j; n_{j,i}) = \\begin{cases} \\frac{[c^\\alpha (1 - h_1)^{1-\\alpha}]^{1-\\gamma}}{1 - \\gamma} & \\text{if } j = 1, \\\\ \\frac{[c^\\alpha (1 - \\kappa n_{2,i} - h_2)^{1-\\alpha}]^{1-\\gamma}}{1 - \\gamma} & \\text{if } j = 2, \\end{cases}"
   },
   {
     "page_no": 5,
     "formula_index": 2,
     "image_name": "page_5_formula_2.png",
-    "latex": "u(c, h_1, h_2; m=0, n_{m,i}) = \\tilde{u}_1\\left(\\frac{c}{1+\\lambda}, h_1; 0\\right) + \\tilde{u}_2\\left(\\frac{c}{1+\\lambda}, h_2; n_{0,i}\\right)"
+    "latex": "u(c, h_1, h_2; m = 0, n_{m,i}) = \\tilde{u}_1 \\left( \\frac{c}{1 + \\lambda}, h_1; 0 \\right) + \\tilde{u}_2 \\left( \\frac{c}{1 + \\lambda}, h_2; n_{0,i} \\right),"
   },
   {
     "page_no": 5,
     "formula_index": 3,
     "image_name": "page_5_formula_3.png",
-    "latex": "E(\\chi) = \\bar{\\alpha}\\bar{\\theta} = \\begin{cases} \\kappa_1 & \\text{if } (m = 0, h_1 = 0, h_2 > 0) \\text{ or } (m = 1, h_1 = 0) \\\\ \\kappa_1 + n_{m,i}\\kappa_2 & \\text{if } (m = 0, h_1 \\ge 0, h_2 = 0) \\text{ or } (m = 2, h_2 = 0) \\end{cases}"
+    "latex": "E(\\chi) = \\bar{\\alpha}\\bar{\\theta} = \\begin{cases} \\kappa_1 & \\text{if } (m = 0, h_1 = 0, h_2 > 0) \\text{ or } (m = 1, h_1 = 0), \\\\ \\kappa_1 + n_{m,i}\\kappa_2 & \\text{if } (m = 0, h_1 \\geq 0, h_2 = 0) \\text{ or } (m = 2, h_2 = 0), \\end{cases}"
   },
   {
     "page_no": 5,
     "formula_index": 4,
     "image_name": "page_5_formula_4.png",
-    "latex": "\\Pi_i(e'_1, e'_2, m'|e_1, e_2, m) = \\begin{cases} \\Pi_{(e_1, e_2), i}(e'_1, e'_2|e_1, e_2) p_{m, i}(m'|m) & \\text{if } m = 0 \\\\ \\Pi_{e_1, i}(e'_1|e_1) p_{m, i}(m'|m) & \\text{if } m = 1 \\\\ \\Pi_{e_2, i}(e'_2|e_2) p_{m, i}(m'|m) & \\text{if } m = 2 \\end{cases}"
+    "latex": "\\Pi_i(e'_1, e'_2, m' | e_1, e_2, m) = \\begin{cases} \\Pi_{(e_1, e_2), i}(e'_1, e'_2 | e_1, e_2) p_{m, i}(m' | m) & \\text{if } m = 0, \\\\ \\Pi_{e_1, i}(e'_1 | e_1) p_{m, i}(m' | m) & \\text{if } m = 1, \\\\ \\Pi_{e_2, i}(e'_2 | e_2) p_{m, i}(m' | m) & \\text{if } m = 2, \\end{cases}"
   },
   {
     "page_no": 5,
     "formula_index": 5,
     "image_name": "page_5_formula_5.png",
-    "latex": "\\begin{aligned}\np_{m,i}(0|0) &= \\phi_{1,i}\\phi_{2,i}, & p_{m,i}(1|0) &= \\phi_{1,i}(1 - \\phi_{2,i}), & p_{m,i}(2|0) &= (1 - \\phi_{1,i})\\phi_{2,i}, \\\\\np_{m,i}(0|1) &= 0, & p_{m,i}(1|1) &= \\phi_{1,i}, & p_{m,i}(2|1) &= 0, \\\\\np_{m,i}(0|2) &= 0, & p_{m,i}(1|2) &= 0, & p_{m,i}(2|2) &= \\phi_{2,i},\n\\end{aligned}"
+    "latex": "p_{m,i}(0|0) = \\phi_{1,i}\\phi_{2,i}, \\quad p_{m,i}(1|0) = \\phi_{1,i}(1 - \\phi_{2,i}), \\quad p_{m,i}(2|0) = (1 - \\phi_{1,i})\\phi_{2,i}, \\\\ p_{m,i}(0|1) = 0, \\quad p_{m,i}(1|1) = \\phi_{1,i}, \\quad p_{m,i}(2|1) = 0, \\\\ p_{m,i}(0|2) = 0, \\quad p_{m,i}(1|2) = 0, \\quad p_{m,i}(2|2) = \\phi_{2,i},"
   },
   {
     "page_no": 6,
     "formula_index": 1,
     "image_name": "page_6_formula_1.png",
-    "latex": "y = \\max (r_t a + w_t e_1 n_1 + w_t e_2 n_2 - (1 + \\mathbf{1}_{\\{m=0\\}}) \\xi, 0)"
+    "latex": "y = \\max (r_t a + w_t e_1 h_1 + w_t e_2 h_2 - (1 + \\mathbf{1}_{\\{m=0\\}}) \\xi, 0) ,"
   },
   {
     "page_no": 6,
     "formula_index": 2,
     "image_name": "page_6_formula_2.png",
-    "latex": "\\tau_{I,t}(y; m) = \\varphi_t \\left[ y - \\left( y^{-\\varphi_{m,1}} + \\varphi_{m,2} \\right)^{-1/\\varphi_{m,1}} \\right]"
+    "latex": "\\tau_{I,t}(y; m) = \\varphi_t \\left[ y - (y^{-\\varphi_{m,1}} + \\varphi_{m,2})^{-1/\\varphi_{m,1}} \\right],"
   },
   {
     "page_no": 6,
     "formula_index": 3,
     "image_name": "page_6_formula_3.png",
-    "latex": "\\tau_{P,t}(y_1, y_2) = \\bar{\\tau}_{P,t} [\\min(y_1, v_{\\max}) + \\min(y_2, v_{\\max})]"
+    "latex": "\\tau_{P,t}(y_{1}, y_{2}) = \\bar{\\tau}_{P,t}[\\min(y_{1}, \\vartheta_{\\max}) + \\min(y_{2}, \\vartheta_{\\max})],"
   },
   {
     "page_no": 6,
     "formula_index": 4,
     "image_name": "page_6_formula_4.png",
-    "latex": "\\psi(i, b_j) = \\mathbf{1}_{\\{i \\ge I_R\\}} (1 + \\mu)^{66 - i} \\left\\{ 0.90 \\min(b_j, \\vartheta_1) + 0.32 \\max [\\min(b_j, \\vartheta_2) - \\vartheta_1, 0] + 0.15 \\max(b_j - \\vartheta_2, 0) \\right\\} \\text{ for } j = 1, 2"
+    "latex": "\\psi(i, b_j) = \\mathbf{1}_{\\{i \\ge I_R\\}} (1 + \\mu)^{60-i} \\{ 0.90 \\min(b_j, \\vartheta_1) + 0.32 \\max [\\min(b_j, \\vartheta_2) - \\vartheta_1, 0] + 0.15 \\max(b_j - \\vartheta_2, 0) \\} \\text{ for } j = 1, 2,"
   },
   {
     "page_no": 6,
     "formula_index": 5,
     "image_name": "page_6_formula_5.png",
-    "latex": "tr_{SS,t}(i, b_1, b_2, m) = \\begin{cases} \\psi_t \\max[\\psi(i, b_1) + \\psi(i, b_2), 1.5 \\psi(i, b_1), 1.5 \\psi(i, b_2)] & \\text{if } m = 0, \\\\ \\psi_t \\max[\\psi(i, b_1), \\psi(i, b_2)] & \\text{if } m = 1, 2 \\end{cases}"
+    "latex": "tr_{SS,t}(i, b_1, b_2, m) = \\begin{cases} \\psi_t \\max[\\psi(i, b_1) + \\psi(i, b_2), 1.5\\psi(i, b_1), 1.5\\psi(i, b_2)] & \\text{if } m = 0, \\\\ \\psi_t \\max[\\psi(i, b_1), \\psi(i, b_2)] & \\text{if } m = 1, 2, \\end{cases}"
   },
   {
     "page_no": 6,
     "formula_index": 6,
     "image_name": "page_6_formula_6.png",
-    "latex": "\\begin{aligned}\na'(\\mathbf{s}, \\mathbf{S}_t; \\mathbf{\\Psi}_t) = \\frac{1}{1 + \\mu} \\Big[ & (1 + r_t)a + w_t e_1 h_1(\\mathbf{s}, \\mathbf{S}_t; \\mathbf{\\Psi}_t) + w_t e_2 h_2(\\mathbf{s}, \\mathbf{S}_t; \\mathbf{\\Psi}_t) \\\\\n& - \\tau_{I,t}\\left(r_t a + w_t e_1 h_1(\\mathbf{s}, \\mathbf{S}_t; \\mathbf{\\Psi}_t) + w_t e_2 h_2(\\mathbf{s}, \\mathbf{S}_t; \\mathbf{\\Psi}_t); m, n_{m,i}\\right) \\\\\n& - \\tau_{P,t}\\left(w_t e_1 h_1(\\mathbf{s}, \\mathbf{S}_t; \\mathbf{\\Psi}_t), w_t e_2 h_2(\\mathbf{s}, \\mathbf{S}_t; \\mathbf{\\Psi}_t)\\right) + tr_{SS,t}(i, b_1, b_2, m) \\\\\n& + (1 + \\mathbf{1}_{\\{m=0\\}})(tr_{LS,t} + \\mathbf{1}_{\\{i < I_R\\}} q_t) - c(\\mathbf{s}, \\mathbf{S}_t; \\mathbf{\\Psi}_t) \\Big] \\ge a'_{\\min}(\\mathbf{s}), \\\\\nb'_1(\\mathbf{s}, \\mathbf{S}_t; \\mathbf{\\Psi}_t) = & \\mathbf{1}_{\\{i < I_R, m \\neq 2\\}} \\frac{1}{i - 20} \\left[ (i - 21)b_1 + \\min(w_t e_1 h_1(\\mathbf{s}, \\mathbf{S}_t; \\mathbf{\\Psi}_t), \\vartheta_{\\max}) \\right] + \\mathbf{1}_{\\{i \\ge I_R \\text{ or } m=2\\}} b_1 \\\\\nb'_2(\\mathbf{s}, \\mathbf{S}_t; \\mathbf{\\Psi}_t) = & \\mathbf{1}_{\\{i < I_R, m \\neq 1\\}} \\frac{1}{i - 20} \\left[ (i - 21)b_2 + \\min(w_t e_2 h_2(\\mathbf{s}, \\mathbf{S}_t; \\mathbf{\\Psi}_t), \\vartheta_{\\max}) \\right] + \\mathbf{1}_{\\{i \\ge I_R \\text{ or } m=1\\}} b_2\n\\end{aligned}"
+    "latex": "\\begin{aligned}\na'(\\mathbf{s}, \\mathbf{S}_t; \\mathbf{\\Psi}_t) = & \\frac{1}{1 + \\mu} \\left[ (1 + r_t)a + w_t e_1 h_1(\\mathbf{s}, \\mathbf{S}_t; \\mathbf{\\Psi}_t) + w_t e_2 h_2(\\mathbf{s}, \\mathbf{S}_t; \\mathbf{\\Psi}_t) \\right. \\\\\n& - \\tau_{I,t}(r_t a + w_t e_1 h_1(\\mathbf{s}, \\mathbf{S}_t; \\mathbf{\\Psi}_t) + w_t e_2 h_2(\\mathbf{s}, \\mathbf{S}_t; \\mathbf{\\Psi}_t); m, n_{m,i}) \\\\\n& - \\tau_{P,t}(w_t e_1 h_1(\\mathbf{s}, \\mathbf{S}_t; \\mathbf{\\Psi}_t), w_t e_2 h_2(\\mathbf{s}, \\mathbf{S}_t; \\mathbf{\\Psi}_t)) + tr_{SS,t}(i, b_1, b_2, m) \\\\\n& \\left. + (1 + \\mathbf{1}_{\\{m=0\\}})(tr_{LS,t} + \\mathbf{1}_{\\{i < I_R\\}} q_t) - c(\\mathbf{s}, \\mathbf{S}_t; \\mathbf{\\Psi}_t) \\right] \\ge a'_{\\min}(\\mathbf{s}), \\\\\nb'_1(\\mathbf{s}, \\mathbf{S}_t; \\mathbf{\\Psi}_t) = & \\mathbf{1}_{\\{i < I_R, m \\neq 2\\}} \\frac{1}{i - 20} [(i - 21)b_1 + \\min(w_t e_1 h_1(\\mathbf{s}, \\mathbf{S}_t; \\mathbf{\\Psi}_t), \\vartheta_{\\max})] + \\mathbf{1}_{\\{i \\geq I_R \\text{ or } m = 2\\}} b_1, \\\\\nb'_2(\\mathbf{s}, \\mathbf{S}_t; \\mathbf{\\Psi}_t) = & \\mathbf{1}_{\\{i < I_R, m \\neq 1\\}} \\frac{1}{i - 20} [(i - 21)b_2 + \\min(w_t e_2 h_2(\\mathbf{s}, \\mathbf{S}_t; \\mathbf{\\Psi}_t), \\vartheta_{\\max})] + \\mathbf{1}_{\\{i \\geq I_R \\text{ or } m = 1\\}} b_2.\n\\end{aligned}"
   },
   {
     "page_no": 6,
     "formula_index": 7,
     "image_name": "page_6_formula_7.png",
-    "latex": ", \\mathbf{S}_t, \\mathbf{\\Phi}_t) - \\mathbf{1}_{\\{i < I_R, m \\neq 1\\}} \\frac{1}{i - 20} [(i - 21)b_2 + \\min(w_t e_2 n_2(\\mathbf{s}, \\mathbf{S}_t, \\mathbf{\\Phi}_t), v_{\\max})] + \\mathbf{1}_{\\{i \\geq I_R \\text{ or } m = 1\\}}"
+    "latex": "\\mathbf{S}_t; \\mathbf{\\Psi}_t) = \\mathbf{1}_{\\{i < I_R, m \\neq 1\\}} \\frac{1}{i - 20} [(i - 21)b_2 + \\min(w_t e_2 h_2(\\mathbf{s}, \\mathbf{S}_t; \\mathbf{\\Psi}_t), \\vartheta_{\\max})] + \\mathbf{1}_{\\{i \\geq I_R \\text{ or } m = 1\\}} b"
   },
   {
     "page_no": 7,
     "formula_index": 1,
     "image_name": "page_7_formula_1.png",
-    "latex": "\\begin{aligned}\n\\int_{A \\times B^2 \\times E^2} dX_t(21, a, b_1, b_2, e_1, e_2, m=0) &= \\int_{E^2} dX_t(21, 0, 0, 0, e_1, e_2, 0) = \\eta, \\\\\n\\int_{A \\times B^2 \\times E^2} dX_t(21, a, b_1, b_2, e_1, e_2, m=1) &= \\int_{E} dX_t(21, 0, 0, 0, e_1, 0, 1) = 1 - \\eta, \\\\\n\\int_{A \\times B^2 \\times E^2} dX_t(21, a, b_1, b_2, e_1, e_2, m=2) &= \\int_{E} dX_t(21, 0, 0, 0, 0, e_2, 2) = 1 - \\eta.\n\\end{aligned}"
+    "latex": "\\begin{aligned}\n\\int_{A \\times B^2 \\times E^2} dX_t(21, a, b_1, b_2, e_1, e_2, m=0) &= \\int_{E^2} dX_t(21, 0, 0, 0, e_1, e_2, 0) = \\eta, \\\\\n\\int_{A \\times B^2 \\times E^2} dX_t(21, a, b_1, b_2, e_1, e_2, m=1) &= \\int_E dX_t(21, 0, 0, 0, e_1, 0, 1) = 1 - \\eta, \\\\\n\\int_{A \\times B^2 \\times E^2} dX_t(21, a, b_1, b_2, e_1, e_2, m=2) &= \\int_E dX_t(21, 0, 0, 0, 0, e_2, 2) = 1 - \\eta,\n\\end{aligned}"
   },
   {
     "page_no": 7,
     "formula_index": 2,
     "image_name": "page_7_formula_2.png",
-    "latex": "x_{t+1}(\\mathbf{s}') = \\frac{1}{1+\\nu} \\sum_{m=0} \\int_{A \\times B^2 \\times E^2} \\mathbf{1}_{\\{a'=a'(\\mathbf{s}, \\mathbf{S}_t; \\mathbf{\\Psi}_t), b'_1=b'_1(\\mathbf{s}, \\mathbf{S}_t; \\mathbf{\\Psi}_t), b'_2=b'_2(\\mathbf{s}, \\mathbf{S}_t; \\mathbf{\\Psi}_t)\\}} \\times \\pi_i(e'_1, e'_2, m'|e_1, e_2, m) dX_t(\\mathbf{s}),"
+    "latex": "x_{t+1}(\\mathbf{s}') = \\frac{1}{1 + \\nu} \\sum_{m=0}^2 \\int_{A \\times B^2 \\times E^2} \\mathbf{1}_{\\{a' = a'(\\mathbf{s}, \\mathbf{S}_t; \\mathbf{\\Psi}_t), b'_1 = b'_1(\\mathbf{s}, \\mathbf{S}_t; \\mathbf{\\Psi}_t), b'_2 = b'_2(\\mathbf{s}, \\mathbf{S}_t; \\mathbf{\\Psi}_t)\\}} \\times \\pi_i(e'_1, e'_2, m' | e_1, e_2, m) dX_t(\\mathbf{s}),"
   },
   {
     "page_no": 7,
     "formula_index": 3,
     "image_name": "page_7_formula_3.png",
-    "latex": "W_{P,t} = \\sum_{i=21}^{I_R-1} \\sum_{m=0}^2 \\int_{A \\times B^2 \\times E^2} a dX_t(\\mathbf{s}), \\\\\nK_t = W_{P,t} + W_{G,t}, \\\\\nL_t = \\sum_{i=21}^{I_R-1} \\sum_{m=0}^2 \\int_{A \\times B^2 \\times E^2} (e_1 h_1(\\mathbf{s}, \\mathbf{S}_t; \\mathbf{\\Psi}_t) + e_2 h_2(\\mathbf{s}, \\mathbf{S}_t; \\mathbf{\\Psi}_t)) dX_t(\\mathbf{s})"
+    "latex": "W_{P,t} = \\sum_{i=21}^{I} \\sum_{m=0}^{2} \\int_{A \\times B^2 \\times E^2} a dX_t(\\mathbf{s}), \\\\\nK_t = W_{P,t} + W_{G,t}, \\\\\nL_t = \\sum_{i=21}^{I_R-1} \\sum_{m=0}^{2} \\int_{A \\times B^2 \\times E^2} (e_1 h_1(\\mathbf{s}, \\mathbf{S}_t; \\mathbf{\\Psi}_t) + e_2 h_2(\\mathbf{s}, \\mathbf{S}_t; \\mathbf{\\Psi}_t)) dX_t(\\mathbf{s})"
   },
   {
     "page_no": 7,
     "formula_index": 4,
     "image_name": "page_7_formula_4.png",
-    "latex": "\\max_{K_t, L_t} F (K_t, L_t) - (r_t + \\delta) K_t - w_t L_t, \\tag{5}"
+    "latex": "\\max_{\\tilde{K}_t, \\tilde{L}_t} F(\\tilde{K}_t, \\tilde{L}_t) - (r_t + \\delta)\\tilde{K}_t - w_t \\tilde{L}_t, \\tag{9}"
   },
   {
     "page_no": 7,
     "formula_index": 5,
     "image_name": "page_7_formula_5.png",
-    "latex": "F_K(K_t, L_t) = r_t + \\delta, \\quad F_L(K_t, L_t) = w_t, \\hfill (10) \\\\ \\text{the factor markets are cleared when } K_t = \\tilde{K}_t \\text{ and } L_t = \\tilde{L}_t."
+    "latex": "F_K(\\tilde{K}_t, \\tilde{L}_t) = r_t + \\delta, \\quad F_L(\\tilde{K}_t, \\tilde{L}_t) = w_t, \\hfill (10)\n\\\\ \\text{the factor markets are cleared when } K_t = \\tilde{K}_t \\text{ and } L_t = \\tilde{L}_t."
   },
   {
     "page_no": 7,
     "formula_index": 6,
     "image_name": "page_7_formula_6.png",
-    "latex": "T_{P,t}(\\bar{\\tau}_{P,t}) = \\sum_{i=21}^{P_K-1} \\sum_{m=0}^{2} \\int_{A \\times B^2 \\times E^2} \\tau_{P,t}(w_t e_1 h_1(\\mathbf{s}, \\mathbf{S}_t; \\mathbf{\\Psi}_t), w_t e_2 h_2(\\mathbf{s}, \\mathbf{S}_t; \\mathbf{\\Psi}_t); \\bar{\\tau}_{P,t}) dX_t(\\mathbf{s}), \\quad (11)"
+    "latex": "T_{P,t}(\\bar{\\tau}_{P,t}) = \\sum_{i=21}^{I_R-1} \\sum_{m=0}^{2} \\int_{A \\times B^2 \\times E^2} \\tau_{P,t}(w_t e_1 h_1(\\mathbf{s}, \\mathbf{S}_t; \\mathbf{\\Psi}_t), w_t e_2 h_2(\\mathbf{s}, \\mathbf{S}_t; \\mathbf{\\Psi}_t); \\bar{\\tau}_{P,t}) dX_t(\\mathbf{s}), \\quad (11)"
   },
   {
     "page_no": 7,
     "formula_index": 7,
     "image_name": "page_7_formula_7.png",
-    "latex": "l(\\mathbf{B},"
+    "latex": "(\\mathbf{S})."
   },
   {
     "page_no": 8,
     "formula_index": 1,
     "image_name": "page_8_formula_1.png",
-    "latex": "TR_{SS,t}(\\psi_t) = \\sum_{i=I_R} \\sum_{m=0} \\int_{A \\times B^2 \\times E^2} tr_{SS,t}(i, b_1, b_2, m; \\psi_t) dX_t(\\mathbf{s})."
+    "latex": "TR_{SS,t}(\\psi_t) = \\sum_{i=I_R}^I \\sum_{m=0}^2 \\int_{A \\times B^2 \\times E^2} tr_{SS,t}(i, b_1, b_2, m; \\psi_t) dX_t(\\mathbf{s}). \\hfill (12)"
   },
   {
     "page_no": 8,
     "formula_index": 2,
     "image_name": "page_8_formula_2.png",
-    "latex": "T_{I,t}(\\varphi_t) = \\sum_{i=21} \\sum_{m=0} \\int_{A \\times B^2 \\times E^2} \\tau_{I,t}(r_t a + w_t e_1 h_1(\\mathbf{s}, \\mathbf{S}_t; \\mathbf{\\Psi}_t) + w_t e_2 h_2(\\mathbf{s}, \\mathbf{S}_t; \\mathbf{\\Psi}_t); m, n_{m,i}, \\varphi_t) dX_t(\\mathbf{s}),"
+    "latex": "T_{I,t}(\\varphi_t) = \\sum_{i=1}^{I} \\sum_{m=0}^{2} \\int_{A \\times B^2 \\times E^2} \\tau_{I,t}(r_t a + w_t e_1 h_1(\\mathbf{s}, \\mathbf{S}_t; \\mathbf{\\Psi}_t) + w_t e_2 h_2(\\mathbf{s}, \\mathbf{S}_t; \\mathbf{\\Psi}_t); m, n_{m,i}, \\varphi_t) dX_t(\\mathbf{s}),"
   },
   {
     "page_no": 8,
     "formula_index": 3,
     "image_name": "page_8_formula_3.png",
-    "latex": "TR_{LS,t}(tr_{LS,t}) = \\sum_{i=21} \\sum_{m=0} \\int_{A \\times B^2 \\times E^2} (1 + \\mathbf{1}_{\\{m=0\\}}) tr_{LS,t} dX_t(\\mathbf{s}). \\tag{14}"
+    "latex": "TR_{LS,t}(tr_{LS,t}) = \\sum_{i=21}^{I} \\sum_{m=0}^{2} \\int_{A \\times B^{2} \\times E^{2}} (1 + \\mathbf{1}_{\\{m=0\\}}) tr_{LS,t} dX_{t}(\\mathbf{s}). \\qquad (14)"
   },
   {
     "page_no": 8,
     "formula_index": 4,
     "image_name": "page_8_formula_4.png",
-    "latex": "Q_t = \\sum_{i=21} \\sum_{m=0} \\int_{A \\times B^2 \\times E^2} (1 - \\phi_{m,i})(1 + \\mu) a'(\\mathbf{s}, \\mathbf{S}_t; \\mathbf{\\Psi}_t) dX_t(\\mathbf{s}), \\quad (15)"
+    "latex": "Q_t = \\sum_{i=21}^{I} \\sum_{m=0}^{2} \\int_{A \\times B^2 \\times E^2} (1 - \\phi_{m,i})(1 + \\mu) a'(\\mathbf{s}, \\mathbf{S}_t; \\mathbf{\\Psi}_t) dX_t(\\mathbf{s}), \\quad (15)"
   },
   {
     "page_no": 8,
     "formula_index": 5,
     "image_name": "page_8_formula_5.png",
-    "latex": "q_t = \\left( \\sum_{i=21}^{I_R-1} \\sum_{m=0}^{2} \\int_{A \\times B^2 \\times E^2} (1 + \\mathbf{1}_{\\{m=0\\}}) dX_t(\\mathbf{s}) \\right) Q_t"
+    "latex": "q_t = \\left( \\sum_{i=21}^{I_R-1} \\sum_{m=0}^2 \\int_{A \\times B^2 \\times E^2} (1 + \\mathbf{1}_{\\{m=0\\}}) d X_t(\\mathbf{s}) \\right)^{-1} Q_t."
   },
   {
     "page_no": 8,
     "formula_index": 6,
     "image_name": "page_8_formula_6.png",
-    "latex": "W_{G,t+1} = \\frac{1}{(1 + \\mu)(1 + \\nu)} \\left[ (1 + r_t)W_{G,t} + T_{I,t}(\\varphi_t) - C_{G,t} - TR_{LS,t}(tr_{LS,t}) \\right]."
+    "latex": "W_{G,t+1} = \\frac{1}{(1 + \\mu)(1 + \\nu)} [(1 + r_t) W_{G,t} + T_{I,t}(\\varphi_t) - C_{G,t} - TR_{LS,t}(tr_{LS,t})]. \\quad (17)"
   },
   {
     "page_no": 8,
     "formula_index": 7,
     "image_name": "page_8_formula_7.png",
-    "latex": "\\mathbf{\\Psi}_t = \\left\\{ C_{G,s}, tr_{LS,s}, \\tau_{I,s}(\\cdot), \\tau_{P,s}(\\cdot), tr_{SS,s}(\\cdot), W_{G,s+1}, q_s \\right\\}_{s=t}^\\infty"
+    "latex": "\\mathbf{\\Psi}_t = \\{ C_{G,s}, tr_{LS,s}, \\tau_{I,s}(\\cdot), \\tau_{P,s}(\\cdot), tr_{SS,s}(\\cdot), W_{G,s+1}, q_s \\}_{s=t}^\\infty."
   },
   {
     "page_no": 8,
     "formula_index": 8,
     "image_name": "page_8_formula_8.png",
-    "latex": "\\mathbf{\\Omega}_t = \\{r_s, w_s, C_{G,s}, tr_{LS,s}, \\varphi_s, \\bar{\\tau}_{P,s}, \\psi_s, W_{G,s}, q_s\\}_{s=t}^{\\infty}"
+    "latex": "\\mathbf{\\Omega}_{t}=\\{r_{s}, w_{s}, C_{G, s}, t r_{L S, s}, \\varphi_{s}, \\bar{\\tau}_{P, s}, \\psi_{s}, W_{G, s}, q_{s}\\}_{s=t}^{\\infty}"
   },
   {
     "page_no": 9,
@@ -231,288 +231,288 @@
     "page_no": 10,
     "formula_index": 1,
     "image_name": "page_10_formula_1.png",
-    "latex": "\\Pi_{m,i} = \\begin{pmatrix} \\phi_{1,i}\\phi_{2,i} & \\phi_{1,i}(1-\\phi_{2,i}) & (1-\\phi_{1,i})\\phi_{2,i} \\\\ 0 & \\phi_{1,i} & 0 \\\\ 0 & 0 & \\phi_{2,i} \\end{pmatrix}"
+    "latex": "\\Pi_{m,i} = \\begin{pmatrix} \\phi_{1,i}\\phi_{2,i} & \\phi_{1,i}(1 - \\phi_{2,i}) & (1 - \\phi_{1,i})\\phi_{2,i} \\\\ 0 & \\phi_{1,i} & 0 \\\\ 0 & 0 & \\phi_{2,i} \\end{pmatrix}."
   },
   {
     "page_no": 10,
     "formula_index": 2,
     "image_name": "page_10_formula_2.png",
-    "latex": "\\frac{1-h}{\\bar{h}} \\frac{1-\\alpha(1-\\gamma)}{\\gamma} = 0.5"
+    "latex": "\\frac{1-\\bar{h}}{\\bar{h}} \\frac{1-\\alpha(1-\\gamma)}{\\gamma}=0.5,"
   },
   {
     "page_no": 10,
     "formula_index": 3,
     "image_name": "page_10_formula_3.png",
-    "latex": "-\\frac{c u_{c c}(c, l)}{u_c(c, l)}=1-\\alpha(1-\\gamma)=1-0.6530(1-2.0)=1.6530"
+    "latex": "-\\frac{c u_{cc}(c, l)}{u_c(c, l)} = 1 - \\alpha(1 - \\gamma) = 1 - 0.6530(1 - 2.0) = 1.6530."
   },
   {
     "page_no": 11,
     "formula_index": 1,
     "image_name": "page_11_formula_1.png",
-    "latex": "k_1 = 0.4997 \\{ 1 + 0.05 \\max(t - 35, 0) + 0.10 \\max(t - 60, 0) \\},"
+    "latex": "\\kappa_1 = 0.4997 \\{ 1 + 0.05 \\max(i - 55, 0) + 0.10 \\max(i - 60, 0)^2 \\}."
   },
   {
     "page_no": 11,
     "formula_index": 2,
     "image_name": "page_11_formula_2.png",
-    "latex": "r_t + \\delta = \\frac{\\theta Y_t}{K_t} = \\frac{0.375}{3.0} = 0.125 \\implies \\delta = 0.125 - r_t = 0.125 - 0.05 = 0.07"
+    "latex": "r_t + \\delta = \\frac{\\theta Y_t}{K_t} = \\frac{0.375}{3.0} = 0.125 \\implies \\delta = 0.125 - r_t = 0.125 - 0.05 = 0.075,"
   },
   {
     "page_no": 11,
     "formula_index": 3,
     "image_name": "page_11_formula_3.png",
-    "latex": "w_t = A(1 - \\theta) \\left( \\frac{K_t}{L_t} \\right)^\\theta = A(1 - \\theta)^{1 - \\theta} \\left( \\frac{K_t}{Y_t} \\right)^\\theta = 0.625^{0.625} 3.0^{0.375} A = 1.0 \\implies A = 0.8885"
+    "latex": "w_t = A(1 - \\theta) \\left( \\frac{K_t}{L_t} \\right)^\\theta = A(1 - \\theta)^{1 - \\theta} \\left( \\frac{K_t}{Y_t} \\right)^\\theta = 0.625^{0.625} 3.0^{0.375} A = 1.0 \\implies A = 0.8885."
   },
   {
     "page_no": 11,
     "formula_index": 4,
     "image_name": "page_11_formula_4.png",
-    "latex": "A(1-\\theta)\\left(\\frac{K_{t}}{L_{t}}\\right)^{\\theta}=A(1-\\theta)^{1-\\theta}\\left(\\frac{K_{t}}{Y_{t}}\\right)^{\\theta}=0.625^{0.625} 3.0^{0.375} A=1.0="
+    "latex": "= \\frac{0.375}{K_t} = \\frac{0.375}{3.0} = 0.125 \\implies \\delta = 0.125 - r_t = 0.125 - 0.05 = 0.075,\n(1-\\theta) \\left( \\frac{K_t}{L_t} \\right)^\\theta = A(1-\\theta)^{1-\\theta} \\left( K_t \\right)^\\theta = 0.625^{0.625} 3.0^{0.375} A = 1.0"
   },
   {
     "page_no": 11,
     "formula_index": 5,
     "image_name": "page_11_formula_5.png",
-    "latex": "\\beta = \\beta(1+\\mu)^{a(1-\\gamma)} = 0.9827/(1+0.015)^{0.6556(1-2.0)} = 0.9732"
+    "latex": "\\tilde{\\beta} = \\beta(1 + \\mu)^{\\alpha(1-\\gamma)} = 0.9827(1 + 0.015)^{0.6530(1-2.0)} = 0.9732."
   },
   {
     "page_no": 11,
     "formula_index": 6,
     "image_name": "page_11_formula_6.png",
-    "latex": "\\frac{d \\ln(h_{t+1}/h_t)}{d \\ln(\\tilde{w}_{t+1}/\\tilde{w}_t)} \\approx -\\frac{1-\\bar{h}}{\\bar{h}} \\frac{d \\ln(l_{t+1}/l_t)}{d \\ln(\\tilde{w}_{t+1}/\\tilde{w}_t)} = \\frac{1-\\bar{h}}{\\bar{h}} \\frac{1}{1-(1-\\alpha)(1-\\gamma)} = 0.449"
+    "latex": "\\frac{d \\ln(h_{t+1}/h_t)}{d \\ln(\\tilde{w}_{t+1}/\\tilde{w}_t)} \\approx -\\frac{1-\\bar{h}}{\\bar{h}} \\frac{d \\ln(l_{t+1}/l_t)}{d \\ln(\\tilde{w}_{t+1}/\\tilde{w}_t)} = \\frac{1-\\bar{h}}{\\bar{h}} \\frac{1}{1-(1-\\alpha)(1-\\gamma)} = 0.4491,"
   },
   {
     "page_no": 12,
     "formula_index": 1,
     "image_name": "page_12_formula_1.png",
-    "latex": "me_{j,i} = m\\bar{e}_{j,i} + mz_j \\\\\nj = 1 \\text{ and } 2, \\text{ where } \\bar{e}_{j,i}"
+    "latex": "\\ln e_{j,i} = \\ln \\bar{e}_{j,i} + \\ln z_j,"
   },
   {
     "page_no": 12,
     "formula_index": 2,
     "image_name": "page_12_formula_2.png",
-    "latex": "\\ln z_{j,i} = \\rho \\ln z_{j,i-1} + \\epsilon_{j,i} \\\\ i = 22, \\dots, 65, \\text{ where } \\epsilon_{j,i}"
+    "latex": "\\ln z_{j,i} = \\rho \\ln z_{j,i-1} + \\epsilon_{j,i}"
   },
   {
     "page_no": 12,
     "formula_index": 3,
     "image_name": "page_12_formula_3.png",
-    "latex": "v(\\ln z_{j,i+1}) = \\rho^2 v(\\ln z_{j,i}) + \\delta \\\\\ni = 22, \\dots, 65, \\text{ so that the varianc}"
+    "latex": "V(\\ln z_{j,i+1}) = \\rho^2 V(\\ln z_{j,i}) + \\sigma^2"
   },
   {
     "page_no": 13,
     "formula_index": 1,
     "image_name": "page_13_formula_1.png",
-    "latex": "\\pi_{e_1,i} = \\pi_{e_2,i} = (0.0625, 0.2500, 0.3750, 0.2500, 0.0625) \\\\\ni = 21, \\dots, 65. \\text{ The Markov transition matrix for single hour}"
+    "latex": "\\pi_{e_1,i} = \\pi_{e_2,i} = (0.0625, 0.2500, 0.3750, 0.2500, 0.0625)'"
   },
   {
     "page_no": 13,
     "formula_index": 2,
     "image_name": "page_13_formula_2.png",
-    "latex": "\\Pi_{e_{1},i} = \\Pi_{e_{2},i} = \\begin{pmatrix} 0.7643 & 0.2125 & 0.0222 & 0.0010 & 0.0000 \\\\ 0.0531 & 0.7754 & 0.1602 & 0.0111 & 0.0003 \\\\ 0.0037 & 0.1068 & 0.7791 & 0.1068 & 0.0037 \\\\ 0.0003 & 0.0111 & 0.1602 & 0.7754 & 0.0531 \\\\ 0.0000 & 0.0010 & 0.0222 & 0.2125 & 0.7643 \\end{pmatrix}"
+    "latex": "\\Pi_{e_1,i} = \\Pi_{e_2,i} = \\begin{pmatrix} 0.7643 & 0.2125 & 0.0222 & 0.0010 & 0.0000 \\\\ 0.0531 & 0.7754 & 0.1602 & 0.0111 & 0.0003 \\\\ 0.0037 & 0.1068 & 0.7791 & 0.1068 & 0.0037 \\\\ 0.0003 & 0.0111 & 0.1602 & 0.7754 & 0.0531 \\\\ 0.0000 & 0.0010 & 0.0222 & 0.2125 & 0.7643 \\end{pmatrix}."
   },
   {
     "page_no": 13,
     "formula_index": 3,
     "image_name": "page_13_formula_3.png",
-    "latex": "\\pi_{(e_1, e_2), i} = \\omega \\operatorname{diag}(\\pi_{e_1, i}) + (1 - \\omega)(\\pi_{e_1, i})(\\pi_{e_2, i})"
+    "latex": "\\pi_{(e_1, e_2), i} = \\omega \\operatorname{diag}(\\pi_{e_1, i}) + (1 - \\omega) (\\pi_{e_1, i}) (\\pi_{e_2, i})'."
   },
   {
     "page_no": 13,
     "formula_index": 4,
     "image_name": "page_13_formula_4.png",
-    "latex": "\\pi (e_{1,i+1}^{j'}, e_{2,i+1}^{k'} | e_{1,i}^j, e_{2,i}^k) = \\begin{cases} \\hat{\\omega} \\mathbf{1}_{\\{j'=k'\\}} \\pi (e_{1,i+1}^{j'} | e_{1,i}^j) + (1 - \\hat{\\omega}) \\pi (e_{1,i+1}^{j'} | e_{1,i}^j) \\pi (e_{2,i+1}^{k'} | e_{2,i}^k) & \\text{if } j = k \\\\ \\pi (e_{1,i+1}^{j'} | e_{1,i}^j) \\pi (e_{2,i+1}^{k'} | e_{2,i}^k) & \\text{if } j \\neq k \\end{cases}"
+    "latex": "\\pi(e_{1,i+1}^{j'}, e_{2,i+1}^{k'} | e_{1,i}^j, e_{2,i}^k) = \\begin{cases} \\hat{\\omega} \\mathbf{1}_{\\{j'=k'\\}} \\pi(e_{1,i+1}^{j'} | e_{1,i}^j) + (1 - \\hat{\\omega}) \\pi(e_{1,i+1}^{j'} | e_{1,i}^j) \\pi(e_{2,i+1}^{k'} | e_{2,i}^k) & \\text{if } j = k, \\\\ \\pi(e_{1,i+1}^{j'} | e_{1,i}^j) \\pi(e_{2,i+1}^{k'} | e_{2,i}^k) & \\text{if } j \\neq k, \\end{cases}"
   },
   {
     "page_no": 13,
     "formula_index": 5,
     "image_name": "page_13_formula_5.png",
-    "latex": "\\hat{\\omega} = \\frac{\\omega}{\\omega + (1 - \\omega)(\\pi_{e_1,i})'(\\pi_{e_2,i})}"
+    "latex": "\\hat{\\omega} = \\frac{\\omega}{\\omega + (1 - \\omega)(\\pi_{e_1, i})'(\\pi_{e_2, i})}."
   },
   {
     "page_no": 13,
     "formula_index": 6,
     "image_name": "page_13_formula_6.png",
-    "latex": "a'_{\\min}(i) = \\begin{cases} [(1 + \\mu) a_{\\min}(i + 1) - 0.10 \\bar{w} e^1_{1,i+1} \\bar{h}] / (1 + \\bar{r}) & \\text{if } i = 21, \\dots, I - 1 \\\\ 0 & \\text{if } i = I, \\end{cases}"
+    "latex": "a'_{\\min}(i) = \\begin{cases} [(1 + \\mu)a_{\\min}(i + 1) - 0.10 \\bar{w} e^1_{1, i+1} \\bar{h}] / (1 + \\bar{r}) & \\text{if } i = 21, \\dots, I - 1, \\\\ 0 & \\text{if } i = I, \\end{cases}"
   },
   {
     "page_no": 15,
     "formula_index": 1,
     "image_name": "page_15_formula_1.png",
-    "latex": "tr_{SS,t}^0(i, b_1, b_2, m) = \\begin{cases} \\psi_t(\\psi_0/\\psi_T) \\max[\\psi(i, b_1) + \\psi(i, b_2), 1.5\\psi(i, b_1), 1.5\\psi(i, b_2)] & \\text{if } m = 0, \\\\ \\psi_t(\\psi_0/\\psi_T) \\max[\\psi(i, b_1), \\psi(i, b_2)] & \\text{if } m = 1, 2 \\end{cases}"
+    "latex": "tr_{SS,t}^0(i, b_1, b_2, m) = \\begin{cases} \\psi_t(\\psi_0 / \\psi_T) \\max[\\psi(i, b_1) + \\psi(i, b_2), 1.5\\psi(i, b_1), 1.5\\psi(i, b_2)] & \\text{if } m = 0, \\\\ \\psi_t(\\psi_0 / \\psi_T) \\max[\\psi(i, b_1), \\psi(i, b_2)] & \\text{if } m = 1, 2, \\end{cases}"
   },
   {
     "page_no": 15,
     "formula_index": 2,
     "image_name": "page_15_formula_2.png",
-    "latex": "tr_{SS,t}^1(i, b_1, b_2, m) = \\begin{cases} \\psi_t [\\psi(i, b_1) + \\psi(i, b_2)] & \\text{if } m = 0, \\\\ \\psi_t \\psi(i, b_j) & \\text{if } m = j = 1, 2 \\end{cases}"
+    "latex": "tr_{SS,t}^1(i, b_1, b_2, m) = \\begin{cases} \\psi_t [\\psi(i, b_1) + \\psi(i, b_2)] & \\text{if } m = 0, \\\\ \\psi_t \\psi(i, b_j) & \\text{if } m = j = 1, 2. \\end{cases}"
   },
   {
     "page_no": 15,
     "formula_index": 3,
     "image_name": "page_15_formula_3.png",
-    "latex": "tr_{SS,t}(i, b_1, b_2, m) = \\frac{(t - 20) - \\bar{t}}{40} tr_{SS,t}^0(i, b_1, b_2, m) + \\left( 1 - \\frac{(t - 20) - \\bar{t}}{40} \\right) tr_{SS,t}^1(i, b_1, b_2, m)"
+    "latex": "tr_{SS,t}(i, b_1, b_2, m) = \\frac{(i - 20) - t}{40} tr_{SS,t}^0(i, b_1, b_2, m) + \\left( 1 - \\frac{(i - 20) - t}{40} \\right) tr_{SS,t}^1(i, b_1, b_2, m)."
   },
   {
     "page_no": 16,
     "formula_index": 1,
     "image_name": "page_16_formula_1.png",
-    "latex": "\\begin{array}{llll}\n\\text{(a)} & tr_{LS, t} & \\longleftarrow & TR_{LS, t}(tr_{LS, t}) = T_{I, t}(\\varphi_0) - C_{G, 0} + (1 + r_t)W_{G, t} - (1 + \\mu)(1 + \\nu)W_{G, t+1} \\\\\n& & & W_{G, t+1} = W_{G, t}; \\\\\n\\text{(b)} & \\varphi_t & \\longleftarrow & T_{I, t}(\\varphi_t) = C_{G, 0} + TR_{LS, t}(tr_{LS, 0}) - (1 + r_t)W_{G, t} + (1 + \\mu)(1 + \\nu)W_{G, t+1} \\\\\n& & & W_{G, t+1} = W_{G, t}; \\\\\n\\text{(a) and (b)} & \\psi_t & \\longleftarrow & TR_{SS, t}(\\psi_t) = T_{P, t}(\\bar{\\tau}_{P, 0}) - TR_0 .\n\\end{array}"
+    "latex": "\\begin{array}{llll}\n\\text{(a)} & tr_{LS,t} & \\longleftarrow & TR_{LS,t}(tr_{LS,t}) = T_{I,t}(\\varphi_0) - C_{G,0} + (1 + r_t)W_{G,t} - (1 + \\mu)(1 + \\nu)W_{G,t+1}, \\\\\n& & & W_{G,t+1} = W_{G,t}; \\\\\n\\text{(b)} & \\varphi_t & \\longleftarrow & T_{I,t}(\\varphi_t) = C_{G,0} + TR_{LS,t}(tr_{LS,0}) - (1 + r_t)W_{G,t} + (1 + \\mu)(1 + \\nu)W_{G,t+1}, \\\\\n& & & W_{G,t+1} = W_{G,t}; \\\\\n\\text{(a) and (b)} & \\psi_t & \\longleftarrow & TR_{SS,t}(\\psi_t) = T_{P,t}(\\bar{\\tau}_{P,0}) - TR_O.\n\\end{array}"
   },
   {
     "page_no": 16,
     "formula_index": 2,
     "image_name": "page_16_formula_2.png",
-    "latex": "\\lambda_{21,t} = \\left[ \\left( \\frac{E v(\\mathbf{s}_{21}, \\mathbf{S}_t; \\mathbf{\\Psi}_t)}{E v(\\mathbf{s}_{21}, \\mathbf{S}_0; \\mathbf{\\Psi}_0)} \\right)^{\\alpha(1-\\gamma)} - 1 \\right] \\times 100"
+    "latex": "\\lambda_{21,t} = \\left[ \\left( \\frac{E v(\\mathbf{s}_{21}, \\mathbf{S}_t; \\mathbf{\\Psi}_t)}{E v(\\mathbf{s}_{21}, \\mathbf{S}_0; \\mathbf{\\Psi}_0)} \\right)^{\\frac{1}{\\alpha(1-\\gamma)}} - 1 \\right] \\times 100,"
   },
   {
     "page_no": 16,
     "formula_index": 3,
     "image_name": "page_16_formula_3.png",
-    "latex": "\\lambda_{i,1} = \\left[ \\left( \\frac{E v(\\mathbf{s}_i, \\mathbf{S}_1; \\mathbf{\\Psi}_1)}{E v(\\mathbf{s}_i, \\mathbf{S}_0; \\mathbf{\\Psi}_0)} \\right)^{\\alpha(1-\\gamma)} - 1 \\right] \\times 100"
+    "latex": "\\lambda_{i,1} = \\left[ \\left( \\frac{E v(\\mathbf{s}_i, \\mathbf{S}_1; \\mathbf{\\Psi}_1)}{E v(\\mathbf{s}_i, \\mathbf{S}_0; \\mathbf{\\Psi}_0)} \\right)^{\\frac{1}{\\alpha(1-\\gamma)}} - 1 \\right] \\times 100."
   },
   {
     "page_no": 23,
     "formula_index": 1,
     "image_name": "page_23_formula_1.png",
-    "latex": "\\Pi_{e_1, i} = \\Pi_{e_2, i} = \\begin{pmatrix} 0.8493 & 0.1416 & 0.0088 & 0.0002 & 0.0000 \\\\ 0.0354 & 0.8538 & 0.1064 & 0.0044 & 0.0001 \\\\ 0.0015 & 0.0709 & 0.8552 & 0.0709 & 0.0015 \\\\ 0.0001 & 0.0044 & 0.1064 & 0.8538 & 0.0354 \\\\ 0.0000 & 0.0002 & 0.0088 & 0.1416 & 0.8493 \\end{pmatrix}"
+    "latex": "\\Pi_{e_1,i} = \\Pi_{e_2,i} = \\begin{pmatrix} 0.8493 & 0.1416 & 0.0088 & 0.0002 & 0.0000 \\\\ 0.0354 & 0.8538 & 0.1064 & 0.0044 & 0.0001 \\\\ 0.0015 & 0.0709 & 0.8552 & 0.0709 & 0.0015 \\\\ 0.0001 & 0.0044 & 0.1064 & 0.8538 & 0.0354 \\\\ 0.0000 & 0.0002 & 0.0088 & 0.1416 & 0.8493 \\end{pmatrix} ."
   },
   {
     "page_no": 24,
     "formula_index": 1,
     "image_name": "page_24_formula_1.png",
-    "latex": "\\mathbf{s} = (i, a, b_1, b_2, e_1, e_2, m) \\in \\{1, 2, \\dots, I\\} \\times A \\times B^2 \\times E_{1,i} \\times E_{2,i} \\times \\{0, 1, 2\\}"
+    "latex": "\\mathbf{s} = (i, a, b_1, b_2, e_1, e_2, m) \\in \\{1, 2, \\dots, I\\} \\times A \\times B^2 \\times E_{1,i} \\times E_{2,i} \\times \\{0, 1, 2\\},"
   },
   {
     "page_no": 25,
     "formula_index": 1,
     "image_name": "page_25_formula_1.png",
-    "latex": "v(\\mathbf{s}; \\boldsymbol{\\Omega}_t) = \\max_{c, l_1, l_2} \\left\\{ u(c, l_1, l_2; m) + \\beta E[v(\\mathbf{s}'; \\boldsymbol{\\Omega}_{t+1}) | \\mathbf{s}] \\right\\}"
+    "latex": "\\hat{v}(\\mathbf{s}; \\boldsymbol{\\Omega}_t) = \\max_{c, l_1, l_2} \\left\\{ u(c, l_1, l_2; m) + \\tilde{\\beta} E \\left[ v(\\mathbf{s}'; \\boldsymbol{\\Omega}_{t+1}) | \\mathbf{s} \\right] \\right\\}"
   },
   {
     "page_no": 25,
     "formula_index": 2,
     "image_name": "page_25_formula_2.png",
-    "latex": "0 < c \\le c_{\\max}, \\quad n_1 - 1 = -l_1, \\quad n_2 - 1 = \\kappa n_{m,i} - l_2, \\\\\n0 < l_1 \\le 1 \\quad \\text{if } m \\neq 2, \\quad l_1 = 1 \\quad \\text{if } m = 2 \\\\\n0 < l_2 \\le 1 - \\kappa n_{m,i} \\quad \\text{if } m \\neq 1, \\quad l_2 = 1 - \\kappa n_{m,i} \\quad \\text{if } m = 1"
+    "latex": "0 < c \\le c_{\\max}, \\quad h_1 = 1 - l_1, \\quad h_2 = 1 - \\kappa n_{m,i} - l_2, \\\\\n0 < l_1 \\le 1 \\quad \\text{if } m \\neq 2, \\quad l_1 = 1 \\quad \\text{if } m = 2, \\\\\n0 < l_2 \\le 1 - \\kappa n_{m,i} \\quad \\text{if } m \\neq 1, \\quad l_2 = 1 - \\kappa n_{m,i} \\quad \\text{if } m = 1,"
   },
   {
     "page_no": 25,
     "formula_index": 3,
     "image_name": "page_25_formula_3.png",
-    "latex": "\\mathbf{s}' = (i + 1, a', b'_1, b'_2, e'_1, e'_2, m'), \\\\\nc_{\\max} = (1 + r_t)a + w_t e_1 h_1 + w_t e_2 h_2 - \\tau_{I,t}(r_t a + w_t e_1 h_1 + w_t e_2 h_2; m, n_{m,i}) - \\tau_{P,t}(w_t e_1 h_1, w_t e_2 h_2) \\\\\n+ tr_{SS,t}(i, b_1, b_2, m) + (1 + \\mathbf{1}_{\\{m=0\\}})(tr_{LS,t} + \\mathbf{1}_{\\{i < I_R\\}}q_t) - (1 + \\mu)a'_{\\min}(\\mathbf{s}), \\\\\na' = \\frac{1}{1 + \\mu}(c_{\\max} - c) + a'_{\\min}(\\mathbf{s}), \\\\\nb'_1 = \\mathbf{1}_{\\{i < I_R, m \\neq 2\\}} \\frac{1}{i - 20} [(i - 21)b_1 + \\min(w_t e_j h_1, \\vartheta_{\\max})] + \\mathbf{1}_{\\{i \\geq I_R \\text{ or } m=2\\}} b_1, \\\\\nb'_2 = \\mathbf{1}_{\\{i < I_R, m \\neq 1\\}} \\frac{1}{i - 20} [(i - 21)b_2 + \\min(w_t e_j h_2, \\vartheta_{\\max})] + \\mathbf{1}_{\\{i \\geq I_R \\text{ or } m=1\\}} b_2. \\\\\n\\text{Let the objective function be}"
+    "latex": "\\begin{aligned}\n\\mathbf{s}' &= (i + 1, a', b'_1, b'_2, e'_1, e'_2, m'), \\\\\nc_{\\max} &= (1 + r_t)a + w_t e_1 h_1 + w_t e_2 h_2 - \\tau_{I,t}(r_t a + w_t e_1 h_1 + w_t e_2 h_2; m, n_{m,i}) - \\tau_{P,t}(w_t e_1 h_1, w_t e_2 h_2) \\\\\n&\\quad + tr_{SS,t}(i, b_1, b_2, m) + (1 + \\mathbf{1}_{\\{m=0\\}})(tr_{LS,t} + \\mathbf{1}_{\\{i < I_R\\}} q_t) - (1 + \\mu) a'_{\\min}(\\mathbf{s}), \\\\\na' &= \\frac{1}{1 + \\mu}(c_{\\max} - c) + a'_{\\min}(\\mathbf{s}), \\\\\nb'_1 &= \\mathbf{1}_{\\{i < I_R, m \\neq 2\\}} \\frac{1}{i - 20} [(i - 21)b_1 + \\min(w_t e_j h_1, \\vartheta_{\\max})] + \\mathbf{1}_{\\{i \\geq I_R \\text{ or } m=2\\}} b_1, \\\\\nb'_2 &= \\mathbf{1}_{\\{i < I_R, m \\neq 1\\}} \\frac{1}{i - 20} [(i - 21)b_2 + \\min(w_t e_j h_2, \\vartheta_{\\max})] + \\mathbf{1}_{\\{i \\geq I_R \\text{ or } m=1\\}} b_2.\n\\end{aligned}"
   },
   {
     "page_no": 25,
     "formula_index": 4,
     "image_name": "page_25_formula_4.png",
-    "latex": "\\begin{aligned}\nf_2(c, l_1, l_2; \\mathbf{s}, \\mathbf{\\Omega}_t) &= u_2(c, l_1, l_2; m) \\\\\n&\\quad - w_t e_1 [1 - \\tau_{I,t}'(r_t a + w_t e_1 h_1 + w_t e_2 h_2; m, n_{m,i}) - \\tau_{P,1,t}(w_t e_1 h_1, w_t e_2 h_2)] u_1(c, l_1, l_2; m) \\\\\n&\\quad - \\mathbf{1}_{\\{i < I_R, w_t e_1 h_1 < \\vartheta_{\\max}\\}} \\frac{w_t e_1}{i - 20} \\tilde{\\beta} E [v_{b_1}(\\mathbf{s}'; \\mathbf{\\Omega}_{t+1}) | \\mathbf{s}] = 0,\n\\end{aligned}"
+    "latex": "\\begin{aligned}\nf_1(c, l_1, l_2; \\mathbf{s}, \\mathbf{\\Omega}_t) &= u_1(c, l_1, l_2; m) - \\frac{\\rho}{1 + \\mu} E[v_a(\\mathbf{s}'; \\mathbf{\\Omega}_{t+1}) | \\mathbf{s}] = 0, & (18) \\\\\nf_2(c, l_1, l_2; \\mathbf{s}, \\mathbf{\\Omega}_t) &= u_2(c, l_1, l_2; m) & (19) \\\\\n& - w_t e_1 [1 - \\tau_{I,t}'(r_t a + w_t e_1 h_1 + w_t e_2 h_2; m, n_{m,i}) - \\tau_{P,1,t}(w_t e_1 h_1, w_t e_2 h_2)] u_1(c, l_1, l_2; m) \\\\\n& - \\mathbf{1}_{\\{i < I_R, w_t e_1 h_1 < \\vartheta_{\\max}\\}} \\frac{w_t e_1}{i - 20} \\tilde{\\beta} E[v_{b_1}(\\mathbf{s}'; \\mathbf{\\Omega}_{t+1}) | \\mathbf{s}] = 0,\n\\end{aligned}"
   },
   {
     "page_no": 25,
     "formula_index": 5,
     "image_name": "page_25_formula_5.png",
-    "latex": "\\begin{align}\nf_1(c, l_1, l_2; \\mathbf{s}, \\mathbf{\\Omega}_t) &= u_1(c, l_1, l_2; m) - \\frac{\\beta}{1 + \\mu} E[v_a(\\mathbf{s}'; \\mathbf{\\Omega}_{t+1}) | \\mathbf{s}] = 0, \\tag{18} \\\\\nf_2(c, l_1, l_2; \\mathbf{s}, \\mathbf{\\Omega}_t) &= u_2(c, l_1, l_2; m) \\tag{19}\n\\end{align}"
+    "latex": "f_1(c, l_1, l_2; \\mathbf{s}, \\mathbf{\\Omega}_t) = u_1(c, l_1, l_2; m) - \\frac{\\tilde{\\beta}}{1 + \\mu} E[v_a(\\mathbf{s}'; \\mathbf{\\Omega}_{t+1}) | \\mathbf{s}] = 0, \\quad (18)"
   },
   {
     "page_no": 25,
     "formula_index": 6,
     "image_name": "page_25_formula_6.png",
-    "latex": "-\\mathbf{1}_{\\{i < I_R, w_t e_1 h_1 < \\vartheta_{\\max}\\}} \\frac{}{i - 20} \\beta E[v_{b_1}(\\mathbf{s}'; \\mathbf{\\Omega}_{t+1}) | \\mathbf{s}] = 0,\n\\\\\nf_3(c, l_1, l_2; \\mathbf{s}, \\mathbf{\\Omega}_t) = u_3(c, l_1, l_2; m) \\hfill (20)\n\\\\\n- w_t e_2 [1 - \\tau_{I,t}'(r_t a + w_t e_1 h_1 + w_t e_2 h_2; m, n_{m,i}) - \\tau_{P,2,t}(w_t e_1 h_1, w_t e_2 h_2)] u_1(c, l_1, l_2; m)\n\\\\\n- \\mathbf{1}_{\\{i < I_R, w_t e_2 h_2 < \\vartheta_{\\max}\\}} \\frac{w_t e_2}{i - 20} \\tilde{\\beta} E[v_{b_2}(\\mathbf{s}'; \\mathbf{\\Omega}_{t+1}) | \\mathbf{s}] = 0,"
+    "latex": "-\\mathbf{1}_{\\left\\{i<I_{R}, w_{t} e_{1} h_{1}<\\vartheta_{\\max }\\right\\}} \\frac{w_{t} e_{1}}{i-20} \\tilde{\\beta} E\\left[v_{b_{1}}\\left(\\mathbf{s}^{\\prime} ; \\mathbf{\\Omega}_{t+1}\\right) \\mid \\mathbf{s}\\right]=0, \\\\\nf_{3}\\left(c, l_{1}, l_{2} ; \\mathbf{s}, \\mathbf{\\Omega}_{t}\\right)=u_{3}\\left(c, l_{1}, l_{2} ; m\\right) \\hfill (20) \\\\\n-w_{t} e_{2}\\left[1-\\tau_{I, t}^{\\prime}\\left(r_{t} a+w_{t} e_{1} h_{1}+w_{t} e_{2} h_{2} ; m, n_{m, i}\\right)-\\tau_{P, 2, t}\\left(w_{t} e_{1} h_{1}, w_{t} e_{2} h_{2}\\right)\\right] u_{1}\\left(c, l_{1}, l_{2} ; m\\right) \\\\\n-\\mathbf{1}_{\\left\\{i<I_{R}, w_{t} e_{2} h_{2}<\\vartheta_{\\max }\\right\\}} \\frac{w_{t} e_{2}}{i-20} \\tilde{\\beta} E\\left[v_{b_{2}}\\left(\\mathbf{s}^{\\prime} ; \\mathbf{\\Omega}_{t+1}\\right) \\mid \\mathbf{s}\\right]=0,"
   },
   {
     "page_no": 25,
     "formula_index": 7,
     "image_name": "page_25_formula_7.png",
-    "latex": "-\\mathbb{I}_{\\left\\{i<I_{R}, w_{t} e_{2} h_{2}<\\vartheta_{\\max }\\right\\}} \\frac{1}{i-20} \\beta E\\left[v_{b_{2}}\\left(\\mathbf{s}^{\\prime} ; \\boldsymbol{\\Omega}_{t+1}\\right) | \\mathbf{s}\\right]=\\tau_{I, t}^{\\prime}\\left(r_{t} a+w_{t} e_{1} h_{1}+w_{t} e_{2} h_{2} ; m, n_{m, i}\\right) \\text { and } \\tau_{P, k, t}\\left(w_{t} e_{1} h_{1},\\right."
+    "latex": "-\\mathbf{1}_{\\{i<I_{R}, w_{t} e_{2} h_{2}<\\vartheta_{\\max }\\}} \\frac{w_{t} e_{2}}{i-20} \\tilde{\\beta} E\\left[v_{b_{2}}\\left(\\mathbf{s}^{\\prime} ; \\boldsymbol{\\Omega}_{t+1}\\right) \\mid \\mathbf{s}\\right]=0"
   },
   {
     "page_no": 25,
     "formula_index": 8,
     "image_name": "page_25_formula_8.png",
-    "latex": "\\begin{aligned}\nf_1(c, l_1, l_2, \\mathbf{s}, \\boldsymbol{\\Omega}_t) &= 0 \\quad \\text{if } 0 < c < c_{\\max}, & > 0 \\quad \\text{if } c = c_{\\max}, \\\\\nf_2(c, l_1, l_2; \\mathbf{s}, \\boldsymbol{\\Omega}_t) &= 0 \\quad \\text{if } 0 < l_1 < 1, & > 0 \\quad \\text{if } l_1 = 1, \\\\\nf_3(c, l_1, l_2; \\mathbf{s}, \\boldsymbol{\\Omega}_t) &= 0 \\quad \\text{if } 0 < l_2 < 1 - \\kappa n_{m,i}, & > 0 \\quad \\text{if } l_2 = 1 - \\kappa n_m,\n\\end{aligned}"
+    "latex": "\\begin{aligned}\nf_1(c, l_1, l_2; \\mathbf{s}, \\boldsymbol{\\Omega}_t) &= 0 \\quad \\text{if } 0 < c < c_{\\max}, &> 0 \\quad \\text{if } c = c_{\\max}, \\\\\nf_2(c, l_1, l_2; \\mathbf{s}, \\boldsymbol{\\Omega}_t) &= 0 \\quad \\text{if } 0 < l_1 < 1, &> 0 \\quad \\text{if } l_1 = 1, \\\\\nf_3(c, l_1, l_2; \\mathbf{s}, \\boldsymbol{\\Omega}_t) &= 0 \\quad \\text{if } 0 < l_2 < 1 - \\kappa n_{m,i}, &> 0 \\quad \\text{if } l_2 = 1 - \\kappa n_{m,i}.\n\\end{aligned}"
   },
   {
     "page_no": 26,
     "formula_index": 1,
     "image_name": "page_26_formula_1.png",
-    "latex": "\\min \\left\\{ \\max \\left[ \\begin{pmatrix} f_1(c, l_1, l_2, \\mathbf{s}, \\mathbf{\\Omega}_t) / u_1(c, l_1, l_2, m) \\\\ f_2(c, l_1, l_2; \\mathbf{s}, \\mathbf{\\Omega}_t) / u_1(c, l_1, l_2; m) \\\\ f_3(c, l_1, l_2; \\mathbf{s}, \\mathbf{\\Omega}_t) / u_1(c, l_1, l_2; m) \\end{pmatrix} , \\begin{pmatrix} \\varepsilon - c \\\\ \\varepsilon - l_1 \\\\ \\varepsilon - l_2 \\end{pmatrix} \\right] , \\begin{pmatrix} c_{\\text{max}} - c \\\\ 1 - l_1 \\\\ 1 - \\kappa n_{m,i} - l_2 \\end{pmatrix} \\right\\} = \\mathbf{0}, \\quad (21)"
+    "latex": "\\min \\left\\{ \\max \\left[ \\begin{pmatrix} f_1(c, l_1, l_2; \\mathbf{s}, \\boldsymbol{\\Omega}_t) / u_1(c, l_1, l_2; m) \\\\ f_2(c, l_1, l_2; \\mathbf{s}, \\boldsymbol{\\Omega}_t) / u_1(c, l_1, l_2; m) \\\\ f_3(c, l_1, l_2; \\mathbf{s}, \\boldsymbol{\\Omega}_t) / u_1(c, l_1, l_2; m) \\end{pmatrix}, \\begin{pmatrix} \\varepsilon - c \\\\ \\varepsilon - l_1 \\\\ \\varepsilon - l_2 \\end{pmatrix} \\right], \\begin{pmatrix} c_{\\max} - c \\\\ 1 - l_1 \\\\ 1 - \\kappa n_{m,i} - l_2 \\end{pmatrix} \\right\\} = \\mathbf{0}, \\quad (21)"
   },
   {
     "page_no": 26,
     "formula_index": 2,
     "image_name": "page_26_formula_2.png",
-    "latex": "\\phi(u, v) \\equiv u + v - \\sqrt{u^2 + v^2}, \\qquad \\phi^\\dagger(u, v) \\equiv u + v + \\sqrt{u^2 + v^2}"
+    "latex": "\\phi^-(u, v) \\equiv u + v - \\sqrt{u^2 + v^2}, \\quad \\phi^+(u, v) \\equiv u + v + \\sqrt{u^2 + v^2},"
   },
   {
     "page_no": 26,
     "formula_index": 3,
     "image_name": "page_26_formula_3.png",
-    "latex": "v(\\mathbf{s}; \\mathbf{\\Omega}_t) = u(c(\\mathbf{s}; \\mathbf{\\Omega}_t), l_1(\\mathbf{s}; \\mathbf{\\Omega}_t), l_2(\\mathbf{s}; \\mathbf{\\Omega}_t); m) + \\beta E[v(\\mathbf{s}'; \\mathbf{\\Omega}_{t+1}) | \\mathbf{s}]"
+    "latex": "\\hat{v}(\\mathbf{s}; \\boldsymbol{\\Omega}_t) = u(\\hat{c}(\\mathbf{s}; \\boldsymbol{\\Omega}_t), \\hat{l}_1(\\mathbf{s}; \\boldsymbol{\\Omega}_t), \\hat{l}_2(\\mathbf{s}; \\boldsymbol{\\Omega}_t); m) + \\tilde{\\beta} E[v(\\mathbf{s}'; \\boldsymbol{\\Omega}_{t+1}) | \\mathbf{s}],"
   },
   {
     "page_no": 26,
     "formula_index": 4,
     "image_name": "page_26_formula_4.png",
-    "latex": "\\begin{aligned}\nv_a (\\mathbf{s}; \\mathbf{\\Omega}_t) = & \\left[ 1 + r_t \\left( 1 - \\tau_{I,t}' (r_t a + w_t e_1 h_1 (\\mathbf{s}; \\mathbf{\\Omega}_t) + w_t e_2 h_2 (\\mathbf{s}; \\mathbf{\\Omega}_t)); m, n_{m,i} \\right) \\right] \\\\\n& \\times u_c (\\hat{c}(\\mathbf{s}; \\mathbf{\\Omega}_t), \\hat{l}_1(\\mathbf{s}; \\mathbf{\\Omega}_t), \\hat{l}_2(\\mathbf{s}; \\mathbf{\\Omega}_t); m), \\\\\n\\hat{v}_{b_1} (\\mathbf{s}; \\mathbf{\\Omega}_t) = & tr_{SS,b_1,t}(i, b_1, b_2, m) u_c (\\hat{c}(\\mathbf{s}; \\mathbf{\\Omega}_t), \\hat{l}_1(\\mathbf{s}; \\mathbf{\\Omega}_t), \\hat{l}_2(\\mathbf{s}; \\mathbf{\\Omega}_t); m) \\\\\n& + \\left( \\mathbf{1}_{\\{i < I_R, m \\neq 2\\}} \\frac{i-21}{i-20} + \\mathbf{1}_{\\{i \\ge I_R \\text{ or } m=2\\}} \\right) \\tilde{\\beta} E [v_{b_1} (\\mathbf{s}'; \\mathbf{\\Omega}_{t+1}) | \\mathbf{s}], \\\\\n\\hat{v}_{b_2} (\\mathbf{s}; \\mathbf{\\Omega}_t) = & tr_{SS,b_2,t}(i, b_1, b_2, m) u_c (c(\\mathbf{s}; \\mathbf{\\Omega}_t), l_1(\\mathbf{s}; \\mathbf{\\Omega}_t), l_2(\\mathbf{s}; \\mathbf{\\Omega}_t); m) \\\\\n& + \\left( \\mathbf{1}_{\\{i < I_R, m \\neq 1\\}} \\frac{i-21}{i-20} + \\mathbf{1}_{\\{i \\ge I_R \\text{ or } m=1\\}} \\right) \\tilde{\\beta} E [v_{b_2} (\\mathbf{s}'; \\mathbf{\\Omega}_{t+1}) | \\mathbf{s}],\n\\end{aligned}"
+    "latex": "\\hat{v}_a (\\mathbf{s}; \\mathbf{\\Omega}_t) = [1 + r_t(1 - \\tau'_{I,t}(r_t a + w_t e_1 \\hat{h}_1 (\\mathbf{s}; \\mathbf{\\Omega}_t) + w_t e_2 \\hat{h}_2 (\\mathbf{s}; \\mathbf{\\Omega}_t); m, n_{m,i}))] \\times u_c(\\hat{c}(\\mathbf{s}; \\mathbf{\\Omega}_t), \\hat{l}_1 (\\mathbf{s}; \\mathbf{\\Omega}_t), \\hat{l}_2 (\\mathbf{s}; \\mathbf{\\Omega}_t); m),\n\\hat{v}_{b_1} (\\mathbf{s}; \\mathbf{\\Omega}_t) = tr_{SS,b_1,t}(i, b_1, b_2, m) u_c(\\hat{c}(\\mathbf{s}; \\mathbf{\\Omega}_t), \\hat{l}_1 (\\mathbf{s}; \\mathbf{\\Omega}_t), \\hat{l}_2 (\\mathbf{s}; \\mathbf{\\Omega}_t); m) + \\left( \\mathbf{1}_{\\{i < I_R, m \\neq 2\\}} \\frac{i - 21}{i - 20} + \\mathbf{1}_{\\{i \\geq I_R \\text{ or } m = 2\\}} \\right) \\tilde{\\beta} E [v_{b_1} (\\mathbf{s}'; \\mathbf{\\Omega}_{t+1}) | \\mathbf{s}],\n\\hat{v}_{b_2} (\\mathbf{s}; \\mathbf{\\Omega}_t) = tr_{SS,b_2,t}(i, b_1, b_2, m) u_c(c(\\mathbf{s}; \\mathbf{\\Omega}_t), l_1 (\\mathbf{s}; \\mathbf{\\Omega}_t), l_2 (\\mathbf{s}; \\mathbf{\\Omega}_t); m) + \\left( \\mathbf{1}_{\\{i < I_R, m \\neq 1\\}} \\frac{i - 21}{i - 20} + \\mathbf{1}_{\\{i \\geq I_R \\text{ or } m = 1\\}} \\right) \\tilde{\\beta} E [v_{b_2} (\\mathbf{s}'; \\mathbf{\\Omega}_{t+1}) | \\mathbf{s}],"
   },
   {
     "page_no": 26,
     "formula_index": 5,
     "image_name": "page_26_formula_5.png",
-    "latex": "\\begin{aligned}\n& tr_{SS,b_1,t}(i, b_1, b_2, m) \\\\\n& = \\begin{cases} \\psi_t \\left[ \\mathbf{1}_{\\{\\psi(i,b_1) \\geq 0.5 \\psi(i,b_2)\\}} \\psi_b(i, b_1) + \\mathbf{1}_{\\{\\psi(i,b_1) > 2.0 \\psi(i,b_2)\\}} 0.5 \\psi_b(i, b_1) \\right] & \\text{if } m = 0, \\\\ \\psi_t \\mathbf{1}_{\\{\\psi(i,b_1) \\geq \\psi(i,b_2)\\}} \\psi_b(i, b_1) & \\text{if } m = 1, 2 \\end{cases} \\\\\n& tr_{SS,b_2,t}(i, b_1, b_2, m) \\\\\n& = \\begin{cases} \\psi_t \\left[ \\mathbf{1}_{\\{\\psi(i,b_2) \\geq 0.5 \\psi(i,b_1)\\}} \\psi_b(i, b_2) + \\mathbf{1}_{\\{\\psi(i,b_2) > 2.0 \\psi(i,b_1)\\}} 0.5 \\psi_b(i, b_2) \\right] & \\text{if } m = 0, \\\\ \\psi_t \\mathbf{1}_{\\{\\psi(i,b_2) \\geq \\psi(i,b_1)\\}} \\psi_b(i, b_2) & \\text{if } m = 1, 2 \\end{cases}\n\\end{aligned}"
+    "latex": "tr_{SS,b_1,t}(i, b_1, b_2, m) \\\\ = \\begin{cases} \\psi_t [\\mathbf{1}_{\\{\\psi(i,b_1) \\geq 0.5\\psi(i,b_2)\\}} \\psi_b(i, b_1) + \\mathbf{1}_{\\{\\psi(i,b_1) > 2.0\\psi(i,b_2)\\}} 0.5\\psi_b(i, b_1)] & \\text{if } m = 0, \\\\ \\psi_t \\mathbf{1}_{\\{\\psi(i,b_1) \\geq \\psi(i,b_2)\\}} \\psi_b(i, b_1) & \\text{if } m = 1, 2, \\end{cases} \\\\ tr_{SS,b_2,t}(i, b_1, b_2, m) \\\\ = \\begin{cases} \\psi_t [\\mathbf{1}_{\\{\\psi(i,b_2) \\geq 0.5\\psi(i,b_1)\\}} \\psi_b(i, b_2) + \\mathbf{1}_{\\{\\psi(i,b_2) > 2.0\\psi(i,b_1)\\}} 0.5\\psi_b(i, b_2)] & \\text{if } m = 0, \\\\ \\psi_t \\mathbf{1}_{\\{\\psi(i,b_2) \\geq \\psi(i,b_1)\\}} \\psi_b(i, b_2) & \\text{if } m = 1, 2, \\end{cases}"
   },
   {
     "page_no": 26,
     "formula_index": 6,
     "image_name": "page_26_formula_6.png",
-    "latex": "\\psi_b(i, b_j) = \\mathbf{1}_{\\{i \\ge I_R\\}} (1 + \\mu)^{66 - i} \\{ \\mathbf{1}_{\\{b_j < \\vartheta_1\\}} 0.90 + \\mathbf{1}_{\\{\\vartheta_1 \\le b_j < \\vartheta_2\\}} 0.32 + \\mathbf{1}_{\\{\\vartheta_2 \\le b_j\\}} 0.15 \\}"
+    "latex": "\\psi_b(i, b_j) = \\mathbf{1}_{\\{i \\ge I_R\\}} (1 + \\mu)^{60-i} \\{ \\mathbf{1}_{\\{b_j < \\vartheta_1\\}} 0.90 + \\mathbf{1}_{\\{\\vartheta_1 \\le b_j < \\vartheta_2\\}} 0.32 + \\mathbf{1}_{\\{\\vartheta_2 \\le b_j\\}} 0.15 \\}"
   },
   {
     "page_no": 26,
     "formula_index": 7,
     "image_name": "page_26_formula_7.png",
-    "latex": "\\begin{aligned}\ntr_{SS,b_1,t}(i, b_1, b_2, m) &= \\psi_t \\psi_b(i, b_1) \\quad \\text{if } m = 0 \\text{ or } 1, \\quad = 0 \\quad \\text{if } m = 2, \\\\\ntr^1_{SS,b_2,t}(i, b_1, b_2, m) &= \\psi_t \\psi_b(i, b_2) \\quad \\text{if } m = 0 \\text{ or } 2, \\quad = 0 \\quad \\text{if } m = 1\n\\end{aligned}"
+    "latex": "tr_{SS,b_1,t}^1(i, b_1, b_2, m) = \\psi_t \\psi_b(i, b_1) \\quad \\text{if } m = 0 \\text{ or } 1, \\quad = 0 \\quad \\text{if } m = 2, \\\\\ntr_{SS,b_2,t}^1(i, b_1, b_2, m) = \\psi_t \\psi_b(i, b_2) \\quad \\text{if } m = 0 \\text{ or } 2, \\quad = 0 \\quad \\text{if } m = 1."
   },
   {
     "page_no": 27,
     "formula_index": 1,
     "image_name": "page_27_formula_1.png",
-    "latex": "v(\\mathbf{s}; \\mathbf{\\Omega}_t) = v(\\mathbf{s}; \\mathbf{\\Omega}_t) + E[\\chi(h_1(\\mathbf{s}; \\mathbf{\\Omega}_t), h_2(\\mathbf{s}; \\mathbf{\\Omega}_t); m, n_{m,i})]"
+    "latex": "v(\\mathbf{s}; \\mathbf{\\Omega}_t) = \\hat{v}(\\mathbf{s}; \\mathbf{\\Omega}_t) + E[\\chi(\\hat{h}_1(\\mathbf{s}; \\mathbf{\\Omega}_t), \\hat{h}_2(\\mathbf{s}; \\mathbf{\\Omega}_t); m, n_{m,i})],"
   },
   {
     "page_no": 27,
     "formula_index": 2,
     "image_name": "page_27_formula_2.png",
-    "latex": "\\begin{aligned}\nc(\\mathbf{s}; \\mathbf{\\Omega}_t) = c(\\mathbf{s}; \\mathbf{\\Omega}_t), \\quad &h_1(\\mathbf{s}; \\mathbf{\\Omega}_t) = h_1(\\mathbf{s}; \\mathbf{\\Omega}_t), \\quad &h_2(\\mathbf{s}; \\mathbf{\\Omega}_t) = h_2(\\mathbf{s}; \\mathbf{\\Omega}_t), \\\\\na'(\\mathbf{s}; \\mathbf{\\Omega}_t) = \\hat{a}'(\\mathbf{s}; \\mathbf{\\Omega}_t), \\quad &b'_1(\\mathbf{s}; \\mathbf{\\Omega}_t) = \\hat{b}'_1(\\mathbf{s}; \\mathbf{\\Omega}_t), \\quad &b'_2(\\mathbf{s}; \\mathbf{\\Omega}_t) = \\hat{b}'_2(\\mathbf{s}; \\mathbf{\\Omega}_t), \\\\\nv_a(\\mathbf{s}; \\mathbf{\\Omega}_t) = \\hat{v}_a(\\mathbf{s}; \\mathbf{\\Omega}_t), \\quad &v_{b_1}(\\mathbf{s}; \\mathbf{\\Omega}_t) = \\hat{v}_{b_1}(\\mathbf{s}; \\mathbf{\\Omega}_t), \\quad &v_{b_2}(\\mathbf{s}; \\mathbf{\\Omega}_t) = \\hat{v}_{b_2}(\\mathbf{s}; \\mathbf{\\Omega}_t),\n\\end{aligned}\n\\hat{h}_1(\\mathbf{s}; \\mathbf{\\Omega}_t) \\geq \\hat{h}_2(\\mathbf{s}; \\mathbf{\\Omega}_t) > 0,"
+    "latex": "\\begin{aligned} c(\\mathbf{s}; \\mathbf{\\Omega}_t) &= \\hat{c}(\\mathbf{s}; \\mathbf{\\Omega}_t), & h_1(\\mathbf{s}; \\mathbf{\\Omega}_t) &= \\hat{h}_1(\\mathbf{s}; \\mathbf{\\Omega}_t), & h_2(\\mathbf{s}; \\mathbf{\\Omega}_t) &= \\hat{h}_2(\\mathbf{s}; \\mathbf{\\Omega}_t), \\\\ a'(\\mathbf{s}; \\mathbf{\\Omega}_t) &= \\hat{a}'(\\mathbf{s}; \\mathbf{\\Omega}_t), & b'_1(\\mathbf{s}; \\mathbf{\\Omega}_t) &= \\hat{b}'_1(\\mathbf{s}; \\mathbf{\\Omega}_t), & b'_2(\\mathbf{s}; \\mathbf{\\Omega}_t) &= \\hat{b}'_2(\\mathbf{s}; \\mathbf{\\Omega}_t), \\\\ v_a(\\mathbf{s}; \\mathbf{\\Omega}_t) &= \\hat{v}_a(\\mathbf{s}; \\mathbf{\\Omega}_t), & v_{b_1}(\\mathbf{s}; \\mathbf{\\Omega}_t) &= \\hat{v}_{b_1}(\\mathbf{s}; \\mathbf{\\Omega}_t), & v_{b_2}(\\mathbf{s}; \\mathbf{\\Omega}_t) &= \\hat{v}_{b_2}(\\mathbf{s}; \\mathbf{\\Omega}_t), \\end{aligned}"
   },
   {
     "page_no": 27,
     "formula_index": 3,
     "image_name": "page_27_formula_3.png",
-    "latex": "n_{\\ell}."
+    "latex": "t)."
   },
   {
     "page_no": 27,
     "formula_index": 4,
     "image_name": "page_27_formula_4.png",
-    "latex": "\\begin{aligned}\nv(\\mathbf{s}; \\mathbf{\\Omega}_t) &= \\Pr(\\tilde{\\chi} \\le d) \\hat{v}(\\mathbf{s}; \\mathbf{\\Omega}_t) + \\Pr(\\tilde{\\chi} > d) \\{ \\hat{v}(\\mathbf{s}; \\mathbf{\\Omega}_t, h_2 = 0) + E[\\tilde{\\chi} \\mid \\tilde{\\chi} > d] \\} \\\\\n&= \\hat{v}(\\mathbf{s}; \\mathbf{\\Omega}_t) + \\Pr(\\tilde{\\chi} > d) E[\\tilde{\\chi} - d \\mid \\tilde{\\chi} > d] \\\\\n&= \\hat{v}(\\mathbf{s}; \\mathbf{\\Omega}_t) + E[(\\tilde{\\chi} - d)_+],\n\\end{aligned}\n\\text{where } \\tilde{\\chi} = \\chi(\\hat{h}_1(\\mathbf{s}; \\mathbf{\\Omega}_t, h_2 = 0), 0; m, n_{m,i}), d = \\hat{v}(\\mathbf{s}; \\mathbf{\\Omega}_t) - \\hat{v}(\\mathbf{s}; \\mathbf{\\Omega}_t, h_2 = 0), \\text{ and}"
+    "latex": "\\begin{aligned}\nv(\\mathbf{s} ; \\mathbf{\\Omega}_{t}) & = \\operatorname{Pr}(\\tilde{\\chi} \\le d) \\hat{v}(\\mathbf{s} ; \\mathbf{\\Omega}_{t}) + \\operatorname{Pr}(\\tilde{\\chi} > d) \\{ \\hat{v}(\\mathbf{s} ; \\mathbf{\\Omega}_{t}, h_{2}=0) + E[\\tilde{\\chi} \\mid \\tilde{\\chi} > d] \\} \\\\\n& = \\hat{v}(\\mathbf{s} ; \\mathbf{\\Omega}_{t}) + \\operatorname{Pr}(\\tilde{\\chi} > d) E[\\tilde{\\chi}-d \\mid \\tilde{\\chi} > d] \\\\\n& = \\hat{v}(\\mathbf{s} ; \\mathbf{\\Omega}_{t}) + E[(\\tilde{\\chi}-d)_{+}],\n\\end{aligned}"
   },
   {
     "page_no": 27,
     "formula_index": 5,
     "image_name": "page_27_formula_5.png",
-    "latex": "E[(x - d)_+] = \\alpha\\theta(1 - \\Gamma(d/\\theta; \\alpha + 1)) - d(1 - \\Gamma(d/\\theta; \\alpha)),"
+    "latex": "E[(\\tilde{\\chi} - d)_+] = \\bar{\\alpha}\\bar{\\theta}(1 - \\Gamma(d/\\bar{\\theta}; \\bar{\\alpha} + 1)) - d(1 - \\Gamma(d/\\bar{\\theta}; \\bar{\\alpha})),"
   },
   {
     "page_no": 27,
     "formula_index": 6,
     "image_name": "page_27_formula_6.png",
-    "latex": "\\Gamma(\\alpha; x) \\equiv \\frac{1}{\\Gamma(\\alpha)} \\int_{0}^{x} t^{\\alpha-1} e^{-t} dt, \\quad \\Gamma(\\alpha) \\equiv \\int_{0}^{\\infty} t^{\\alpha-1} e^{-t} dt, \\quad \\alpha > 0, \\quad x > 0"
+    "latex": "\\Gamma(\\alpha; x) \\equiv \\frac{1}{\\Gamma(\\alpha)} \\int_0^x t^{\\alpha-1} e^{-t} dt, \\quad \\Gamma(\\alpha) \\equiv \\int_0^\\infty t^{\\alpha-1} e^{-t} dt, \\quad \\alpha > 0, \\quad x > 0."
   },
   {
     "page_no": 27,
     "formula_index": 7,
     "image_name": "page_27_formula_7.png",
-    "latex": "\\begin{aligned}\n&\\{c(\\mathbf{s}; \\mathbf{\\Omega}_t), h_1(\\mathbf{s}; \\mathbf{\\Omega}_t), h_2(\\mathbf{s}; \\mathbf{\\Omega}_t), a'(\\mathbf{s}; \\mathbf{\\Omega}_t), b'_1(\\mathbf{s}; \\mathbf{\\Omega}_t), b'_2(\\mathbf{s}; \\mathbf{\\Omega}_t)\\} \\\\\n&= \\begin{cases} \\{\\hat{c}(\\mathbf{s}; \\mathbf{\\Omega}_t), \\hat{h}_1(\\mathbf{s}; \\mathbf{\\Omega}_t), \\hat{h}_2(\\mathbf{s}; \\mathbf{\\Omega}_t), \\hat{a}'(\\mathbf{s}; \\mathbf{\\Omega}_t), \\hat{b}'_1(\\mathbf{s}; \\mathbf{\\Omega}_t), \\hat{b}'_2(\\mathbf{s}; \\mathbf{\\Omega}_t)\\} & \\text{with prob. } \\Pr(\\tilde{\\chi} \\le d) \\\\ \\begin{aligned} \\{&\\hat{c}(\\mathbf{s}; \\mathbf{\\Omega}_t, h_2 = 0), \\hat{h}_1(\\mathbf{s}; \\mathbf{\\Omega}_t, h_2 = 0), \\hat{h}_2(\\mathbf{s}; \\mathbf{\\Omega}_t, h_2 = 0), \\\\ &\\hat{a}'(\\mathbf{s}; \\mathbf{\\Omega}_t, h_2 = 0), \\hat{b}'_1(\\mathbf{s}; \\mathbf{\\Omega}_t, h_2 = 0), \\hat{b}'_2(\\mathbf{s}; \\mathbf{\\Omega}_t, h_2 = 0)\\} \\end{aligned} & \\text{with prob. } \\Pr(\\tilde{\\chi} > d) \\end{cases} \\\\\n&v_a(\\mathbf{s}; \\mathbf{\\Omega}_t) = \\Pr(\\tilde{\\chi} \\le d) \\hat{v}_a(\\mathbf{s}; \\mathbf{\\Omega}_t) + \\Pr(\\tilde{\\chi} > d) \\hat{v}_a(\\mathbf{s}; \\mathbf{\\Omega}_t, h_2 = 0), \\\\\n&v_{b_1}(\\mathbf{s}; \\mathbf{\\Omega}_t) = \\Pr(\\tilde{\\chi} \\le d) \\hat{v}_{b_1}(\\mathbf{s}; \\mathbf{\\Omega}_t) + \\Pr(\\tilde{\\chi} > d) \\hat{v}_{b_1}(\\mathbf{s}; \\mathbf{\\Omega}_t, h_2 = 0), \\\\\n&v_{b_2}(\\mathbf{s}; \\mathbf{\\Omega}_t) = \\Pr(\\tilde{\\chi} \\le d) \\hat{v}_{b_2}(\\mathbf{s}; \\mathbf{\\Omega}_t) + \\Pr(\\tilde{\\chi} > d) \\hat{v}_{b_2}(\\mathbf{s}; \\mathbf{\\Omega}_t, h_2 = 0).\n\\end{aligned}"
+    "latex": "\\begin{aligned}\n& \\{c(\\mathbf{s}; \\boldsymbol{\\Omega}_t), h_1(\\mathbf{s}; \\boldsymbol{\\Omega}_t), h_2(\\mathbf{s}; \\boldsymbol{\\Omega}_t), a'(\\mathbf{s}; \\boldsymbol{\\Omega}_t), b'_1(\\mathbf{s}; \\boldsymbol{\\Omega}_t), b'_2(\\mathbf{s}; \\boldsymbol{\\Omega}_t)\\} \\\\\n& \\quad = \\begin{cases} \\{\\hat{c}(\\mathbf{s}; \\boldsymbol{\\Omega}_t), \\hat{h}_1(\\mathbf{s}; \\boldsymbol{\\Omega}_t), \\hat{h}_2(\\mathbf{s}; \\boldsymbol{\\Omega}_t), \\hat{a}'(\\mathbf{s}; \\boldsymbol{\\Omega}_t), \\hat{b}'_1(\\mathbf{s}; \\boldsymbol{\\Omega}_t), \\hat{b}'_2(\\mathbf{s}; \\boldsymbol{\\Omega}_t)\\} & \\text{with prob. } \\Pr(\\tilde{\\chi} \\le d), \\\\ \\begin{aligned}[b] \\{ & \\hat{c}(\\mathbf{s}; \\boldsymbol{\\Omega}_t, h_2 = 0), \\hat{h}_1(\\mathbf{s}; \\boldsymbol{\\Omega}_t, h_2 = 0), \\hat{h}_2(\\mathbf{s}; \\boldsymbol{\\Omega}_t, h_2 = 0), \\\\ & \\hat{a}'(\\mathbf{s}; \\boldsymbol{\\Omega}_t, h_2 = 0), \\hat{b}'_1(\\mathbf{s}; \\boldsymbol{\\Omega}_t, h_2 = 0), \\hat{b}'_2(\\mathbf{s}; \\boldsymbol{\\Omega}_t, h_2 = 0) \\} \\end{aligned} & \\text{with prob. } \\Pr(\\tilde{\\chi} > d), \\end{cases} \\\\\n& v_a(\\mathbf{s}; \\boldsymbol{\\Omega}_t) = \\Pr(\\tilde{\\chi} \\le d)\\hat{v}_a(\\mathbf{s}; \\boldsymbol{\\Omega}_t) + \\Pr(\\tilde{\\chi} > d)\\hat{v}_a(\\mathbf{s}; \\boldsymbol{\\Omega}_t, h_2 = 0), \\\\\n& v_{b_1}(\\mathbf{s}; \\boldsymbol{\\Omega}_t) = \\Pr(\\tilde{\\chi} \\le d)\\hat{v}_{b_1}(\\mathbf{s}; \\boldsymbol{\\Omega}_t) + \\Pr(\\tilde{\\chi} > d)\\hat{v}_{b_1}(\\mathbf{s}; \\boldsymbol{\\Omega}_t, h_2 = 0), \\\\\n& v_{b_2}(\\mathbf{s}; \\boldsymbol{\\Omega}_t) = \\Pr(\\tilde{\\chi} \\le d)\\hat{v}_{b_2}(\\mathbf{s}; \\boldsymbol{\\Omega}_t) + \\Pr(\\tilde{\\chi} > d)\\hat{v}_{b_2}(\\mathbf{s}; \\boldsymbol{\\Omega}_t, h_2 = 0).\n\\end{aligned}"
   }
 ]
