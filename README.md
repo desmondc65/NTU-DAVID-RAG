@@ -360,7 +360,110 @@ data/[Paper Name]/manuscript_paper2code/
 
 ### [Phase 2] RAG Database & Embeddings
 
-(To be implemented)
+The `utils/s2_embedding/` directory contains the embedding pipeline that chunks, embeds, and stores academic paper text and Fortran code into a local vector database for retrieval.
+
+#### Architecture Overview
+
+```
+JSON Data Files ──→ Chunker ──→ Embedding Model ──→ ChromaDB Vector Store
+                   (chunker.py)  (embedder.py)      (vector_store.py)
+```
+
+| Component | Choice | Rationale |
+|-----------|--------|-----------|
+| **Embedding Model** | `BAAI/bge-large-en-v1.5` | 1024-dim, strong on academic text + code, runs locally on GPU |
+| **Vector Database** | ChromaDB (persistent) | Lightweight, local-first, zero-config, supports metadata filtering |
+| **Chunking** | Section-aware (text) + Line-based (code) | Preserves semantic coherence for papers; summary-prefixed for code |
+
+#### File Structure
+
+```
+utils/s2_embedding/
+├── __init__.py          # Package init
+├── chunker.py           # Chunking strategies for manuscript text and Fortran code
+├── embedder.py          # BAAI/bge-large-en-v1.5 embedding model wrapper
+├── vector_store.py      # ChromaDB persistent vector store wrapper
+└── run_embed.py         # CLI orchestration script (chunk → embed → store → test)
+```
+
+#### Chunking Strategy
+
+**Manuscript Text** (`Manuscript_content_list.json`):
+- Filters `type == "text"` entries only (ignores headers, footers, page numbers)
+- Merges consecutive paragraphs into chunks of ~384 tokens with 64-token overlap
+- Preserves page index metadata for traceability
+
+**Fortran Code** (`fortran_chunks.json`):
+- Reads each code file referenced in the JSON
+- Splits into sub-chunks of 150 lines with 30-line overlap
+- Prepends the summary description to each chunk for retrieval context
+
+#### Usage
+
+**Prerequisites**: Install dependencies from the project root:
+
+```bash
+source .venv/bin/activate
+pip install -r requirements.txt  # includes sentence-transformers and chromadb
+```
+
+**Run the embedding pipeline**:
+
+```bash
+# Using GPU #2 (adjust CUDA_VISIBLE_DEVICES as needed)
+CUDA_VISIBLE_DEVICES=2 python -m utils.s2_embedding.run_embed \
+  --manuscript "data/Accounting for Wealth Concentration in the United States/manuscript_parsed_mineru/Manuscript/hybrid_auto/Manuscript_content_list.json" \
+  --fortran "data/Accounting for Wealth Concentration in the United States/RAG_Chunks/fortran_chunks.json" \
+  --output "data/Accounting for Wealth Concentration in the United States/vector_store" \
+  --device cuda:0 \
+  --test-query
+```
+
+**CLI Arguments**:
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `--manuscript` | No* | Path to `Manuscript_content_list.json` |
+| `--fortran` | No* | Path to `fortran_chunks.json` |
+| `--output` | Yes | Output directory for ChromaDB persistent storage |
+| `--model` | No | Embedding model name (default: `BAAI/bge-large-en-v1.5`) |
+| `--device` | No | Device for inference, e.g. `cuda:0` (default: auto-detect) |
+| `--test-query` | No | Run smoke queries after embedding to verify results |
+
+\* At least one of `--manuscript` or `--fortran` must be specified.
+
+**Output**: The vector store is saved to the `--output` directory and persists across runs:
+
+```
+data/[Paper Name]/vector_store/
+├── chroma.sqlite3           # ChromaDB persistent storage
+└── [collection files]       # HNSW index and metadata
+```
+
+#### Programmatic Usage
+
+You can also use the components directly in Python:
+
+```python
+from utils.s2_embedding.chunker import chunk_manuscript, chunk_fortran
+from utils.s2_embedding.embedder import EmbeddingModel
+from utils.s2_embedding.vector_store import VectorStore
+
+# Chunk
+chunks = chunk_manuscript("path/to/Manuscript_content_list.json")
+
+# Embed
+model = EmbeddingModel(device="cuda:0")
+embeddings = model.embed_documents([c["text"] for c in chunks])
+
+# Store
+store = VectorStore(persist_dir="path/to/vector_store")
+store.add_documents(texts=..., embeddings=..., metadatas=..., ids=...)
+
+# Query
+query_emb = model.embed_query("What drives wealth concentration?")
+results = store.query(query_emb, n_results=5, where_filter={"content_type": "manuscript"})
+```
 
 ### [Phase 3] Hybrid Retrieval & Generation
 
