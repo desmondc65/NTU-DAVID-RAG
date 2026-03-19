@@ -95,6 +95,73 @@ This enables the tool to render transcribed LaTeX formulas back to PNG for visua
 python3 utils/data_preprocess/fortran_parser.py --help
 ```
 
+## Running Tests
+
+All tests are located in the `tests/` directory and should be run **from the project root** with the virtual environment activated:
+
+```bash
+source .venv/bin/activate
+```
+
+### Phase 2: Embedding Pipeline
+
+Tests chunking, embedding model, vector store, and end-to-end embed+query:
+
+```bash
+CUDA_VISIBLE_DEVICES=2 python -m tests.test_s2_embedding
+```
+
+### Phase 3: Hybrid RAG Retrieval
+
+Tests BM25 retriever, dense retriever, reranker, RRF fusion, and the full hybrid pipeline:
+
+```bash
+CUDA_VISIBLE_DEVICES=2 python -m tests.test_s3_rag
+```
+
+### LLM Clients
+
+Tests Gemini and GPT clients (text, JSON, and structured output generation). Requires API keys:
+
+```bash
+export GEMINI_API_KEY="your-key"
+export OPENAI_API_KEY="your-key"
+python -m tests.test_llm_clients
+```
+
+> **Note:** Phase 2 and Phase 3 tests require a GPU and an existing vector store at `data/[Paper Name]/vector_store/`. The LLM client tests require valid API keys.
+
+### Local LLM Service (Qwen3-Next-80B Q8_0 on GPU 0 + 1)
+
+This repository includes a Docker Compose setup for a local OpenAI-compatible LLM endpoint using `llama.cpp` server.
+
+```bash
+cd docker/local_llm
+cp .env.example .env
+# Edit .env and set MODEL_DIR + MODEL_FILE
+docker compose --env-file .env -f docker-compose.qwen3-next-80b.yml up -d
+```
+
+Use it from scripts via `LocalLLMClient`:
+
+```python
+from utils.llm_clients.local_llm import LocalLLMClient
+
+client = LocalLLMClient(
+  model_name="qwen3-next-80b-instruct-q8_0",
+  base_url="http://localhost:8000/v1",
+  api_key="local-dev-key",
+)
+
+response = client.generate_response(
+  user_prompt="Give me three key takeaways from this economics abstract.",
+  response_mime_type="text/plain"
+)
+print(response)
+```
+
+For full setup and remote access details, see `docs/local_llm_qwen3_next_80b_docker.md`.
+
 ## Project Structure
 
 ```
@@ -467,4 +534,97 @@ results = store.query(query_emb, n_results=5, where_filter={"content_type": "man
 
 ### [Phase 3] Hybrid Retrieval & Generation
 
-(To be implemented)
+#### Retrieval Pipeline (`utils/s3_RAG/`) ✅
+
+The retrieval pipeline combines sparse and dense search with cross-encoder reranking:
+
+```
+Query
+  ├──→ BM25 Sparse (top 50)  ──┐
+  │     exact variable names,   │
+  │     algorithm names         ├──→ RRF Fusion ──→ Cross-Encoder Reranker (top 10)
+  └──→ Dense Vector (top 50) ──┘     (merge +       (BGE-Reranker-v2-m3)
+        semantic intent               deduplicate)
+```
+
+| Component | Model / Library | Purpose |
+|-----------|----------------|---------|
+| **Sparse Retrieval** | BM25 (`rank-bm25`) | Lexical matching for exact Fortran identifiers like `REAL*8`, `NGRIDA`, subroutine names |
+| **Dense Retrieval** | ChromaDB + `BAAI/bge-large-en-v1.5` | Semantic similarity for concept-level queries |
+| **Fusion** | Reciprocal Rank Fusion (RRF) | Merges + deduplicates results from both retrievers |
+| **Reranker** | `BAAI/bge-reranker-v2-m3` | Cross-encoder that rigorously scores each passage against the query |
+
+##### Retrieval Strategy
+
+**1. Reciprocal Rank Fusion (RRF)**
+
+BM25 and dense retrieval produce scores on different scales (BM25 is unbounded, cosine similarity is 0–1), so raw scores can't be compared directly. RRF solves this by discarding scores entirely and using only **rank positions**:
+
+```
+RRF(doc) = Σ  1 / (k + rank_i)     where k = 60
+```
+
+- Documents found by **both** retrievers receive additive RRF contributions, boosting them above single-source results
+- The constant `k = 60` (from [Cormack et al., 2009](https://plg.uwaterloo.ca/~gvcormac/cormacksigir09-rrf.pdf)) smooths out rank differences so neither retriever dominates
+- Deduplication is built-in: each document appears once, keeping the first occurrence's metadata
+
+**2. Cross-Encoder Reranking**
+
+The top 50 RRF-fused results are refined by `BAAI/bge-reranker-v2-m3`, a cross-encoder that scores (query, passage) pairs jointly — unlike bi-encoders like BGE which embed query and passage independently. This makes it significantly more accurate at judging relevance, but too slow to run on the whole corpus (hence applied only to the fused top-50). The final top 10 results are returned sorted by `rerank_score`.
+
+##### File Structure
+
+```
+utils/s3_RAG/
+├── __init__.py            # Package init
+├── bm25_retriever.py      # BM25Okapi sparse retrieval with Fortran-aware tokenization
+├── dense_retriever.py     # ChromaDB + BGE dense vector retrieval
+├── reranker.py            # BGE-Reranker-v2-m3 cross-encoder
+├── hybrid_rag.py          # Full pipeline: BM25 + Dense + RRF + Reranker
+└── run_rag.py             # Interactive CLI query interface
+```
+
+##### Usage
+
+```bash
+# Interactive query mode (GPU #2)
+CUDA_VISIBLE_DEVICES=2 python -m utils.s3_RAG.run_rag \
+  --vector-store "data/Accounting for Wealth Concentration in the United States/vector_store" \
+  --device cuda:0
+
+# With content type filter
+CUDA_VISIBLE_DEVICES=2 python -m utils.s3_RAG.run_rag \
+  --vector-store "data/.../vector_store" \
+  --device cuda:0 \
+  --filter code       # or 'manuscript' or 'all'
+```
+
+In the interactive prompt, you can also switch filters on the fly:
+
+```
+>>> filter:code
+Filter: code
+>>> REAL*8 dimension asset grid
+  [1] rerank=0.9256 | type=code | ...
+>>> filter:all
+Filter: all (no filter)
+```
+
+##### Programmatic Usage
+
+```python
+from utils.s3_RAG.hybrid_rag import HybridRAG
+
+rag = HybridRAG(
+    vector_store_dir="data/.../vector_store",
+    device="cuda:0",
+)
+
+results = rag.query("What drives wealth concentration?", final_top_k=5)
+for r in results:
+    print(r["rerank_score"], r["metadata"]["content_type"], r["text"][:100])
+```
+
+#### Generation 🔲 (To Be Implemented)
+
+The generation component — using Multimodal LLMs to produce context-aware answers from retrieved passages — is planned for future development.

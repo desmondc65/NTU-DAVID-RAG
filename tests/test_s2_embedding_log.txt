@@ -1,0 +1,52 @@
+============================================================
+Phase 2: Embedding Pipeline Tests
+Time: 2026-03-09 19:51:44
+============================================================
+
+=== Test: Manuscript Chunking ===
+  Chunks produced: 63
+  Non-text types filtered out: {'header', 'table', 'footer', 'image', 'equation', 'page_number', 'page_footnote', 'list'}
+  Avg chunk length: 1430 chars
+  ✓ PASSED
+
+=== Test: Fortran Code Chunking ===
+  Chunks produced: 89
+  First chunk file: 00_Global_Context.f90
+  First chunk lines: 1-150
+  Unique files chunked: 6
+  ✓ PASSED
+
+=== Test: Embedding Model ===
+  Model: BAAI/bge-large-en-v1.5
+  BGE model: True
+  Embedding dim: 1024
+  Query embedding dim: 1024
+  Embedding norm: 1.000000 (expected ~1.0)
+  ✓ PASSED
+
+=== Test: Vector Store ===
+  Documents in store: 152
+  Query returned: 3 results
+  Filtered (code) query: 3 results
+  Filtered (manuscript) query: 3 results
+  ✓ PASSED
+
+=== Test: End-to-End Embed + Query ===
+  Top score: 0.7947
+  Top doc preview: A. Distributions of Earnings, Income, and Net Worth
+
+Figure 3 depicts the distributions of earnings,...
+  Code query results: 3
+  ✓ PASSED
+
+============================================================
+Test Results Summary
+============================================================
+  Manuscript Chunking: ✓ PASSED
+  Fortran Chunking: ✓ PASSED
+  Embedding Model: ✓ PASSED
+  Vector Store: ✓ PASSED
+  End-to-End Embed+Query: ✓ PASSED
+
+  Total: 5/5 tests passed
+============================================================

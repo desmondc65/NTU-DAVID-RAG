@@ -1,0 +1,47 @@
+# Phase 2: Embedding Pipeline Workflow
+
+```mermaid
+flowchart TD
+    subgraph Input["📄 Input JSON Files"]
+        MS["Manuscript_content_list.json\n(type: text, table, header, ...)"]
+        FT["fortran_chunks.json\n(summary → file path mapping)"]
+    end
+
+    subgraph Chunking["✂️ Chunking (chunker.py)"]
+        direction TB
+        MS --> MSF["Filter type == 'text' only\n(drop headers, footers,\npage numbers, tables)"]
+        MSF --> MSM["Merge consecutive paragraphs\nmax_tokens=384\noverlap_tokens=64"]
+        MSM --> MSC["Manuscript Chunks\nmetadata: page_idx, chunk_idx,\ncontent_type='manuscript'"]
+
+        FT --> FTR["Read each .f90 file\nreferenced in JSON"]
+        FTR --> FTS["Split by lines\nlines_per_chunk=150\noverlap_lines=30"]
+        FTS --> FTP["Prepend summary\n+ file name to each chunk"]
+        FTP --> FTC["Code Chunks\nmetadata: file_name, summary,\nline_start, line_end,\ncontent_type='code'"]
+    end
+
+    subgraph Embedding["🧠 Embedding (embedder.py)"]
+        MSC --> EMB["BAAI/bge-large-en-v1.5\n1024-dim, normalized\nbatch_size=32"]
+        FTC --> EMB
+        EMB --> VEC["Embedding Vectors\nList[List[float]]"]
+    end
+
+    subgraph Storage["💾 Storage (vector_store.py)"]
+        VEC --> CHR["ChromaDB PersistentClient\ncollection: rag_embeddings\nmetric: cosine"]
+        MSC --> CHR
+        FTC --> CHR
+        CHR --> DB[("vector_store/\nchroma.sqlite3\n+ HNSW index")]
+    end
+
+    subgraph Query["🔍 Query"]
+        Q["User Query"] --> QE["embed_query()\nwith BGE prefix"]
+        QE --> QR["collection.query()\nn_results, where_filter"]
+        DB --> QR
+        QR --> RES["Ranked Results\n+ metadata"]
+    end
+
+    style Input fill:#1a1a2e,stroke:#e94560,color:#fff
+    style Chunking fill:#16213e,stroke:#0f3460,color:#fff
+    style Embedding fill:#0f3460,stroke:#533483,color:#fff
+    style Storage fill:#533483,stroke:#e94560,color:#fff
+    style Query fill:#1a1a2e,stroke:#e94560,color:#fff
+```

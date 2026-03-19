@@ -1,0 +1,60 @@
+services:
+  qwen3-next-80b-q8-server:
+    image: ghcr.io/ggml-org/llama.cpp:server-cuda
+    container_name: qwen3-next-80b-q8-server
+    restart: unless-stopped
+    gpus: all
+
+    # Expose OpenAI-compatible API to host and other machines.
+    ports:
+      - "${SERVICE_PORT:-8000}:8000"
+
+    environment:
+      NVIDIA_VISIBLE_DEVICES: "0,1"
+      NVIDIA_DRIVER_CAPABILITIES: "compute,utility"
+      LLAMA_API_KEY: "${LOCAL_LLM_API_KEY:-local-dev-key}"
+
+    volumes:
+      - "${MODEL_DIR}:/models:ro"
+
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["0", "1"]
+              capabilities: [gpu]
+
+    command:
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+      - --model
+      - /models/${MODEL_FILE}
+      - --alias
+      - ${MODEL_ALIAS:-qwen3-next-80b-instruct-q8_0}
+      - --n-gpu-layers
+      - "999"
+      - --tensor-split
+      - ${TENSOR_SPLIT:-1,1}
+      - --ctx-size
+      - ${CTX_SIZE:-8192}
+      - --batch-size
+      - ${BATCH_SIZE:-1024}
+      - --ubatch-size
+      - ${UBATCH_SIZE:-512}
+      - --threads
+      - ${THREADS:-16}
+      - --parallel
+      - ${PARALLEL:-4}
+      - --flash-attn
+      - ${FLASH_ATTN:-auto}
+      - --jinja
+
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
