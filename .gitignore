@@ -7,3 +7,5 @@ __pycache__/
 .vscode/
 
 personal/
+*.bin
+*.sqlite3
