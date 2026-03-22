@@ -1,0 +1,105 @@
+services:
+  qwen3-next-80b-q8-server:
+    image: ghcr.io/ggml-org/llama.cpp:server-cuda
+    container_name: qwen3-next-80b-q8-server
+    restart: unless-stopped
+    privileged: true
+    gpus: all
+
+    # Expose OpenAI-compatible API to host and other machines.
+    ports:
+      - "${SERVICE_PORT:-8000}:8000"
+
+    environment:
+      NVIDIA_VISIBLE_DEVICES: "0,1"
+      CUDA_VISIBLE_DEVICES: "0,1"
+      NVIDIA_DRIVER_CAPABILITIES: "compute,utility"
+      LLAMA_API_KEY: "${LOCAL_LLM_API_KEY:-local-dev-key}"
+      MODEL_FILE: "${MODEL_FILE}"
+      # Optional: set this to a vision projector file to enable image input.
+      MM_PROJ_FILE: "${MM_PROJ_FILE:-}"
+
+    volumes:
+      - "${MODEL_DIR}:/models:ro"
+      - "/home3/davidlcs/Econ-Rag/NTU-DAVID-RAG/docker/local_llm:/logs"
+
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["0", "1"]
+              capabilities: [gpu]
+
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        if ! command -v nvidia-smi >/dev/null 2>&1; then
+          echo "nvidia-smi not found in container. GPU runtime is not available." >&2
+          exit 3
+        fi
+
+        if ! nvidia-smi -L >/dev/null 2>&1; then
+          echo "No NVIDIA GPU detected inside container. Check NVIDIA Container Toolkit / docker GPU runtime." >&2
+          exit 3
+        fi
+
+        GPU_COUNT=$(nvidia-smi -L | wc -l)
+        if [ "$${GPU_COUNT}" -lt 2 ]; then
+          echo "Expected at least 2 GPUs (0 and 1), but detected $${GPU_COUNT}." >&2
+          exit 3
+        fi
+
+        if [ -z "$${MODEL_FILE}" ]; then
+          echo "MODEL_FILE is empty. Set MODEL_FILE in docker/local_llm/.env (e.g. Qwen3-Next-80B-Instruct-Q8_0.gguf)." >&2
+          exit 2
+        fi
+
+        if [ ! -f "/models/$${MODEL_FILE}" ]; then
+          echo "Model file not found: /models/$${MODEL_FILE}" >&2
+          echo "Check MODEL_DIR and MODEL_FILE in docker/local_llm/.env." >&2
+          exit 2
+        fi
+
+        ARGS=" \
+        --host 0.0.0.0 \
+        --port 8000 \
+        --model /models/$${MODEL_FILE} \
+        --alias $${MODEL_ALIAS:-qwen3-next-80b-instruct-q8_0} \
+        --n-gpu-layers 999 \
+        --tensor-split $${TENSOR_SPLIT:-1,1} \
+        --ctx-size $${CTX_SIZE:-262144} \
+        --batch-size $${BATCH_SIZE:-1024} \
+        --ubatch-size $${UBATCH_SIZE:-512} \
+        --threads $${THREADS:-16} \
+        --parallel $${PARALLEL:-1} \
+        --flash-attn $${FLASH_ATTN:-auto} \
+        --jinja"
+            
+        if [ -n "$${MM_PROJ_FILE}" ]; then
+          ARGS="$$ARGS --mmproj /models/$${MM_PROJ_FILE}"
+        fi
+
+        # Different llama.cpp image tags expose the server binary under
+        # different names/paths. Pick the first available option.
+        if command -v llama-server >/dev/null 2>&1; then
+          SERVER_BIN="llama-server"
+        elif [ -x /app/llama-server ]; then
+          SERVER_BIN="/app/llama-server"
+        elif command -v llama-cli >/dev/null 2>&1; then
+          SERVER_BIN="llama-cli"
+        else
+          echo "No llama.cpp server binary found (tried: llama-server, /app/llama-server, llama-cli)" >&2
+          exit 127
+        fi
+
+        # Mirror server output to a persistent host log file.
+        # Keeps logs available in both `docker logs` and /logs/log.txt.
+        $$SERVER_BIN $$ARGS 2>&1 | tee -a /logs/log.txt
+
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s

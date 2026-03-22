@@ -1,0 +1,26 @@
+{
+    "Global variable declarations, parameter settings, array allocations, transition matrices, and initializations for the general equilibrium wealth accounting model.": {
+        "path": "/home3/davidlcs/Econ-Rag/NTU-DAVID-RAG/data/Accounting for Wealth Concentration in the United States/RAG_Chunks/00_Global_Context.f90",
+        "name": "00_Global_Context.f90"
+    },
+    "Main driver program that manages the general equilibrium iteration loop, updating aggregate variables like capital and checking government budget convergence.": {
+        "path": "/home3/davidlcs/Econ-Rag/NTU-DAVID-RAG/data/Accounting for Wealth Concentration in the United States/RAG_Chunks/01_Main_Driver.f90",
+        "name": "01_Main_Driver.f90"
+    },
+    "Value function and policy solvers containing subroutines for optimizing agent asset and labor choices across the state space grids.": {
+        "path": "/home3/davidlcs/Econ-Rag/NTU-DAVID-RAG/data/Accounting for Wealth Concentration in the United States/RAG_Chunks/02_Policy_Solvers.f90",
+        "name": "02_Policy_Solvers.f90"
+    },
+    "Policy iterator subroutine that systematically loops through all age, asset, return, and productivity states to compute optimal choices.": {
+        "path": "/home3/davidlcs/Econ-Rag/NTU-DAVID-RAG/data/Accounting for Wealth Concentration in the United States/RAG_Chunks/03_Policy_Iterator.f90",
+        "name": "03_Policy_Iterator.f90"
+    },
+    "Agent distribution calculators determining population probabilities across different states to find the invariant wealth distribution.": {
+        "path": "/home3/davidlcs/Econ-Rag/NTU-DAVID-RAG/data/Accounting for Wealth Concentration in the United States/RAG_Chunks/04_Distribution_Calc.f90",
+        "name": "04_Distribution_Calc.f90"
+    },
+    "Statistical analysis module for calculating age profiles, wealth/income Gini coefficients, wealth distributions, and various macroeconomic aggregations.": {
+        "path": "/home3/davidlcs/Econ-Rag/NTU-DAVID-RAG/data/Accounting for Wealth Concentration in the United States/RAG_Chunks/05_Analysis_Stats.f90",
+        "name": "05_Analysis_Stats.f90"
+    }
+}

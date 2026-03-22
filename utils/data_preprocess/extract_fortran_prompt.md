@@ -1,0 +1,3 @@
+/home3/davidlcs/Econ-Rag/NTU-DAVID-RAG/data/Accounting for Wealth Concentration in the United States/source/codes_fortran/benchmark_no_top_corr.f90
+
+this fortran code is too long, please process it and add index of sumary so that is can be put into a database for RAG usage later, put the process items in /home3/davidlcs/Econ-Rag/NTU-DAVID-RAG/data/Accounting for Wealth Concentration in the United States/processed_fortran/processed_fortran.json
