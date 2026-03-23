@@ -632,7 +632,7 @@
     },
     {
         "type": "discarded",
-        "text": "5 ",
+        "text": "",
         "bbox": [
             837,
             75,
@@ -658,7 +658,8 @@
             848,
             194
         ],
-        "page_idx": 5
+        "page_idx": 5,
+        "description": "1. Subject: Cross-Sectional Distributions of Income, Earnings, and Net Worth\n2. Data Metrics: Cumulative concentration shares for top percentile groups, Gini coefficients\n3. Key Findings: Net worth is more concentrated among top percentiles compared to income and earnings, with the top 1% holding 35% of net worth and the Gini coefficient indicating higher inequality in net worth (0.84) than in income (0.66) or earnings (0.64).\n4. Keywords: income distribution, earnings, net worth, Gini coefficient, concentration shares, economic inequality, SCF, top percentile"
     },
     {
         "type": "text",
@@ -787,7 +788,8 @@
             848,
             182
         ],
-        "page_idx": 6
+        "page_idx": 6,
+        "description": "1. Subject: Distribution of Net Worth by Income and Earnings Percentiles\n2. Data Metrics: Cumulative shares of net worth, top income percentiles, top earnings percentiles\n3. Key Findings: Higher income and earnings percentiles hold disproportionately larger shares of net worth, with the top 0.1% of income earners holding 8% of net worth and the top 0.1% of earnings holding 4%.\n4. Keywords: net worth, income distribution, earnings distribution, wealth inequality, SCF, cumulative shares"
     },
     {
         "type": "text",
@@ -938,8 +940,7 @@
             327
         ],
         "page_idx": 7,
-        "transcription": "[Mocked Transcription: Image description would go here]",
-        "description": "The image consists of two bar charts, each depicting the wage share and labor share across different percentiles of income and wealth. The charts are labeled as follows:\n\n### Left Chart: Wage and Labor Share by Income Percentiles\n- **Title**: Wage and Labor Share by Income Percentiles\n- **X-axis**: Percentiles of income, ranging from \"99-100\" to \"90-95\" and an \"All\" category.\n- **Y-axis**: Percentage values ranging from 0 to 100.\n- **Legend**: \n  - Grey bars represent the \"Wage share.\"\n  - Red bars represent the \"Labor share.\"\n- **Data Trends**:\n  - For the \"99-100\" income percentile, the wage share is approximately 50%, while the labor share is around 55%.\n  - As the income percentile decreases, the wage share generally increases, reaching about 75% for the \"90-95\" percentile.\n  - The labor share also increases but remains slightly higher than the wage share until the \"90-95\" percentile, where it becomes slightly lower.\n  - The \"All\" category shows a wage share of about 75% and a labor share of around 78%.\n\n### Right Chart: Wage and Labor Share by Wealth Percentiles\n- **Title**: Wage and Labor Share by Wealth Percentiles\n- **X-axis**: Percentiles of wealth, ranging from \"99-100\" to \"90-95\" and an \"All\" category.\n- **Y-axis**: Percentage values ranging from 0 to 100.\n- **Legend**: \n  - Grey bars represent the \"Wage share.\"\n  - Red bars represent the \"Labor share.\"\n- **Data Trends**:\n  - For the \"99-100\" wealth percentile, the wage share is approximately 45%, while the labor share is around 50%.\n  - As the wealth percentile decreases, the wage share increases, reaching about 75% for the \"90-95\" percentile.\n  - The labor share also increases but remains slightly higher than the wage share until the \"90-95\" percentile, where it becomes slightly lower.\n  - The \"All\" category shows a wage share of about 75% and a labor share of around 78%.\n\n### General Observations:\n- Both charts show a similar trend where the wage share and labor share increase as the income or wealth percentile decreases.\n- The labor share is consistently higher than the wage share for the top percentiles but becomes slightly lower for the \"90-95\" percentile and the \"All\" category.\n- Error bars are present on each bar, indicating the variability or uncertainty in the data points."
+        "description": "1. Type & Subject: Bar chart showing wage and labor shares of total income by income and wealth percentiles.\n2. Labels & Legends: \n   - Left chart: Percentiles of income (x-axis), Wage share, Labor share (legend)\n   - Right chart: Percentiles of wealth (x-axis), Wage share, Labor share (legend)\n3. Key Findings: Wage and labor shares increase as income and wealth percentiles rise, with labor share consistently higher than wage share across all percentiles.\n4. Keywords: wage share, labor share, income percentiles, wealth percentiles, capital gains, total income, imputed wage income, business owners, economic distribution"
     },
     {
         "type": "text",
@@ -1101,8 +1102,7 @@
             290
         ],
         "page_idx": 8,
-        "transcription": "[Mocked Transcription: Image description would go here]",
-        "description": "This image contains two bar charts comparing the labor share and wage share across different percentiles of income and net worth. Both charts use red bars to represent the labor share and gray bars to represent the wage share. The data is presented for four distinct percentile ranges: 99.9–100, 99.5–99.9, 99–99.5, and 0–90.\n\n### Left Chart: Percentiles of Income\n- **99.9–100 percentile:**\n  - Labor share: 11.2%\n  - Wage share: 10.2%\n- **99.5–99.9 percentile:**\n  - Labor share: 7.5%\n  - Wage share: 7.2%\n- **99–99.5 percentile:**\n  - Labor share: 4.9%\n  - Wage share: 4.9%\n- **0–90 percentile:**\n  - Labor share: 2.5%\n  - Wage share: 2.8%\n\n### Right Chart: Percentiles of Net Worth\n- **99.9–100 percentile:**\n  - Labor share: 5.9%\n  - Wage share: 5.1%\n- **99.5–99.9 percentile:**\n  - Labor share: 5.7%\n  - Wage share: 5.1%\n- **99–99.5 percentile:**\n  - Labor share: 5.5%\n  - Wage share: 5.1%\n- **0–90 percentile:**\n  - Labor share: 3.5%\n  - Wage share: 4%\n\n### Observations:\n- In both charts, the labor share is consistently higher than the wage share across all percentile ranges.\n- The differences between the labor share and wage share are more pronounced in the higher income and net worth percentiles (99.9–100 and 99.5–99.9) compared to the lower percentiles.\n- The 0–90 percentile range shows the smallest difference between the labor share and wage share in both charts.\n\n### Keywords and Labels:\n- Labor share\n- Wage share\n- Percentiles of income\n- Percentiles of net worth\n- 99.9–100\n- 99.5–99.9\n- 99–99.5\n- 0–90\n- Bar chart\n- Income distribution\n- Net worth distribution"
+        "description": "1. Type & Subject: Bar chart showing synthetic rate of return on assets by household income and net worth\n2. Labels & Legends: Percentiles of income, Percentiles of net worth, Labor share, Wage share\n3. Key Findings: Higher income and net worth percentiles show higher synthetic rates of return, with labor share generally exceeding wage share across all percentiles.\n4. Keywords: synthetic rate of return, household income, net worth, labor share, wage share, SCF 2001-2019, economic inequality, asset returns"
     },
     {
         "type": "text",
@@ -1137,7 +1137,8 @@
             666,
             592
         ],
-        "page_idx": 8
+        "page_idx": 8,
+        "description": "1. Concept: Labor Income Share Model\n2. Intuition: This equation calculates the labor income share of a group relative to a base group, considering the group's earnings, assets, and the return on assets.\n3. Variables: $\\lambda_i$ is the labor income share of group $i$, $e_i$ is the average earnings of group $i$, $k_i$ is the average assets of group $i$, $r_i$ is the return on assets for group $i$, $\\lambda_0$ is the labor income share of the base group, $k_{i/0}$ is the asset ratio of group $i$ relative to the base group, $e_{i/0}$ is the earnings ratio of group $i$ relative to the base group, $r_0$ is the return on assets for the base group.\n4. Keywords: labor income share, earnings, assets, return on assets, relative wealth, relative earnings, base group, top income groups"
     },
     {
         "type": "text",
@@ -1161,7 +1162,8 @@
             594,
             799
         ],
-        "page_idx": 8
+        "page_idx": 8,
+        "description": "1. Concept: Relative Rate of Return Estimation\n2. Intuition: This equation calculates the relative rate of return for different income groups, adjusting for differences in earnings, wealth, and labor income shares.\n3. Variables: $r_i$ is the rate of return for group i, $r_0$ is the rate of return for the base group, $e_{i/0}$ is the relative earnings of group i compared to the base group, $k_{i/0}$ is the relative wealth of group i compared to the base group, $\\lambda_i$ is the labor income share of group i, and $\\lambda_0$ is the labor income share of the base group.\n4. Keywords: relative rate of return, earnings, wealth, labor income share, income groups, wealth-to-earnings ratio"
     },
     {
         "type": "text",
@@ -1185,7 +1187,8 @@
             676,
             909
         ],
-        "page_idx": 8
+        "page_idx": 8,
+        "description": "1. Concept: Labor Share Decomposition Model\n2. Intuition: This equation calculates the labor share of income for individual i relative to a baseline, decomposing it into the effects of relative earnings, wealth, and the ratio of individual to baseline return on capital.\n3. Variables: $\\lambda_i$ is the labor share for individual i, $e_i$ and $e_0$ are the earnings of individual i and the baseline, $k_i$ and $k_0$ are the capital holdings of individual i and the baseline, $r_i$ and $r_0$ are the returns on capital for individual i and the baseline, $\\lambda_0$ is the baseline labor share.\n4. Keywords: labor share, earnings, capital, return on capital, relative income, wealth distribution"
     },
     {
         "type": "discarded",
@@ -1487,7 +1490,8 @@
             827,
             692
         ],
-        "page_idx": 10
+        "page_idx": 10,
+        "description": "1. Concept: Dynamic Programming in Life-Cycle Model\n2. Intuition: This equation represents the maximization of an agent's lifetime utility, balancing consumption, leisure, and future bequests, considering uncertainty in labor endowment and returns.\n3. Variables: \n   - $V(j,k,z,\\kappa)$: Value function at period $j$ with capital $k$, labor endowment $z$, and return rate $\\kappa$.\n   - $c$: Consumption.\n   - $k'$: Capital in the next period.\n   - $h$: Labor supply.\n   - $\\sigma_c$, $\\sigma_l$: Elasticities of substitution for consumption and leisure.\n   - $\\theta$: Disutility of labor.\n   - $\\beta$: Discount factor.\n   - $s(j)$: Survival probability at period $j$.\n   - $\\phi(k')$: Bequest function.\n   - $\\Phi'$: Additional capital from bequests.\n   - $z'$, $\\kappa'$: Future labor endowment and return rate.\n4. Keywords: dynamic programming, life-cycle model, utility maximization, consumption, leisure, bequests, discount factor, labor supply, capital accumulation"
     },
     {
         "type": "text",
@@ -1511,7 +1515,8 @@
             685,
             756
         ],
-        "page_idx": 10
+        "page_idx": 10,
+        "description": "1. Concept: Intertemporal Consumption and Investment Model\n2. Intuition: This equation represents the budget constraint of a household, balancing consumption, savings, and taxes with income from labor and capital.\n3. Variables: \n   - $c$: Consumption\n   - $\\tau_s$: Savings tax rate\n   - $k'$: Capital in the next period\n   - $y^d$: Disposable income\n   - $z$: Productivity\n   - $w$: Wage rate\n   - $\\varepsilon_j$: Job-specific productivity shock\n   - $h$: Hours worked\n   - $r$: Rental rate of capital\n   - $\\kappa$: Capital depreciation rate\n   - $k$: Capital in the current period\n   - $Tr$: Transfer payments\n4. Keywords: budget constraint, consumption, savings, disposable income, labor income, capital income, taxes, transfer payments"
     },
     {
         "type": "text",
@@ -1623,7 +1628,8 @@
             799,
             250
         ],
-        "page_idx": 11
+        "page_idx": 11,
+        "description": "1. Concept: Bellman Equation for Retiree Consumption\n2. Intuition: This equation represents the optimal consumption and savings decision for a retiree, balancing current utility with future expected utility, considering survival probability and bequest motives.\n3. Variables: \n   - \\( V(j,k,z,\\kappa) \\): Value function representing the retiree's utility.\n   - \\( c \\): Consumption level.\n   - \\( k \\): Capital stock.\n   - \\( k' \\): Next period's capital stock.\n   - \\( \\sigma_c \\): Coefficient of relative risk aversion.\n   - \\( \\beta \\): Discount factor.\n   - \\( s(j) \\): Probability of survival to the next period.\n   - \\( \\phi(k') \\): Bequest function.\n   - \\( \\Phi' \\): Adjustment to capital stock.\n   - \\( \\kappa \\): State variable.\n   - \\( z \\): Exogenous shock.\n4. Keywords: Bellman equation, retiree, consumption, savings, utility, bequest, survival probability, capital stock, discount factor, risk aversion"
     },
     {
         "type": "text",
@@ -1647,7 +1653,8 @@
             679,
             321
         ],
-        "page_idx": 11
+        "page_idx": 11,
+        "description": "1. Concept: Stationary Equilibrium Model\n2. Intuition: This equation represents the budget constraint in a stationary equilibrium where consumption, savings, and taxes are balanced with production and capital accumulation.\n3. Variables: \\( \\tau_s \\) - savings tax rate, \\( c \\) - consumption, \\( k' \\) - capital in the next period, \\( y^d \\) - domestic production function, \\( b(z) \\) - technology or productivity level, \\( r \\) - interest rate, \\( \\kappa \\) - capital adjustment factor, \\( k \\) - current capital, \\( T \\) - lump-sum tax, \\( r \\) - interest rate.\n4. Keywords: stationary equilibrium, budget constraint, consumption, capital accumulation, production function, savings tax, technology, interest rate, lump-sum tax"
     },
     {
         "type": "text",
@@ -1683,7 +1690,8 @@
             691,
             514
         ],
-        "page_idx": 11
+        "page_idx": 11,
+        "description": "1. Concept: Aggregate Capital and Labor Supply\n2. Intuition: This equation represents the total capital stock and labor supply in an economy, integrating individual contributions across all states.\n3. Variables: $K$ is total capital, $k(s)$ is individual capital, $\\Gamma(s)$ is the distribution of agents, $N$ is total labor, $z$ is productivity, $\\varepsilon_j$ is a sector-specific factor, $h(s)$ is individual labor supply, $\\Gamma_{j<J_r}(s)$ is the distribution of agents in sectors less than $J_r$.\n4. Keywords: aggregate capital, labor supply, individual contributions, state distribution, productivity, sector-specific factors"
     },
     {
         "type": "text",
@@ -1707,7 +1715,8 @@
             768,
             706
         ],
-        "page_idx": 11
+        "page_idx": 11,
+        "description": "1. Concept: Government Budget Constraint in a Heterogeneous Agent Model\n2. Intuition: This equation represents the government's budget balance condition, ensuring that government spending equals revenue from taxes and other sources in an economy with heterogeneous agents.\n3. Variables: G = government spending; b(z) = bond holdings; dΓ(s) = distribution of states; τ_s = consumption tax rate; c(s) = consumption; y = income; y^d = disposable income; zwε_jh = productivity and labor; rκk = capital return and capital; τ_b(k') = capital tax rate; s(j) = saving rate.\n4. Keywords: government budget, heterogeneous agents, consumption tax, capital tax, disposable income, bond holdings, state distribution"
     },
     {
         "type": "text",
@@ -1869,7 +1878,7 @@
     },
     {
         "type": "text",
-        "text": "The stochastic component of labor productivity takes eight values. Six of these are ordinary states, and the other two are extraordinary states that generate exceptionally high earnings levels. The ordinary levels $z _ { 1 }$ to $z _ { 6 }$ consist of combinations of two components: a permanent component, $f \\in \\ \\{ f _ { H } , f _ { L } \\}$ , that is fixed over a household’s career, and a transitory component, $a ~ \\in ~ \\{ a _ { L } , a _ { M } , a _ { H } \\}$ . Individuals randomly draw their value of $f$ in the first period of their lives. Idiosyncratic fluctuations in labor income are captured by a three-by-three matrix $A \\ = \\ [ A _ { i j } ]$ with $i , j \\in \\{ L , M , H \\}$ and $\\begin{array} { r } { \\sum _ { j } A _ { i j } = \\bar { 1 } - \\lambda _ { i n } , } \\end{array}$ as well as by $\\lambda _ { i n }$ , which represents the probability of entering an extraordinary state of productivity. The stochastic labor productivity process is summarized by the matrix in Table  3. The following additional assumptions are explicit in the formulation of the matrix. The probability of reaching an extraordinary status, $\\lambda _ { i n } .$ , is independent of one’s current productivity state and age. Likewise, if a household loses its extraordinary status, then it is equally likely to transition to any one of the ordinary states. ",
+        "text": "The stochastic component of labor productivity takes eight values. Six of these are ordinary states, and the other two are extraordinary states that generate exceptionally high earnings levels. The ordinary levels $z _ { 1 }$ to $z _ { 6 }$ consist of combinations of two components: a permanent component, $f \\in \\{ f _ { H } , f _ { L } \\}$ , that is fixed over a household’s career, and a transitory component, $a ~ \\in ~ \\{ a _ { L } , a _ { M } , a _ { H } \\}$ . Individuals randomly draw their value of $f$ in the first period of their lives. Idiosyncratic fluctuations in labor income are captured by a three-by-three matrix $A \\ = \\ [ A _ { i j } ]$ with $i , j \\in \\{ L , M , H \\}$ and $\\begin{array} { r } { \\sum _ { j } A _ { i j } = \\bar { 1 } - \\lambda _ { i n } , } \\end{array}$ as well as by $\\lambda _ { i n }$ , which represents the probability of entering an extraordinary state of productivity. The stochastic labor productivity process is summarized by the matrix in Table  3. The following additional assumptions are explicit in the formulation of the matrix. The probability of reaching an extraordinary status, $\\lambda _ { i n } .$ , is independent of one’s current productivity state and age. Likewise, if a household loses its extraordinary status, then it is equally likely to transition to any one of the ordinary states. ",
         "bbox": [
             151,
             736,
@@ -1942,14 +1951,15 @@
         "table_footnote": [
             "Notes: The transition probabilities from the state in column 1 to the states in columns 2 to 9. The last row shows the initial distribution of young workers across the productivity states at the time of labor market entry. "
         ],
-        "table_body": "<table><tr><td></td><td>z1 + </td><td>Z2 + </td><td>Z3 + </td><td>Z4 + </td><td>z5 + </td><td>Z6 +</td><td>Z7</td><td>Z8</td></tr><tr><td>f + </td><td>A11</td><td>A12</td><td>A13</td><td>0</td><td>0</td><td>0</td><td>λin</td><td>0</td></tr><tr><td>fL + a</td><td>A21</td><td>A22</td><td>A23</td><td>0</td><td>0</td><td>0</td><td>λin</td><td>0</td></tr><tr><td> + </td><td>A31</td><td>A32</td><td>A33</td><td>0</td><td>0</td><td>0</td><td>λin</td><td>0</td></tr><tr><td>f + </td><td>0</td><td>0</td><td>0</td><td>A11</td><td>A12</td><td>A13</td><td>Ain</td><td>0</td></tr><tr><td>f + </td><td>0</td><td>0</td><td>0</td><td>A21</td><td>A22</td><td>A23</td><td>λin</td><td>0</td></tr><tr><td> +</td><td>0</td><td>0</td><td>0</td><td>A31</td><td>A32</td><td>A33</td><td>λin</td><td>0</td></tr><tr><td>Z7</td><td>λout</td><td>λout</td><td>λout</td><td>λout</td><td>λout</td><td>λout</td><td>λll</td><td>λlh</td></tr><tr><td>Z8</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>λhl</td><td>λhh</td></tr><tr><td>Initial dist.</td><td>ζ/4</td><td>(1 − ζ)/2</td><td>S/4</td><td>5/4</td><td>(1 - ζ)/2</td><td>ζ/4</td><td>0</td><td>0</td></tr></table>",
+        "table_body": "<table><tr><td></td><td>z1 +</td><td>Z2 + </td><td>Z3 + </td><td>Z4 + </td><td>z5 + </td><td>Z6 +</td><td>Z7</td><td>Z8</td></tr><tr><td>f + </td><td>A11</td><td>A12</td><td>A13</td><td>0</td><td>0</td><td>0</td><td>λin</td><td>0</td></tr><tr><td>fL + a</td><td>A21</td><td>A22</td><td>A23</td><td>0</td><td>0</td><td>0</td><td>λin</td><td>0</td></tr><tr><td> + </td><td>A31</td><td>A32</td><td>A33</td><td>0</td><td>0</td><td>0</td><td>λin</td><td>0</td></tr><tr><td>f + </td><td>0</td><td>0</td><td>0</td><td>A11</td><td>A12</td><td>A13</td><td>λin</td><td>0</td></tr><tr><td>f + </td><td>0</td><td>0</td><td>0</td><td>A21</td><td>A22</td><td>A23</td><td>λin</td><td>0</td></tr><tr><td> +</td><td>0</td><td>0</td><td>0</td><td>A31</td><td>A32</td><td>A33</td><td>λin</td><td>0</td></tr><tr><td>Z7</td><td>λout</td><td>λout</td><td>λout</td><td>λout</td><td>λout</td><td>λout</td><td>λll</td><td>λlh</td></tr><tr><td>Z8</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>λhl</td><td>λhh</td></tr><tr><td>Initial dist.</td><td>ζ/4</td><td>(1 − ζ)/2</td><td>S/4</td><td>ζ/4</td><td>(1 - ζ)/2</td><td>ζ/4</td><td>0</td><td>0</td></tr></table>",
         "bbox": [
             174,
             123,
             818,
             284
         ],
-        "page_idx": 13
+        "page_idx": 13,
+        "description": "1. Subject: Transition Matrix for Labor Productivity Process\n2. Data Metrics: Transition probabilities (Aij), initial distribution of young workers (ζ), entry (λin), exit (λout), and state transitions (λll, λlh, λhl, λhh)\n3. Key Findings: The table shows the probabilities of workers transitioning between different productivity states, with a focus on the initial distribution of young workers and the likelihood of entering or exiting the labor market.\n4. Keywords: labor productivity, transition matrix, productivity states, initial distribution, entry probability, exit probability, young workers, economic dynamics"
     },
     {
         "type": "text",
@@ -2106,7 +2116,8 @@
             740,
             444
         ],
-        "page_idx": 14
+        "page_idx": 14,
+        "description": "1. Concept: Stochastic Rate of Return Transition Model\n\n2. Intuition: This equation represents the transition probabilities between different states of relative idiosyncratic returns, influenced by labor productivity levels. It captures the dynamic relationship between productivity and the distribution of returns on capital.\n\n3. Variables:\n- $\\kappa_L, \\kappa_H, \\kappa_{top}$: Relative idiosyncratic returns (low, high, top).\n- $\\pi_{ll}, \\pi_{hh}, \\pi_{top,top}$: Self-transition probabilities for each return state.\n- $\\pi_{in}(z)$: Probability of transitioning to a higher return state, dependent on labor productivity $z$.\n- $z$: Labor productivity level.\n\n4. Keywords: stochastic returns, transition matrix, labor productivity, relative returns, dynamic economic model"
     },
     {
         "type": "text",
@@ -2210,7 +2221,7 @@
     },
     {
         "type": "discarded",
-        "text": "",
+        "text": "15 ",
         "bbox": [
             829,
             75,
@@ -2390,8 +2401,7 @@
             364
         ],
         "page_idx": 16,
-        "transcription": "[Mocked Transcription: Image description would go here]",
-        "description": "The image contains two side-by-side line graphs, each depicting trends in net worth, income, and earnings across different top percentiles. Both graphs use a logarithmic scale on the x-axis, representing the top percentile of income or earnings, ranging from 0.1 to 40.\n\n### Left Graph:\n- **Title and Axes**: The x-axis is labeled \"Top percentile,\" and the y-axis is unlabeled but appears to represent a normalized value ranging from 0 to 1.\n- **Data and Model Lines**:\n  - **Net worth (D)**: Represented by a solid black line, showing a gradual increase as the percentile increases.\n  - **Net worth (M)**: Represented by red circles, closely following the trend of the solid black line.\n  - **Income (D)**: Represented by a dashed black line, showing a steeper increase compared to net worth.\n  - **Income (M)**: Represented by red triangles, closely following the dashed black line.\n  - **Earnings (D)**: Represented by a dotted black line, showing the steepest increase among the three.\n  - **Earnings (M)**: Represented by red squares, closely following the dotted black line.\n- **Key Trends**: As the top percentile increases, the normalized values for net worth, income, and earnings all increase, with earnings showing the most significant growth.\n\n### Right Graph:\n- **Title and Axes**: The x-axis is labeled \"Top percentile of income or earnings,\" and the y-axis is unlabeled but appears to represent a normalized value ranging from 0 to 1.\n- **Data and Model Lines**:\n  - **Net worth by income (D)**: Represented by a solid black line, showing a gradual increase as the percentile increases.\n  - **Net worth by income (M)**: Represented by red circles, closely following the trend of the solid black line.\n  - **Net worth by earnings (D)**: Represented by a dashed black line, showing a slightly steeper increase compared to net worth by income.\n  - **Net worth by earnings (M)**: Represented by red squares, closely following the dashed black line.\n- **Key Trends**: Similar to the left graph, as the top percentile of income or earnings increases, the normalized values for net worth by income and net worth by earnings both increase, with net worth by earnings showing a slightly steeper growth.\n\n### General Observations:\n- Both graphs show a consistent trend where higher percentiles correspond to higher normalized values for net worth, income, and earnings.\n- The models (M) closely follow the data (D) trends in both graphs, indicating a good fit.\n- The right graph focuses specifically on net worth in the context of income and earnings, while the left graph includes separate lines for income and earnings."
+        "description": "1. Type & Subject: Line graphs showing cumulative shares of net worth, income, and earnings for top percentile groups\n2. Labels & Legends: \n   - Panel A: X-axis: Top percentile, Y-axis: Cumulative share, Legend: Net worth (D), Net worth (M), Income (D), Income (M), Earnings (D), Earnings (M)\n   - Panel B: X-axis: Top percentile of income or earnings, Y-axis: Share of net worth, Legend: Net worth by income (D), Net worth by income (M), Net worth by earnings (D), Net worth by earnings (M)\n3. Key Findings: Cumulative shares increase with higher percentiles, with net worth consistently higher than income and earnings. Net worth by income shows a steeper increase compared to net worth by earnings.\n4. Keywords: net worth, income, earnings, top percentile, cumulative shares, SCF, capital gains, economic inequality"
     },
     {
         "type": "text",
@@ -2543,7 +2553,8 @@
             803,
             200
         ],
-        "page_idx": 17
+        "page_idx": 17,
+        "description": "1. Subject: Share of Income from Labor by Income Groups\n2. Data Metrics: Share of income from labor, income groups (All, Top 0.1%, Top 1%, Top 10%, Quintiles)\n3. Key Findings: The share of income from labor is significantly higher for the lower quintiles compared to the top percentiles. The model underestimates the share for the first quintile and overestimates for the top percentiles.\n4. Keywords: income distribution, labor income, quintiles, top percentiles, SCF, economic inequality"
     },
     {
         "type": "text",
@@ -2727,7 +2738,7 @@
         "text": "C. Rate of Return Heterogeneity ",
         "text_level": 1,
         "bbox": [
-            363,
+            365,
             282,
             632,
             298
@@ -2871,8 +2882,7 @@
             299
         ],
         "page_idx": 19,
-        "transcription": "[Mocked Transcription: Image description would go here]",
-        "description": "This image consists of two bar charts, each comparing data from two categories: \"Data (imputed)\" and \"Model.\" The charts are labeled with corresponding legends, where \"Data (imputed)\" is represented by red bars and \"Model\" by gray bars. The charts are divided into two sections, each focusing on different economic indicators: \"Income groups (percent)\" and \"Net worth groups (percent).\"\n\n### Left Chart: Income Groups (percent)\n- **Top 0.1**: \n  - Data (imputed): 11.3%\n  - Model: 9.2%\n- **Top 1**: \n  - Data (imputed): 8%\n  - Model: 7%\n- **Bottom 90**: \n  - Data (imputed): 2.6%\n  - Model: 3.6%\n\n### Right Chart: Net Worth Groups (percent)\n- **Top 0.1**: \n  - Data (imputed): 6%\n  - Model: 6.8%\n- **Top 1**: \n  - Data (imputed): 5.8%\n  - Model: 5.6%\n- **Bottom 90**: \n  - Data (imputed): 3.6%\n  - Model: 3.2%\n\n### Key Observations:\n- In the \"Income groups\" chart, the \"Data (imputed)\" values are consistently higher than the \"Model\" values for the \"Top 0.1\" and \"Top 1\" groups, while the \"Bottom 90\" group shows a lower value in the \"Data (imputed)\" compared to the \"Model.\"\n- In the \"Net worth groups\" chart, the differences between \"Data (imputed)\" and \"Model\" are smaller, with the \"Top 0.1\" and \"Top 1\" groups showing slightly higher values in the \"Model,\" and the \"Bottom 90\" group showing a slightly higher value in the \"Data (imputed).\"\n\n### Structural Relationships:\n- Both charts compare the same two categories (\"Data (imputed)\" and \"Model\") across three income/wealth groups.\n- The \"Top 0.1\" and \"Top 1\" groups generally have higher percentages compared to the \"Bottom 90\" group in both charts.\n- The \"Data (imputed)\" and \"Model\" values are close for the \"Net worth groups,\" suggesting a better alignment between the two categories in this context compared to the \"Income groups.\"\n\n### Contextual Information:\n- The charts likely represent a comparison between imputed data and a modeled estimate for income and net worth distribution across different economic groups.\n- The focus on \"Top 0.1,\" \"Top 1,\" and \"Bottom 90\" suggests an analysis of economic inequality, with emphasis on the wealthiest and the majority of the population."
+        "description": "1. Type & Subject: Bar chart showing rates of return on assets by household income and net worth.\n2. Labels & Legends: \n   - X-axis: Income groups (percent), Net worth groups (percent)\n   - Y-axis: Rates of return on assets (percent)\n   - Legends: Data (imputed), Model\n3. Key Findings: Higher income and net worth groups have higher rates of return on assets, with a significant difference between the top 0.1% and the bottom 90%.\n4. Keywords: rates of return, assets, household income, net worth, SCF, imputed data, economic model"
     },
     {
         "type": "text",
@@ -2900,8 +2910,7 @@
             805
         ],
         "page_idx": 19,
-        "transcription": "[Mocked Transcription: Image description would go here]",
-        "description": "The image consists of three panels, each depicting a different economic metric—earnings, income, and net worth—over the lifespan. Each panel contains a line graph with two datasets represented: one labeled with \"(D)\" and the other with \"(M).\" The x-axis in all panels represents age, while the y-axis represents the respective economic metric.\n\n### Panel A: Earnings\n- **X-axis (Age):** Ranges from 20 to 60.\n- **Y-axis (Earnings):** Ranges from 0 to 1.5.\n- **Lines and Data Points:**\n  - The line labeled \"Earnings (D)\" is a smooth curve that increases steadily from age 20 to around age 50, where it peaks slightly above 1.2, and then declines gradually.\n  - The line labeled \"Earnings (M)\" is represented by red squares. These points follow a similar trend to the \"Earnings (D)\" line but are slightly lower in value at each corresponding age.\n\n### Panel B: Income\n- **X-axis (Age):** Ranges from 20 to 90.\n- **Y-axis (Income):** Ranges from 0 to 2.\n- **Lines and Data Points:**\n  - The line labeled \"Income (D)\" is a smooth curve that increases from age 20 to around age 50, where it peaks slightly above 1.5, and then declines gradually until age 90.\n  - The line labeled \"Income (M)\" is represented by red squares. These points follow a similar trend to the \"Income (D)\" line but are slightly lower in value at each corresponding age.\n\n### Panel C: Net Worth\n- **X-axis (Age):** Ranges from 20 to 90.\n- **Y-axis (Net Worth):** Ranges from 0 to 2.5.\n- **Lines and Data Points:**\n  - The line labeled \"Net worth (D)\" is a smooth curve that increases steadily from age 20 to around age 60, where it peaks slightly above 2, and then declines gradually.\n  - The line labeled \"Net worth (M)\" is represented by red squares. These points follow a similar trend to the \"Net worth (D)\" line but are slightly lower in value at each corresponding age.\n\n### General Observations:\n- In all three panels, the \"(D)\" lines are smoother and slightly higher than the \"(M)\" data points, which are represented by red squares.\n- The trends in all three panels show an increase in the economic metric up to a certain age (around 50-60), followed by a decline.\n- The age range covered varies slightly between panels, with Panels B and C extending to age 90, while Panel A ends at age 60. \n\nThis description captures the key data points, trends, and structural relationships in the image for indexing purposes."
+        "description": "1. Type & Subject: Line graphs showing life cycle profiles of earnings, income, and net worth\n2. Labels & Legends: \n   - Panel A: Earnings (D), Earnings (M), Age\n   - Panel B: Income (D), Income (M), Age\n   - Panel C: Net worth (D), Net worth (M), Age\n3. Key Findings: Earnings and income peak in mid-life and decline thereafter. Net worth increases steadily with age, peaking later in life.\n4. Keywords: earnings, income, net worth, life cycle, age, SCF, benchmark calibration"
     },
     {
         "type": "text",
@@ -2983,8 +2992,7 @@
             379
         ],
         "page_idx": 20,
-        "transcription": "[Mocked Transcription: Image description would go here]",
-        "description": "This image is a line graph that illustrates the relationship between age and two economic variables: earnings and net worth. The graph compares these variables for two groups, labeled as \"D\" and \"M,\" across a range of ages from 20 to 60.\n\n### Axes:\n- **X-axis (Horizontal):** Represents age, ranging from 20 to 60 years.\n- **Y-axis (Vertical):** Represents the normalized values of earnings and net worth, ranging from 0 to 1.2.\n\n### Data Series:\nThe graph includes four data series, each represented by a distinct line and marker:\n1. **Earnings (D):** Represented by a solid black line with square markers. This line shows a general upward trend in earnings for group D as age increases, starting from a value around 0.4 at age 20 and reaching approximately 0.65 at age 60.\n2. **Earnings (M):** Represented by a solid black line with diamond markers. This line also shows an upward trend in earnings for group M, starting from a value around 0.85 at age 20 and reaching approximately 0.65 at age 60.\n3. **Net worth (D):** Represented by a dashed black line with square markers. This line shows a downward trend in net worth for group D, starting from a value around 1.0 at age 20 and decreasing to approximately 0.8 at age 60.\n4. **Net worth (M):** Represented by a dashed black line with diamond markers. This line shows a similar downward trend in net worth for group M, starting from a value around 0.9 at age 20 and decreasing to approximately 0.7 at age 60.\n\n### Key Observations:\n- Both groups, D and M, experience an increase in earnings as age increases, though the rate of increase appears to slow down over time.\n- Both groups also experience a decline in net worth as age increases, with group D starting with a higher net worth than group M but both converging to similar values by age 60.\n- The earnings for group M are consistently higher than those for group D across all ages, while the net worth for group M is consistently lower than that for group D.\n\n### Legend:\nThe legend in the bottom right corner of the graph identifies the four data series:\n- Solid black line with square markers: Earnings (D)\n- Solid black line with diamond markers: Earnings (M)\n- Dashed black line with square markers: Net worth (D)\n- Dashed black line with diamond markers: Net worth (M)\n\nThis graph provides a comparative analysis of earnings and net worth trends for two groups over time, highlighting differences in economic performance across age groups."
+        "description": "1. Type & Subject: Line graph showing Earnings and Net worth over Age\n2. Labels & Legends: Age, Earnings (D), Earnings (M), Net worth (D), Net worth (M)\n3. Key Findings: Earnings increase with age, while Net worth decreases. Model closely matches data trends except for slight overshoot near retirement age.\n4. Keywords: earnings, net worth, age, retirement, asset accumulation, asset decumulation, economic model"
     },
     {
         "type": "text",
@@ -3112,7 +3120,8 @@
             850,
             338
         ],
-        "page_idx": 21
+        "page_idx": 21,
+        "description": "1. Subject: Determinants of Wealth Concentration\n2. Data Metrics: Gini coefficient for wealth, top wealth shares (0.1%, 1%), top earnings shares (0.1%, 1%)\n3. Key Findings: Removing top earners and equalizing bequests significantly reduces wealth concentration, as indicated by a lower Gini coefficient and reduced top wealth shares.\n4. Keywords: wealth concentration, Gini coefficient, top wealth shares, top earnings shares, counterfactual economies, bequests, productivity, returns"
     },
     {
         "type": "text",
@@ -3363,8 +3372,7 @@
             298
         ],
         "page_idx": 23,
-        "transcription": "[Mocked Transcription: Image description would go here]",
-        "description": "This image contains two bar charts placed side by side, both depicting data in percentages. The charts appear to be related, as they share the same categories on the x-axis and y-axis labels. Here's a detailed description of each chart:\n\n### Left Chart:\n- **Title or Label:** Not explicitly provided in the image.\n- **X-axis:** Labeled with three categories: \"Bequests,\" \"Top earnings,\" and \"Asset returns.\"\n- **Y-axis:** Labeled \"Percent,\" ranging from 0 to 60, with increments of 10.\n- **Bars and Data Points:**\n  - \"Bequests\": The bar reaches approximately 20%, with an error bar indicating variability.\n  - \"Top earnings\": The bar reaches approximately 45%, with an error bar.\n  - \"Asset returns\": The bar reaches approximately 20%, with an error bar.\n- **Color:** All bars are filled with a dark red color.\n- **Error Bars:** Each bar has a vertical error bar, suggesting a measure of variability or confidence interval.\n\n### Right Chart:\n- **Title or Label:** Not explicitly provided in the image.\n- **X-axis:** Labeled with the same three categories as the left chart: \"Bequests,\" \"Top earnings,\" and \"Asset returns.\"\n- **Y-axis:** Labeled \"Percent,\" ranging from 0 to 60, with increments of 10.\n- **Bars and Data Points:**\n  - \"Bequests\": The bar reaches approximately 20%, with an error bar.\n  - \"Top earnings\": The bar reaches approximately 40%, with an error bar.\n  - \"Asset returns\": The bar reaches approximately 30%, with an error bar.\n- **Color:** All bars are filled with the same dark red color.\n- **Error Bars:** Each bar has a vertical error bar, similar to the left chart.\n\n### Key Observations:\n- Both charts compare the same three categories: \"Bequests,\" \"Top earnings,\" and \"Asset returns.\"\n- The percentages for \"Bequests\" are consistent between the two charts, around 20%.\n- \"Top earnings\" is higher in the left chart (around 45%) compared to the right chart (around 40%).\n- \"Asset returns\" is lower in the left chart (around 20%) compared to the right chart (around 30%).\n- The error bars suggest variability in the data, but the specific values of the error margins are not provided.\n\n### Contextual Information:\n- The charts likely represent some form of economic or financial data, possibly related to wealth distribution, income sources, or investment returns.\n- The absence of titles or additional labels makes it challenging to determine the exact context, but the consistent use of \"Percent\" on the y-axis suggests a focus on proportions or percentages of a whole."
+        "description": "1. Type & Subject: Bar charts comparing contributions to top wealth shares\n2. Labels & Legends: Percent, Bequests, Top earnings, Asset returns\n3. Key Findings: Bequests and asset returns contribute less to top wealth shares compared to top earnings. Equalizing bequests and return heterogeneity reduce top wealth shares, with a larger effect on the top 0.1 percent.\n4. Keywords: bequests, asset returns, top wealth shares, benchmark value, return heterogeneity, top 1 percent, top 0.1 percent"
     },
     {
         "type": "text",
@@ -3768,7 +3776,7 @@
     },
     {
         "type": "image",
-        "img_path": "images/f083eaa0f243c67de0bf32a537339b588481b9e4c68aa7cecdcc7b1102d231ef.jpg",
+        "img_path": "images/869743d0ef40e974d2b06f3626c2eb6ca823cfc57095b63548bb9bd8a21467c8.jpg",
         "image_caption": [
             "Panel A. Top 1 percent wealth share ",
             "Panel B. Top 0.1 percent wealth share ",
@@ -3779,12 +3787,11 @@
         "bbox": [
             149,
             120,
-            850,
+            848,
             298
         ],
         "page_idx": 26,
-        "transcription": "[Mocked Transcription: Image description would go here]",
-        "description": "The image consists of two bar charts, labeled as Panel A and Panel B, each depicting the wealth share percentages for three categories: \"Bequests,\" \"Top earnings,\" and \"Asset returns.\" Both panels are visually similar but represent different wealth share percentages.\n\n### Panel A: Top 1 percent wealth share\n- **Bequests**: The bar reaches approximately 18 percent, with an error bar indicating variability or uncertainty in the data.\n- **Top earnings**: This category has the highest bar, reaching about 42 percent, also accompanied by an error bar.\n- **Asset returns**: The bar is around 20 percent, with an error bar similar in size to the \"Bequests\" category.\n\n### Panel B: Top 0.1 percent wealth share\n- **Bequests**: The bar is slightly higher than in Panel A, reaching about 22 percent, with an error bar.\n- **Top earnings**: This category also has the highest bar in this panel, reaching approximately 48 percent, with an error bar.\n- **Asset returns**: The bar is around 25 percent, with an error bar similar in size to the \"Bequests\" category.\n\n### General Observations:\n- Both panels show that \"Top earnings\" consistently have the highest wealth share percentages, followed by \"Asset returns\" and then \"Bequests.\"\n- The error bars in both panels suggest variability in the data, with \"Top earnings\" having the largest error bars, indicating higher uncertainty or variability in the wealth share attributed to top earnings.\n- The wealth share percentages are higher in Panel B (Top 0.1 percent) compared to Panel A (Top 1 percent) for all three categories, indicating a greater concentration of wealth among the top 0.1 percent compared to the top 1 percent. \n\nThe y-axis in both panels is labeled \"Percent,\" and the x-axis lists the three categories: \"Bequests,\" \"Top earnings,\" and \"Asset returns.\" The charts use red bars to represent the data, with black error bars for each category."
+        "description": "1. Type & Subject: Bar charts showing top wealth share distribution\n2. Labels & Legends: \n   - Panel A: Percent, Bequests, Top earnings, Asset returns\n   - Panel B: Percent, Bequests, Top earnings, Asset returns\n3. Key Findings: Top earnings contribute significantly more to wealth share compared to bequests and asset returns in both panels.\n4. Keywords: wealth share, top earnings, bequests, asset returns, percent, distribution"
     },
     {
         "type": "text",
@@ -3877,8 +3884,7 @@
             365
         ],
         "page_idx": 27,
-        "transcription": "[Mocked Transcription: Image description would go here]",
-        "description": "This image consists of two panels, A and B, each depicting a line graph with data points representing different measures of wealth and income across various top percentiles.\n\n### Panel A:\n- **Title:** Panel A\n- **Axes:**\n  - The x-axis is labeled \"Top percentile\" and ranges from 0.1 to 40.\n  - The y-axis is unlabeled but ranges from 0 to 1.\n- **Lines and Data Points:**\n  - Solid black line with circle markers (Net worth (D)).\n  - Dashed black line with triangle markers (Income (D)).\n  - Dotted black line with square markers (Earnings (D)).\n  - Solid red line with circle markers (Net worth (D) without entr.).\n  - Dashed red line with triangle markers (Income (D) without entr.).\n  - Dotted red line with square markers (Earnings (D) without entr.).\n- **Legend:**\n  - Data without entr.: Net worth (D), Income (D), Earnings (D).\n  - Data: Net worth (D), Income (D), Earnings (D).\n- **Trends:**\n  - All lines show an upward trend as the top percentile increases.\n  - The solid black line (Net worth (D)) is consistently above the other lines, indicating higher values.\n  - The red lines (without entr.) are generally below the black lines, suggesting lower values when entrants are excluded.\n\n### Panel B:\n- **Title:** Panel B\n- **Axes:**\n  - The x-axis is labeled \"Top percentile\" and ranges from 0.1 to 40.\n  - The y-axis is unlabeled but ranges from 0 to 1.\n- **Lines and Data Points:**\n  - Solid black line with circle markers (Net worth by income).\n  - Dashed black line with square markers (Net worth by earnings).\n  - Solid red line with circle markers (Net worth by income without entr.).\n  - Dashed red line with square markers (Net worth by earnings without entr.).\n- **Legend:**\n  - Data without entr.: Net worth by income, Net worth by earnings.\n  - Data: Net worth by income, Net worth by earnings.\n- **Trends:**\n  - All lines show an upward trend as the top percentile increases.\n  - The solid black line (Net worth by income) is consistently above the dashed black line (Net worth by earnings), indicating higher values for net worth by income.\n  - The red lines (without entr.) are generally below the black lines, suggesting lower values when entrants are excluded.\n\n### Keywords and Labels:\n- Top percentile\n- Net worth (D)\n- Income (D)\n- Earnings (D)\n- Net worth by income\n- Net worth by earnings\n- Data without entr.\n- Data\n- Entrants\n- Upward trend\n- Percentile\n- Wealth\n- Income\n- Earnings"
+        "description": "1. Type & Subject: Line graph showing the effect of excluding entrepreneurial households on income, net worth, and earnings distributions.\n2. Labels & Legends: \n   - Panel A: Y-axis: Value, X-axis: Top percentile, Legend: Net worth (D), Income (D), Earnings (D), Data without entr., Data\n   - Panel B: Y-axis: Value, X-axis: Top percentile, Legend: Net worth by income, Net worth by earnings, Data without entr., Data\n3. Key Findings: Excluding entrepreneurial households reduces the concentration of net worth, income, and earnings among top percentiles, with a more pronounced effect on net worth.\n4. Keywords: entrepreneurial households, income distribution, net worth, earnings, top percentile, wealth concentration, economic inequality"
     },
     {
         "type": "text",
@@ -4017,8 +4023,7 @@
             299
         ],
         "page_idx": 28,
-        "transcription": "[Mocked Transcription: Image description would go here]",
-        "description": "This image consists of two bar charts, labeled as **Panel A** and **Panel B**, each depicting the wealth share percentages attributed to different factors. Both panels use the same color scheme and structure, with red bars and error bars indicating variability or uncertainty in the data.\n\n### Panel A: Top 1 percent wealth share\n- **Bequests**: The bar shows a wealth share of approximately 18%, with error bars extending above and below the bar, indicating a range of uncertainty.\n- **Top earnings**: This category has the highest wealth share in this panel, around 45%, with error bars showing a moderate level of variability.\n- **Asset returns**: The wealth share here is about 15%, with error bars similar in length to those of \"Bequests.\"\n\n### Panel B: Top 0.1 percent wealth share\n- **Bequests**: The wealth share is roughly 20%, with error bars that are slightly larger compared to those in Panel A.\n- **Top earnings**: This category also has the highest wealth share in this panel, around 55%, with error bars indicating a similar level of variability as in Panel A.\n- **Asset returns**: The wealth share is approximately 22%, with error bars that are comparable in length to those of \"Bequests.\"\n\n### General Observations:\n- Both panels show that \"Top earnings\" contribute the most significant share of wealth for both the top 1 percent and the top 0.1 percent.\n- \"Bequests\" and \"Asset returns\" have lower contributions, with \"Asset returns\" having the smallest share in both panels.\n- The error bars suggest that there is some degree of uncertainty or variability in the data, particularly noticeable in the \"Bequests\" category in Panel B.\n- The y-axis in both panels is labeled \"Percent,\" indicating the wealth share as a percentage of the total wealth.\n\nThis description captures the key data points, trends, and structural relationships presented in the image, suitable for indexing in a Retrieval-Augmented Generation (RAG) system."
+        "description": "1. Type & Subject: Bar chart showing marginal effects of factors on wealth concentration among nonentrepreneurs\n2. Labels & Legends: \n   - Panel A: Top 1 percent wealth share, Panel B: Top 0.1 percent wealth share\n   - Y-axis: Percent\n   - X-axis: Bequests, Top earnings, Asset returns\n3. Key Findings: Top earnings have the highest marginal effect on wealth concentration, followed by bequests and asset returns, with similar trends in both wealth share panels.\n4. Keywords: wealth concentration, nonentrepreneurs, marginal effect, bequests, top earnings, asset returns, wealth share, economic factors"
     },
     {
         "type": "text",
@@ -4440,7 +4445,8 @@
             659,
             439
         ],
-        "page_idx": 31
+        "page_idx": 31,
+        "description": "1. Concept: Capital Share Estimation Model\n2. Intuition: This equation calculates the proportion of business income attributable to capital investment versus labor input, using a log-log regression framework.\n3. Variables: $Y_i$ = household's total income from the business; $K_i$ = equity invested in the business; $L_i$ = effective labor input; $\\alpha$ = elasticity of income with respect to capital; $\\beta$ = elasticity of income with respect to labor; $\\epsilon_i$ = error term.\n4. Keywords: capital share, business income, equity investment, labor input, log-log regression, economic apportionment"
     },
     {
         "type": "text",
@@ -4547,7 +4553,8 @@
             848,
             331
         ],
-        "page_idx": 32
+        "page_idx": 32,
+        "description": "1. Subject: Labor Component of Income by Income and Wealth Group\n2. Data Metrics: Wage income, labor income, with and without capital gains, income percentile, net worth percentile\n3. Key Findings: Higher income and wealth percentiles show a lower share of income from labor and wages, especially when including capital gains. The lowest income and wealth groups derive a significantly higher proportion of their income from labor.\n4. Keywords: labor income, wage income, capital gains, income distribution, wealth distribution, SCF, economic inequality"
     },
     {
         "type": "text",
@@ -4597,7 +4604,7 @@
         "type": "discarded",
         "text": "VOL. 18 NO. 1 ",
         "bbox": [
-            151,
+            153,
             73,
             242,
             84
@@ -4653,7 +4660,8 @@
             806,
             284
         ],
-        "page_idx": 33
+        "page_idx": 33,
+        "description": "1. Subject: Composition of Income for Top Income Groups\n2. Data Metrics: Income percentile categories, wage income, business income, interest and dividend income, with and without capital gains\n3. Key Findings: As income percentile increases, the share of wage income decreases while the share of interest, dividend, and capital gains income increases significantly. Business income remains relatively stable across percentiles.\n4. Keywords: income distribution, top income groups, wage income, business income, interest, dividend, capital gains, income percentiles, economic inequality"
     },
     {
         "type": "text",
