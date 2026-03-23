@@ -9,3 +9,5 @@ __pycache__/
 personal/
 *.bin
 *.sqlite3
+
+log.txt
