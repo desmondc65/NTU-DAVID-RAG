@@ -130,15 +130,22 @@ def describe_mineru_images(json_path: str | Path):
                 with open(img_full_path, "rb") as img_file:
                     base64_img = base64.b64encode(img_file.read()).decode("utf-8")
                     
-                context_instruction = ""
-                if context_text:
-                    context_instruction = f"For your reference, here is the surrounding text from the document:\n{context_text}\n\n"
+                context_instruction = f"Context:\n{context_text}\n\n" if context_text else ""
+
+                user_prompt_text = (
+                    f"{context_instruction}"
+                    "Task: Generate a search index summary for this image. Keep it short and simple. Provide:\n"
+                    "1. Type & Subject: (e.g., Scatter plot showing GDP vs. Inflation)\n"
+                    "2. Labels & Legends: (List exact axis labels and legend keys)\n"
+                    "3. Key Findings: (Extract the main trend, anomaly, or relationship shown)\n"
+                    "4. Keywords: (Comma-separated list of core economic terms and entities)"
+                )
 
                 # Provide the image using the OpenAI-compatible multimodal format
                 user_prompt = [
                     {
                         "type": "text",
-                        "text": f"{context_instruction}Please provide a detailed and precise description of this image. If it contains charts, graphs, or tables, explicitly extract and describe the key data points, trends, and structural relationships. If it contains text or mathematical formulas, transcribe them accurately. This description will be used directly to index the image for a Retrieval-Augmented Generation (RAG) system, so include all relevant keywords, labels, and contextual information."
+                        "text": user_prompt_text
                     },
                     {
                         "type": "image_url",
@@ -151,7 +158,7 @@ def describe_mineru_images(json_path: str | Path):
                 print(f"Describing image: {img_rel_path}")
                 response = client.generate_response(
                     user_prompt=user_prompt, # type: ignore
-                    system_prompt="You are an expert AI assistant specializing in carefully describing academic and economic figures, charts, and equations for RAG indexing.",
+                    system_prompt="You are an expert data extraction system. Your output is used directly for dense vector retrieval of economics and academic papers. Prioritize entities, exact axis labels, data trends, and terminology. Be concise and highly structured. Do not use conversational filler.",
                     response_mime_type="text/plain",
                     max_tokens=2048
                 )
@@ -226,15 +233,23 @@ def describe_mineru_equations(json_path: str | Path):
                 with open(img_full_path, "rb") as img_file:
                     base64_img = base64.b64encode(img_file.read()).decode("utf-8")
                     
-                context_instruction = ""
-                if context_text:
-                    context_instruction = f"For your reference, here is the surrounding text from the document:\n{context_text}\n\n"
+                context_instruction = f"Context:\n{context_text}\n\n" if context_text else ""
+
+                user_prompt_text = (
+                    f"{context_instruction}"
+                    f"LaTeX: {equation_text}\n\n"
+                    "Task: Generate a search index summary for this equation. Keep it short and simple. Provide:\n"
+                    "1. Concept: (Name of the theorem, model, or economic principle)\n"
+                    "2. Intuition: (What does this equation fundamentally calculate or represent?)\n"
+                    "3. Variables: (Define the key variables based on the context)\n"
+                    "4. Keywords: (Comma-separated list of core terms)"
+                )
 
                 # Provide the image using the OpenAI-compatible multimodal format
                 user_prompt = [
                     {
                         "type": "text",
-                        "text": f"{context_instruction}Please provide a detailed explanation of this mathematical equation. The LaTeX representation is:\n{equation_text}\n\nDescribe the variables, the meaning of the equation, and its context. This description will be used to index the equation for a Retrieval-Augmented Generation (RAG) system, so include all relevant keywords, concepts, and contextual information. Only return the index of the equation without further conversational text."
+                        "text": user_prompt_text
                     },
                     {
                         "type": "image_url",
@@ -247,7 +262,7 @@ def describe_mineru_equations(json_path: str | Path):
                 print(f"Describing equation: {img_rel_path}")
                 response = client.generate_response(
                     user_prompt=user_prompt, # type: ignore
-                    system_prompt="You are an expert AI assistant specializing in explaining complex mathematical and economic equations for RAG indexing.",
+                    system_prompt="You are an expert mathematical extraction system. Your output is used directly for dense vector retrieval of economics papers. Focus on defining variables, stating the core mathematical relationship, and extracting the economic intuition. Do not use conversational filler.",
                     response_mime_type="text/plain",
                     max_tokens=2048
                 )
@@ -269,10 +284,124 @@ def describe_mineru_equations(json_path: str | Path):
         print("No new equations were described.")
 
 
+def describe_mineru_tables(json_path: str | Path):
+    """
+    Reads the object list JSON generated by MinerU, describes any tables 
+    found using a local LLM, and adds a 'description' key to those items 
+    to be used as an index for RAG.
+    """
+    json_path = Path(json_path)
+    if not json_path.exists():
+        raise FileNotFoundError(f"JSON file not found: {json_path}")
+        
+    with open(json_path, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+        
+    print("Initializing client...")
+    client = LocalLLMClient(
+        model_name="qwen2.5-vl-72b-instruct",
+        base_url="http://localhost:8000/v1",
+        api_key="local-dev-key",
+    )
+    
+    modified = False
+    for idx, item in enumerate(data):
+        if item.get("type") == "table":
+            # Skip if already described
+            if "description" in item and item["description"]:
+                print(f"Skipping table {item.get('img_path', 'unknown')}, already described.")
+                continue
+
+            img_rel_path = item.get("img_path")
+            table_caption = "\n".join(item.get("table_caption", [])) if "table_caption" in item else ""
+            table_footnote = "\n".join(item.get("table_footnote", [])) if "table_footnote" in item else ""
+            table_body = item.get("table_body", "")
+            
+            if not img_rel_path:
+                print("Warning: Table type item has no img_path.")
+                continue
+                
+            # The image path is relative to the directory containing the JSON file
+            img_full_path = json_path.parent / img_rel_path
+            
+            if not img_full_path.exists():
+                print(f"Image not found: {img_full_path}")
+                continue
+                
+            # Gather surrounding text context
+            context_text = ""
+            if idx > 0 and data[idx - 1].get("type") == "text":
+                context_text += f"Previous text:\n{data[idx - 1].get('text', '')}\n\n"
+            if idx < len(data) - 1 and data[idx + 1].get("type") == "text":
+                context_text += f"Next text:\n{data[idx + 1].get('text', '')}\n\n"
+
+            try:
+                with open(img_full_path, "rb") as img_file:
+                    base64_img = base64.b64encode(img_file.read()).decode("utf-8")
+                    
+                context_instruction = f"Context:\n{context_text}\n\n" if context_text else ""
+                table_info = ""
+                if table_caption:
+                    table_info += f"Table Caption: {table_caption}\n"
+                if table_footnote:
+                    table_info += f"Table Footnote: {table_footnote}\n"
+                if table_body:
+                    table_info += f"Table HTML/Body: {table_body}\n"
+
+                user_prompt_text = (
+                    f"{context_instruction}"
+                    f"{table_info}\n"
+                    "Task: Generate a search index summary for this table. Keep it short and simple. Provide:\n"
+                    "1. Subject: (What is this table about? E.g., Cross-Sectional Distributions of Income)\n"
+                    "2. Data Metrics: (What variables or metrics are being reported?)\n"
+                    "3. Key Findings: (Extract the main trend, anomaly, or insight shown)\n"
+                    "4. Keywords: (Comma-separated list of core economic terms and entities)"
+                )
+
+                # Provide the image using the OpenAI-compatible multimodal format
+                user_prompt = [
+                    {
+                        "type": "text",
+                        "text": user_prompt_text
+                    },
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:image/jpeg;base64,{base64_img}"
+                        }
+                    }
+                ]
+                
+                print(f"Describing table: {img_rel_path}")
+                response = client.generate_response(
+                    user_prompt=user_prompt, # type: ignore
+                    system_prompt="You are an expert data extraction system. Your output is used directly for dense vector retrieval of economics papers. Focus on defining metrics, stating the core data relationships, and extracting the economic intuition. Do not use conversational filler.",
+                    response_mime_type="text/plain",
+                    max_tokens=2048
+                )
+                print(response)
+                item["description"] = response
+                modified = True
+                print(f"Description added for {img_rel_path}")
+                
+                # Incrementally save progress to avoid data loss if interrupted
+                with open(json_path, 'w', encoding='utf-8') as f:
+                    json.dump(data, f, indent=4, separators=(',', ': '), ensure_ascii=False)
+                    
+            except Exception as e:
+                print(f"Error describing table {img_rel_path}: {e}")
+                
+    if modified:
+        print(f"Finished updating {json_path} with table descriptions.")
+    else:
+        print("No new tables were described.")
+
+
 def main():
     json_file_path = "/home3/davidlcs/Econ-Rag/NTU-DAVID-RAG/tests/output_pdf_extract/Manuscript/auto/Manuscript_content_list.json"
     describe_mineru_images(json_file_path)
     describe_mineru_equations(json_file_path)
+    describe_mineru_tables(json_file_path)
 
 
 if __name__ == "__main__":

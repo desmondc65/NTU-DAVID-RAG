@@ -6,7 +6,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from utils.s1_data_ingestion.pdf_extract import extract_pdf_mineru, describe_mineru_images, describe_mineru_equations
+from utils.s1_data_ingestion.pdf_extract import extract_pdf_mineru, describe_mineru_images, describe_mineru_equations, describe_mineru_tables
 
 def main():
     input_pdf = REPO_ROOT / "tests" / "Manuscript.pdf"
@@ -49,6 +49,15 @@ def main():
             print("Success! Equation description complete.")
         except Exception as e:
             print(f"Error during equation description: {e}")
+
+        print(f"\nTesting table description for RAG on {json_path}...")
+        try:
+            describe_mineru_tables(json_path)
+                
+            print("Success! Table description complete.")
+        except Exception as e:
+            print(f"Error during table description: {e}")
+            
     else:
         print(f"\nWarning: Could not find JSON output at {json_path} to test descriptions.")
 
