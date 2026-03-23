@@ -1,7 +1,7 @@
 services:
-  qwen3-next-80b-q8-server:
+  qwen3-vl-server:
     image: ghcr.io/ggml-org/llama.cpp:server-cuda
-    container_name: qwen3-next-80b-q8-server
+    container_name: qwen3-vl-server
     restart: unless-stopped
     privileged: true
     gpus: all
@@ -11,8 +11,8 @@ services:
       - "${SERVICE_PORT:-8000}:8000"
 
     environment:
-      NVIDIA_VISIBLE_DEVICES: "0,1"
-      CUDA_VISIBLE_DEVICES: "0,1"
+      NVIDIA_VISIBLE_DEVICES: "1,2"
+      CUDA_VISIBLE_DEVICES: "1,2"
       NVIDIA_DRIVER_CAPABILITIES: "compute,utility"
       LLAMA_API_KEY: "${LOCAL_LLM_API_KEY:-local-dev-key}"
       MODEL_FILE: "${MODEL_FILE}"
@@ -28,7 +28,7 @@ services:
         reservations:
           devices:
             - driver: nvidia
-              device_ids: ["0", "1"]
+              device_ids: ["1", "2"]
               capabilities: [gpu]
 
     entrypoint: ["/bin/sh", "-c"]
@@ -51,7 +51,7 @@ services:
         fi
 
         if [ -z "$${MODEL_FILE}" ]; then
-          echo "MODEL_FILE is empty. Set MODEL_FILE in docker/local_llm/.env (e.g. Qwen3-Next-80B-Instruct-Q8_0.gguf)." >&2
+          echo "MODEL_FILE is empty. Set MODEL_FILE in docker/local_llm/.env (e.g. Qwen2.5-VL-72B-Instruct-Q4_K_M.gguf)." >&2
           exit 2
         fi
 
@@ -65,10 +65,10 @@ services:
         --host 0.0.0.0 \
         --port 8000 \
         --model /models/$${MODEL_FILE} \
-        --alias $${MODEL_ALIAS:-qwen3-next-80b-instruct-q8_0} \
+        --alias $${MODEL_ALIAS:-qwen2.5-vl-72b-instruct} \
         --n-gpu-layers 999 \
         --tensor-split $${TENSOR_SPLIT:-1,1} \
-        --ctx-size $${CTX_SIZE:-262144} \
+        --ctx-size $${CTX_SIZE:-128000} \
         --batch-size $${BATCH_SIZE:-1024} \
         --ubatch-size $${UBATCH_SIZE:-512} \
         --threads $${THREADS:-16} \
@@ -95,7 +95,7 @@ services:
 
         # Mirror server output to a persistent host log file.
         # Keeps logs available in both `docker logs` and /logs/log.txt.
-        $$SERVER_BIN $$ARGS 2>&1 | tee -a /logs/log.txt
+        $$SERVER_BIN $$ARGS 2>&1 | tee /logs/log.txt
 
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]

@@ -1,0 +1,887 @@
+{
+    "key_functions": [
+        {
+            "name": "DECRULE01",
+            "core_purpose": "Solve the policy functions for the model.",
+            "pseudocode": [
+                "Initialize policy function arrays.",
+                "Loop over all states (age, asset, return, productivity).",
+                "For each state, compute the optimal consumption, asset, and labor supply decisions.",
+                "Store the optimal decisions in the policy function arrays."
+            ],
+            "dependencies": [
+                "BRACKET01",
+                "SRCHFIVE01",
+                "check_BRACKET01",
+                "A_SRCHFIVE01",
+                "N_SRCHFIVE01"
+            ],
+            "key_variables": [
+                "IDCWA",
+                "IDCWN",
+                "IDCWC",
+                "IDCRA",
+                "IDCRN",
+                "IDCRC"
+            ],
+            "summary_index": "1. Core Capability: Computes optimal consumption, asset, and labor supply decisions for policy functions.\n2. Algorithms/Logic: Initializes policy function arrays; iterates over states (age, asset, return, productivity); calculates optimal decisions; stores results.\n3. Key Variables: IDCWA, IDCWN, IDCWC, IDCRA, IDCRN, IDCRC\n4. Keywords: policy functions, optimal decisions, consumption, asset, labor supply, state iteration, Fortran"
+        },
+        {
+            "name": "INVAR01",
+            "core_purpose": "Find the invariant distribution of agents across states.",
+            "pseudocode": [
+                "Initialize the distribution arrays.",
+                "Iterate until convergence:",
+                "    For each state, compute the transition probabilities to other states.",
+                "    Update the distribution arrays based on the transition probabilities.",
+                "    Check for convergence."
+            ],
+            "dependencies": [
+                "DECRULE01"
+            ],
+            "key_variables": [
+                "YW",
+                "YR"
+            ],
+            "summary_index": "1. Core Capability: Computes the invariant distribution of agents across states.\n2. Algorithms/Logic: Initializes distribution arrays, iterates computing transition probabilities, updates distributions, checks convergence.\n3. Key Variables: YW, YR\n4. Keywords: invariant, distribution, agents, states, transition, probabilities, convergence, YW, YR"
+        },
+        {
+            "name": "compute_distributions",
+            "core_purpose": "Compute age-weighted distributions using the invariant distribution.",
+            "pseudocode": [
+                "Initialize age-weighted distribution arrays.",
+                "Loop over all states and ages:",
+                "    Compute the age-weighted distribution for each state.",
+                "    Store the results in the distribution arrays."
+            ],
+            "dependencies": [
+                "INVAR01"
+            ],
+            "key_variables": [
+                "D_YW",
+                "D_YR"
+            ],
+            "summary_index": "1. Core Capability: Computes age-weighted distributions using invariant distribution.\n2. Algorithms/Logic: Initializes arrays, iterates over states and ages, calculates age-weighted distributions, stores results.\n3. Key Variables: D_YW, D_YR\n4. Keywords: compute_distributions, age-weighted, invariant_distribution, state, age, distribution_arrays"
+        },
+        {
+            "name": "PROFILE01",
+            "core_purpose": "Compute age profiles for various economic variables.",
+            "pseudocode": [
+                "Initialize age profile arrays.",
+                "Loop over all ages:",
+                "    For each age, compute the average values of assets, consumption, income, etc.",
+                "    Store the results in the age profile arrays."
+            ],
+            "dependencies": [
+                "compute_distributions"
+            ],
+            "key_variables": [
+                "ACROSS",
+                "CCROSS",
+                "ICROSS",
+                "TICROSS",
+                "NCROSS",
+                "LCROSS",
+                "BCROSS",
+                "ALONG",
+                "CLONG",
+                "ILONG",
+                "TILONG",
+                "NLONG",
+                "LLONG",
+                "BLONG"
+            ],
+            "summary_index": "1. Core Capability: Computes age profiles for economic variables.\n2. Algorithms/Logic: Initializes arrays, iterates over ages, calculates averages, stores results.\n3. Key Variables: ACROSS, CCROSS, ICROSS, TICROSS, NCROSS, LCROSS, BCROSS, ALONG, CLONG, ILONG, TILONG, NLONG, LLONG, BLONG.\n4. Keywords: age_profiles, economic_variables, average_values, array_initialization, age_iteration, computation, storage"
+        },
+        {
+            "name": "beq_distribution",
+            "core_purpose": "Compute the bequest distribution.",
+            "pseudocode": [
+                "Initialize bequest distribution arrays.",
+                "Loop over all states and ages:",
+                "    Compute the bequest distribution for each state.",
+                "    Store the results in the bequest distribution arrays."
+            ],
+            "dependencies": [
+                "compute_distributions"
+            ],
+            "key_variables": [
+                "BEQTRANS",
+                "BEQTRANS1"
+            ],
+            "summary_index": "1. Core Capability: Computes the bequest distribution across various states and ages.\n2. Algorithms/Logic: Initializes arrays, iterates over states and ages, calculates bequest distribution, stores results.\n3. Key Variables: BEQTRANS, BEQTRANS1\n4. Keywords: bequest, distribution, states, ages, computation, arrays, iteration, storage"
+        },
+        {
+            "name": "avg_return",
+            "core_purpose": "Compute the average return and asset-weighted average return.",
+            "pseudocode": [
+                "Initialize return arrays.",
+                "Loop over all states and ages:",
+                "    Compute the average return for each state.",
+                "    Compute the asset-weighted average return.",
+                "    Store the results in the return arrays."
+            ],
+            "dependencies": [
+                "compute_distributions"
+            ],
+            "key_variables": [
+                "Avg_R",
+                "Avg_R_weighted"
+            ],
+            "summary_index": "1. Core Capability: Computes average return and asset-weighted average return.\n2. Algorithms/Logic: Initializes return arrays, loops over states and ages, calculates average returns and asset-weighted averages, stores results.\n3. Key Variables: Avg_R, Avg_R_weighted\n4. Keywords: avg_return, average, asset-weighted, return, states, ages, computation, Fortran"
+        },
+        {
+            "name": "bequest_exemption",
+            "core_purpose": "Compute the top 2% bequest tax exemption level.",
+            "pseudocode": [
+                "Initialize exemption level variables.",
+                "Loop over all states and ages:",
+                "    Compute the bequest tax exemption level for each state.",
+                "    Store the results in the exemption level variables."
+            ],
+            "dependencies": [
+                "beq_distribution"
+            ],
+            "key_variables": [
+                "beqtax_exempt"
+            ],
+            "summary_index": "1. Core Capability: Computes the top 2% bequest tax exemption level.\n2. Algorithms/Logic: Initializes exemption variables, iterates over states and ages, calculates exemption level, stores results.\n3. Key Variables: beqtax_exempt\n4. Keywords: bequest, exemption, tax, compute, iterate, store, level, states, ages"
+        },
+        {
+            "name": "wealthshare",
+            "core_purpose": "Compute the wealth share holding.",
+            "pseudocode": [
+                "Initialize wealth share arrays.",
+                "Loop over all states and ages:",
+                "    Compute the wealth share for each state.",
+                "    Store the results in the wealth share arrays."
+            ],
+            "dependencies": [
+                "compute_distributions"
+            ],
+            "key_variables": [
+                "kshare05",
+                "kshare1",
+                "kshare5",
+                "kshare10",
+                "kshare20",
+                "kshare40",
+                "kshare60",
+                "kshare80"
+            ],
+            "summary_index": "1. Core Capability: Computes the distribution of wealth share across various states and ages.\n2. Algorithms/Logic: Initializes wealth share arrays. Iterates over all states and ages, calculating wealth share for each state and storing results in designated arrays.\n3. Key Variables: kshare05, kshare1, kshare5, kshare10, kshare20, kshare40, kshare60, kshare80\n4. Keywords: wealth share, computation, distribution, states, ages, arrays, iteration, calculation"
+        },
+        {
+            "name": "compute_gini",
+            "core_purpose": "Compute the Gini coefficient for wealth, income, and consumption.",
+            "pseudocode": [
+                "Initialize Gini coefficient variables.",
+                "Loop over all states and ages:",
+                "    Compute the Gini coefficient for wealth, income, and consumption.",
+                "    Store the results in the Gini coefficient variables."
+            ],
+            "dependencies": [
+                "compute_distributions"
+            ],
+            "key_variables": [
+                "wea_gini",
+                "inc_gini",
+                "cons_gini"
+            ],
+            "summary_index": "1. Core Capability: Computes Gini coefficients for wealth, income, and consumption.\n2. Algorithms/Logic: Initializes Gini variables, iterates over states and ages, calculates Gini coefficients, stores results.\n3. Key Variables: wea_gini, inc_gini, cons_gini\n4. Keywords: Gini, coefficient, wealth, income, consumption, states, ages, computation, Fortran"
+        },
+        {
+            "name": "age_wealth_gini",
+            "core_purpose": "Compute the age-wealth Gini coefficient.",
+            "pseudocode": [
+                "Initialize age-wealth Gini coefficient variables.",
+                "Loop over all ages:",
+                "    Compute the Gini coefficient for wealth at each age.",
+                "    Store the results in the age-wealth Gini coefficient variables."
+            ],
+            "dependencies": [
+                "compute_distributions"
+            ],
+            "key_variables": [
+                "age_wea_gini"
+            ],
+            "summary_index": "1. Core Capability: Computes the age-wealth Gini coefficient for a population.\n2. Algorithms/Logic: Initializes variables, iterates over each age, calculates the Gini coefficient for wealth distribution at that age, and stores the result.\n3. Key Variables: age_wea_gini\n4. Keywords: age-wealth, Gini coefficient, wealth distribution, age iteration, coefficient calculation"
+        },
+        {
+            "name": "wageshare",
+            "core_purpose": "Compute the labor income share holding.",
+            "pseudocode": [
+                "Initialize labor income share arrays.",
+                "Loop over all states and ages:",
+                "    Compute the labor income share for each state.",
+                "    Store the results in the labor income share arrays."
+            ],
+            "dependencies": [
+                "compute_distributions"
+            ],
+            "key_variables": [
+                "incshare05",
+                "incshare1",
+                "incshare5",
+                "incshare10",
+                "incshare20",
+                "incshare40",
+                "incshare60",
+                "incshare80"
+            ],
+            "summary_index": "1. Core Capability: Computes labor income share across various states and ages.\n2. Algorithms/Logic: Initializes arrays, iterates over states and ages, calculates labor income share, stores results.\n3. Key Variables: incshare05, incshare1, incshare5, incshare10, incshare20, incshare40, incshare60, incshare80\n4. Keywords: wageshare, labor, income, share, states, ages, computation, arrays, iteration, storage"
+        },
+        {
+            "name": "totalincomeshare",
+            "core_purpose": "Compute the total income share holding.",
+            "pseudocode": [
+                "Initialize total income share arrays.",
+                "Loop over all states and ages:",
+                "    Compute the total income share for each state.",
+                "    Store the results in the total income share arrays."
+            ],
+            "dependencies": [
+                "compute_distributions"
+            ],
+            "key_variables": [
+                "tincshare05",
+                "tincshare1",
+                "tincshare5",
+                "tincshare10",
+                "tincshare20",
+                "tincshare40",
+                "tincshare60",
+                "tincshare80"
+            ],
+            "summary_index": "1. Core Capability: Computes the total income share holding across various states and ages.\n2. Algorithms/Logic: Initializes arrays, iterates over states and ages, calculates income share, stores results.\n3. Key Variables: tincshare05, tincshare1, tincshare5, tincshare10, tincshare20, tincshare40, tincshare60, tincshare80\n4. Keywords: total income share, compute, states, ages, arrays, iteration, calculation, storage"
+        },
+        {
+            "name": "consumptionshare",
+            "core_purpose": "Compute the consumption share holding.",
+            "pseudocode": [
+                "Initialize consumption share arrays.",
+                "Loop over all states and ages:",
+                "    Compute the consumption share for each state.",
+                "    Store the results in the consumption share arrays."
+            ],
+            "dependencies": [
+                "compute_distributions"
+            ],
+            "key_variables": [
+                "cshare05",
+                "cshare1",
+                "cshare5",
+                "cshare10",
+                "cshare20",
+                "cshare40",
+                "cshare60",
+                "cshare80"
+            ],
+            "summary_index": "1. Core Capability: Computes consumption share holding for various age groups.\n2. Algorithms/Logic: Initializes consumption share arrays. Iterates over all states and ages, calculating consumption share for each state and storing results.\n3. Key Variables: cshare05, cshare1, cshare5, cshare10, cshare20, cshare40, cshare60, cshare80\n4. Keywords: consumption, share, holding, states, ages, calculation, storage, arrays"
+        },
+        {
+            "name": "SRCHFIVE01",
+            "core_purpose": "Finds the optimum asset and labor choices over grid points for a given state.",
+            "pseudocode": [
+                "Initialize variables for age, asset, return, and state.",
+                "Loop over possible asset and labor choices.",
+                "Calculate consumption, leisure, utility, and survival probability.",
+                "Compute expected future value based on transition probabilities.",
+                "Update the maximum value and corresponding optimal choices.",
+                "Return the optimal asset and labor choices and the maximum value."
+            ],
+            "dependencies": [
+                "utility",
+                "beq_aftertax"
+            ],
+            "key_variables": [
+                "AGE, IA, IR, IS, JAMAX, JNMAX, VMAX, ILA, IUA, ISKIPA, ILN, IUN, ISKIPN, X3, BEQ, BEQTRANS1"
+            ],
+            "summary_index": "1. Core Capability: Determines optimal asset and labor choices for given state.\n2. Algorithms/Logic: Initializes variables, iterates over asset and labor choices, calculates economic metrics, computes future value, updates optimal values.\n3. Key Variables: AGE, IA, IR, IS, JAMAX, JNMAX, VMAX, ILA, IUA, ISKIPA, ILN, IUN, ISKIPN, X3, BEQ, BEQTRANS1.\n4. Keywords: SRCHFIVE01, optimization, asset, labor, grid, state, consumption, leisure, utility, survival, future value, transition, maximum, choices."
+        },
+        {
+            "name": "BRACKET01",
+            "core_purpose": "Finds the global optimum asset and labor choice for a single state using a bracketing method.",
+            "pseudocode": [
+                "Initialize search parameters and variables.",
+                "Loop to narrow down the search range for optimal asset and labor choices.",
+                "Call SRCHFIVE01 to find the optimal choices within the narrowed range.",
+                "Update the search range based on the optimal choices found.",
+                "Repeat the process until the optimal choices are found with sufficient precision."
+            ],
+            "dependencies": [
+                "SRCHFIVE01"
+            ],
+            "key_variables": [
+                "AGE, IA, IR, IS, WAGEZ, INDEX_SRCHFIVE01, JAMAX, JNMAX, JHMAX, ILA, IUA, ISKIPA, ILN, IUN, ISKIPN, X3, VMAX"
+            ],
+            "summary_index": "1. Core Capability: Finds global optimum asset and labor choices for a single state.\n2. Algorithms/Logic: Initializes parameters, loops to narrow search range, calls SRCHFIVE01 for optimization, updates range, repeats until precision is met.\n3. Key Variables: AGE, IA, IR, IS, WAGEZ, INDEX_SRCHFIVE01, JAMAX, JNMAX, JHMAX, ILA, IUA, ISKIPA, ILN, IUN, ISKIPN, X3, VMAX\n4. Keywords: bracketing, global optimum, asset choice, labor choice, search range, SRCHFIVE01, precision, initialization"
+        },
+        {
+            "name": "avg_return_wealthgroups",
+            "core_purpose": "Calculates the average return and its standard deviation for different wealth groups.",
+            "pseudocode": [
+                "Allocate arrays for sorting and identifying wealth groups",
+                "Initialize sort_D_R and indentify_R arrays",
+                "Loop over all AGE, IA, IR, IS combinations:",
+                "    Update index_A and indentify_R arrays",
+                "    Calculate sort_D_R using sort_D and indentify_R",
+                "Calculate average return and standard deviation for various wealth groups",
+                "Repeat the above steps for weighted average return calculations"
+            ],
+            "dependencies": [],
+            "key_variables": [
+                "sort_D_R",
+                "indentify_R",
+                "sort_D_R_weighted",
+                "Avg_top0001_R",
+                "SD_top0001_R",
+                "Avg_top0001_R_weighted",
+                "SD_top0001_R_weighted"
+            ],
+            "summary_index": "1. Core Capability: Calculates average return and standard deviation for wealth groups.\n2. Algorithms/Logic: Allocates arrays, initializes sort and identify arrays, loops over combinations updating indices, calculates returns and deviations, repeats for weighted averages.\n3. Key Variables: sort_D_R, indentify_R, sort_D_R_weighted, Avg_top0001_R, SD_top0001_R, Avg_top0001_R_weighted, SD_top0001_R_weighted\n4. Keywords: avg_return_wealthgroups, wealth_groups, average_return, standard_deviation, sort_arrays, identify_arrays, weighted_average, loop_combinations"
+        },
+        {
+            "name": "avg_return_incomegroups",
+            "core_purpose": "Calculates the average return and its standard deviation for different income groups.",
+            "pseudocode": [
+                "Allocate arrays for sorting and identifying income groups",
+                "Initialize sort_D_R, sort_D_Z, and other related arrays",
+                "Loop over all AGE, IA, IR, IS combinations:",
+                "    Update index_A and indentify_R/Z arrays",
+                "    Calculate sort_D_R and sort_D_Z using sort_D_tinc and indentify_R/Z",
+                "Calculate average return and standard deviation for various income groups",
+                "Repeat the above steps for weighted average return calculations"
+            ],
+            "dependencies": [],
+            "key_variables": [
+                "sort_D_R",
+                "sort_D_Z",
+                "indentify_R",
+                "indentify_Z",
+                "Avg_topinc0001_R",
+                "SD_topinc0001_R",
+                "Avg_topinc0001_R_weighted",
+                "SD_topinc0001_R_weighted"
+            ],
+            "summary_index": "1. Core Capability: Calculates average return and standard deviation for income groups.\n2. Algorithms/Logic: Allocates arrays, initializes variables, loops through AGE, IA, IR, IS combinations, updates indices, calculates sort arrays, computes averages and standard deviations, repeats for weighted calculations.\n3. Key Variables: sort_D_R, sort_D_Z, indentify_R, indentify_Z, Avg_topinc0001_R, SD_topinc0001_R, Avg_topinc0001_R_weighted, SD_topinc0001_R_weighted\n4. Keywords: avg_return_incomegroups, average, standard_deviation, income_groups, sort_arrays, weighted_average, AGE, IA, IR, IS"
+        },
+        {
+            "name": "income_partition",
+            "core_purpose": "Partitions income into different components and calculates their shares for various income groups.",
+            "pseudocode": [
+                "Allocate arrays for total income, earning share, kincome share, etc.",
+                "Loop over all AGE, IA, IR, IS combinations:",
+                "    Calculate total income, earning share, kincome share, etc.",
+                "    Store the calculated values in respective arrays",
+                "Sort the arrays by total income",
+                "Calculate average and group-specific shares of income components",
+                "Calculate shares of income accruing to top z and r groups"
+            ],
+            "dependencies": [],
+            "key_variables": [
+                "totalincome",
+                "earning_share",
+                "kincome_share",
+                "trans_share",
+                "age_share",
+                "earning_share_avg",
+                "kincome_share_avg",
+                "trans_share_avg",
+                "age_share_avg"
+            ],
+            "summary_index": "1. Core Capability: Partitions income into components and calculates shares for income groups.\n2. Algorithms/Logic: Allocates arrays, loops over AGE, IA, IR, IS combinations for calculations, sorts arrays by total income, computes average and group-specific shares.\n3. Key Variables: totalincome, earning_share, kincome_share, trans_share, age_share, earning_share_avg, kincome_share_avg, trans_share_avg, age_share_avg\n4. Keywords: income_partition, total_income, earning_share, kincome_share, trans_share, age_share, income_groups, share_calculation, array_sorting, group_specific_shares"
+        },
+        {
+            "name": "income_partition_sort_by_wealth",
+            "core_purpose": "Partitions income into different components and calculates their shares for various wealth groups.",
+            "pseudocode": [
+                "Allocate arrays for total income, earning share, kincome share, etc.",
+                "Loop over all AGE, IA, IR, IS combinations:",
+                "    Calculate total income, earning share, kincome share, etc.",
+                "    Store the calculated values in respective arrays",
+                "Sort the arrays by wealth",
+                "Calculate average and group-specific shares of income components for wealth groups"
+            ],
+            "dependencies": [],
+            "key_variables": [
+                "totalincome_sort_by_wealth",
+                "earning_share_sort_by_wealth",
+                "kincome_share_sort_by_wealth",
+                "trans_share_sort_by_wealth",
+                "age_share_sort_by_wealth",
+                "earning_share_avg_sort_by_wealth",
+                "kincome_share_avg_sort_by_wealth",
+                "trans_share_avg_sort_by_wealth",
+                "age_share_avg_sort_by_wealth"
+            ],
+            "summary_index": "1. Core Capability: Partitions and calculates income shares for wealth groups.\n2. Algorithms/Logic: Allocates arrays, loops over AGE, IA, IR, IS combinations to calculate and store income components, sorts by wealth, calculates averages.\n3. Key Variables: totalincome_sort_by_wealth, earning_share_sort_by_wealth, kincome_share_sort_by_wealth, trans_share_sort_by_wealth, age_share_sort_by_wealth, earning_share_avg_sort_by_wealth, kincome_share_avg_sort_by_wealth, trans_share_avg_sort_by_wealth, age_share_avg_sort_by_wealth\n4. Keywords: income_partition, wealth_groups, sort_by_wealth, income_shares, total_income, earning_share, kincome_share, trans_share, age_share, average_shares, array_allocation, loop_combinations"
+        },
+        {
+            "name": "bequest",
+            "core_purpose": "Calculates bequest distribution, including bequest amounts and their distribution across different wealth percentiles.",
+            "pseudocode": [
+                "Allocate arrays for bequest, distribution, cumulative distribution, and top percentile flags.",
+                "Loop through each age, asset, return, and state combination:",
+                "    Calculate bequest after tax and store it in the bequest array.",
+                "    Calculate the distribution and cumulative distribution of bequests.",
+                "Identify wealth fractile agents based on cumulative distribution.",
+                "Calculate bequest percentiles and ratios.",
+                "Calculate bequest Gini coefficient."
+            ],
+            "dependencies": [],
+            "key_variables": [
+                "sort_B",
+                "sort_D_B",
+                "cum_sort_D_B",
+                "top1pct_D_B",
+                "top2pct_D_B",
+                "top5pct_D_B",
+                "top10pct_D_B",
+                "top20pct_D_B",
+                "top30pct_D_B",
+                "top40pct_D_B",
+                "top50pct_D_B",
+                "top60pct_D_B",
+                "top70pct_D_B",
+                "top80pct_D_B",
+                "top90pct_D_B",
+                "beq_given",
+                "beq_pct98",
+                "beq_pct95",
+                "beq_pct90",
+                "beq_pct80",
+                "beq_pct70",
+                "beq_pct60",
+                "beq_pct50",
+                "beq_pct40",
+                "beq_pct30",
+                "beq_pct20",
+                "beq_pct10",
+                "beq_wealth_ratio",
+                "Beq98",
+                "Beq95",
+                "Beq90",
+                "Beq80",
+                "Beq70",
+                "Beq60",
+                "Beq50",
+                "Beq40",
+                "Beq30",
+                "Beq20",
+                "Beq10",
+                "bshare99_100",
+                "bshare98_100",
+                "bshare95_99",
+                "bshare90_95",
+                "bshare80_90",
+                "bshare70_80",
+                "bshare50_70",
+                "bshare0_50",
+                "beq_gini"
+            ],
+            "summary_index": "1. Core Capability: Calculates bequest distribution and related metrics across wealth percentiles.\n2. Algorithms/Logic: Allocates arrays for bequest data. Iterates through various combinations to calculate bequests after tax. Computes distribution and cumulative distribution. Identifies wealth fractiles. Calculates percentiles, ratios, and Gini coefficient.\n3. Key Variables: sort_B, sort_D_B, cum_sort_D_B, top1pct_D_B, top2pct_D_B, top5pct_D_B, top10pct_D_B, top20pct_D_B, top30pct_D_B, top40pct_D_B, top50pct_D_B, top60pct_D_B, top70pct_D_B, top80pct_D_B, top90pct_D_B, beq_given, beq_pct98, beq_pct95, beq_pct90, beq_pct80, beq_pct70, beq_pct60, beq_pct50, beq_pct40, beq_pct30, beq_pct20, beq_pct10, beq_wealth_ratio, Beq98, Beq95, Beq90, Beq80, Beq70, Beq60, Beq50, Beq40, Beq30, Beq20, Beq10, bshare99_100, bshare98_100, bshare95_99, bshare90_95, bshare80_90, bshare70_80, bshare50_70, bshare0_50, beq_gini\n4. Keywords: bequest, distribution, wealth, percentile, fractile, Gini, coefficient, ratio, tax, allocation, array, iteration, calculation, cumulative, fractile, agent"
+        },
+        {
+            "name": "bequest_distribution",
+            "core_purpose": "Constructs bequest distribution and calculates bequest transition matrices for different types of parents and children.",
+            "pseudocode": [
+                "Allocate arrays for parent bequest basket, bequest distribution, and transition matrices.",
+                "Loop through each age, asset, return, and state combination:",
+                "    Calculate bequest distribution and parent bequest basket.",
+                "    Normalize bequest distribution.",
+                "    Calculate bequest given.",
+                "    Calculate population receiving bequests.",
+                "Loop through each age, asset, return, and state combination for children:",
+                "    Calculate transition matrices for inheritances from different types of parents.",
+                "    Calculate bequest receive.",
+                "    Equally redistribute remaining bequest left to all working agents."
+            ],
+            "dependencies": [],
+            "key_variables": [
+                "parentbeq_basket",
+                "beq_dist",
+                "X45_lowkid_dist1",
+                "X45_highkid_dist1",
+                "X45_lowparent_dist",
+                "X45_highparent_dist",
+                "pdf_parent_kid",
+                "beq_given",
+                "popu_left_beq",
+                "popu_receive_beq",
+                "beq_receive",
+                "BEQTRANS"
+            ],
+            "summary_index": "1. Core Capability: Constructs bequest distribution and calculates transition matrices for inheritances.\n2. Algorithms/Logic: Allocates arrays, loops through combinations of age, asset, return, and state, calculates and normalizes bequest distribution, calculates bequest given and population receiving bequests, calculates transition matrices for children, redistributes remaining bequest.\n3. Key Variables: parentbeq_basket, beq_dist, X45_lowkid_dist1, X45_highkid_dist1, X45_lowparent_dist, X45_highparent_dist, pdf_parent_kid, beq_given, popu_left_beq, popu_receive_beq, beq_receive, BEQTRANS\n4. Keywords: bequest_distribution, bequest_transition, parent_bequest, bequest_calculation, normalization, inheritance_matrices, asset_distribution, population_bequest, redistribution"
+        },
+        {
+            "name": "Calidiff",
+            "core_purpose": "Calculates the sum of squared errors between benchmark calibration and target values.",
+            "pseudocode": [
+                "Allocate arrays for benchmark calibration, targets, and error.",
+                "Assign benchmark calibration values.",
+                "Assign target values.",
+                "Calculate error as the difference between benchmark calibration and target values.",
+                "Calculate sum of squared error."
+            ],
+            "dependencies": [],
+            "key_variables": [
+                "bench_calibration",
+                "targets",
+                "error",
+                "SSE"
+            ],
+            "summary_index": "1. Core Capability: Calculates sum of squared errors between benchmark calibration and target values.\n2. Algorithms/Logic: Allocates arrays, assigns calibration and target values, computes error differences, calculates sum of squared errors.\n3. Key Variables: bench_calibration, targets, error, SSE\n4. Keywords: calibration, targets, error, SSE, sum, squared, errors, Fortran, function, arrays"
+        },
+        {
+            "name": "correlation",
+            "core_purpose": "Calculates correlations between earnings, income, and wealth.",
+            "pseudocode": [
+                "Initialize variables for covariance, variance, and mean.",
+                "Loop through each age, asset, return, and state combination:",
+                "    Calculate mean values for wealth, earnings, and income.",
+                "    Calculate covariance and variance for earnings and wealth.",
+                "    Calculate covariance and variance for earnings and capital income.",
+                "Calculate correlation coefficients using the covariance and variance values."
+            ],
+            "dependencies": [],
+            "key_variables": [
+                "cov_earn_wealth",
+                "cov_earn_wealth_working",
+                "cov_income_wealth",
+                "var_wealth",
+                "var_wealth_working",
+                "var_earn",
+                "var_earn_working",
+                "var_income",
+                "wealth_mean_corr",
+                "wealth_mean_corr_working",
+                "earn_mean_corr",
+                "earn_mean_corr_working",
+                "income_mean_corr",
+                "cov_earn_kinc",
+                "cov_earn_kinc_working",
+                "var_kinc",
+                "var_kinc_working",
+                "kinc_mean_corr",
+                "kinc_mean_corr_working",
+                "corr_earn_wealth",
+                "corr_earn_wealth_working",
+                "corr_income_wealth",
+                "corr_earn_kinc",
+                "corr_earn_kinc_working"
+            ],
+            "summary_index": "1. Core Capability: Calculates correlation coefficients between earnings, income, and wealth.\n2. Algorithms/Logic: Initializes covariance, variance, and mean variables. Iterates through combinations of age, asset, return, and state to compute mean, covariance, and variance. Derives correlation coefficients from these values.\n3. Key Variables: cov_earn_wealth, cov_earn_wealth_working, cov_income_wealth, var_wealth, var_wealth_working, var_earn, var_earn_working, var_income, wealth_mean_corr, wealth_mean_corr_working, earn_mean_corr, earn_mean_corr_working, income_mean_corr, cov_earn_kinc, cov_earn_kinc_working, var_kinc, var_kinc_working, kinc_mean_corr, kinc_mean_corr_working, corr_earn_wealth, corr_earn_wealth_working, corr_income_wealth, corr_earn_kinc, corr_earn_kinc_working\n4. Keywords: correlation, earnings, income, wealth, covariance, variance, mean, age, asset, return, state, coefficients"
+        },
+        {
+            "name": "INTERGENERATIONAL",
+            "core_purpose": "Computes intergenerational wealth correlation and transition matrices.",
+            "pseudocode": [
+                "Initialize arrays and variables for wealth and age data.",
+                "Calculate age-adjusted log wealth for parents and kids.",
+                "Sort kids and parents by age-adjusted wealth.",
+                "Generate quintiles for kids and parents based on sorted wealth.",
+                "Calculate transition matrix for wealth quintiles.",
+                "Compute regression coefficients for wealth correlation."
+            ],
+            "dependencies": [
+                "SSORT_INT",
+                "MATINV3",
+                "MATINV4",
+                "M66INV"
+            ],
+            "key_variables": [
+                "D_kids, D_parents, A_kids, A_parents",
+                "beta3, beta4, beta6",
+                "wealth_trans, corr_Akids_Aparents_sq"
+            ],
+            "summary_index": "1. Core Capability: Computes intergenerational wealth correlation and transition matrices.\n2. Algorithms/Logic: Initializes data structures, calculates age-adjusted log wealth, sorts by wealth, generates quintiles, calculates transition matrix, computes regression coefficients.\n3. Key Variables: D_kids, D_parents, A_kids, A_parents, beta3, beta4, beta6, wealth_trans, corr_Akids_Aparents_sq\n4. Keywords: intergenerational, wealth, correlation, transition, matrices, age-adjusted, log, quintiles, regression, coefficients"
+        },
+        {
+            "name": "earnings_growth_moments",
+            "core_purpose": "Calculates moments of earnings growth distribution.",
+            "pseudocode": [
+                "Initialize arrays for earnings growth and density.",
+                "Loop through each age and asset state.",
+                "Calculate earnings growth and density.",
+                "Store results in arrays.",
+                "Calculate average and standard deviation of earnings growth."
+            ],
+            "dependencies": [],
+            "key_variables": [
+                "earngrowth, density_earngrowth",
+                "avg_earning_growth, sd_earning_growth, skew_earning_growth, kurt_earning_growth"
+            ],
+            "summary_index": "1. Core Capability: Calculates statistical moments of earnings growth distribution.\n2. Algorithms/Logic: Initializes arrays, iterates through age and asset states, computes earnings growth and density, stores results, calculates average, standard deviation, skewness, and kurtosis.\n3. Key Variables: earngrowth, density_earngrowth, avg_earning_growth, sd_earning_growth, skew_earning_growth, kurt_earning_growth\n4. Keywords: earnings_growth, moments, distribution, density, average, standard_deviation, skewness, kurtosis, age, asset_state"
+        },
+        {
+            "name": "SSORT_INT",
+            "core_purpose": "Sorts an array and optionally carries along another array.",
+            "pseudocode": [
+                "Initialize variables and parameters.",
+                "Check if the array size is positive.",
+                "Check if the sort control parameter is valid.",
+                "Adjust array values if needed for decreasing order.",
+                "Perform quicksort algorithm.",
+                "Return sorted array and carry-along array if specified."
+            ],
+            "dependencies": [],
+            "key_variables": [
+                "X, Y, N, KFLAG",
+                "IL, IU, R, DET, A11, A12, ..., A66"
+            ],
+            "summary_index": "1. Core Capability: Sorts an array and optionally carries along another array.\n2. Algorithms/Logic: Initializes variables, checks array size and sort control validity, adjusts array values for order, performs quicksort, returns sorted arrays.\n3. Key Variables: X, Y, N, KFLAG, IL, IU, R, DET, A11, A12, A66\n4. Keywords: SSORT_INT, array_sorting, quicksort, carry_along_array, data_manipulation, Fortran_algorithm"
+        },
+        {
+            "name": "COFACTOR",
+            "core_purpose": "Calculate cofactors for a 6x6 matrix",
+            "pseudocode": [
+                "FOR i FROM 1 TO 6",
+                "    FOR j FROM 1 TO 6",
+                "        COFACTOR(i, j) = 0",
+                "        FOR k FROM 1 TO 6",
+                "            FOR l FROM 1 TO 6",
+                "                COFACTOR(i, j) += (-1)^(i+j) * A(i, k) * A(j, l) * minor(i, j, k, l)",
+                "    END FOR",
+                "END FOR"
+            ],
+            "dependencies": [
+                "minor function"
+            ],
+            "key_variables": [
+                "A(i, k)",
+                "A(j, l)",
+                "minor(i, j, k, l)"
+            ],
+            "summary_index": "1. Core Capability: Computes cofactors for a 6x6 matrix\n2. Algorithms/Logic: Iterates through matrix elements, calculates cofactor using determinant of submatrix, applies sign based on element position\n3. Key Variables: A(i, k), A(j, l), minor(i, j, k, l)\n4. Keywords: cofactor, 6x6 matrix, determinant, submatrix, iteration, sign calculation"
+        },
+        {
+            "name": "COFACTOR(3,4)",
+            "core_purpose": "Calculates the cofactor for the (3,4) position of a 6x6 matrix.",
+            "pseudocode": [
+                "COFACTOR(3,4) = 0",
+                "FOR each term in the cofactor formula:",
+                "    COFACTOR(3,4) += term",
+                "END FOR"
+            ],
+            "dependencies": [],
+            "key_variables": [
+                "A16",
+                "A25",
+                "A33",
+                "A42",
+                "A51",
+                "A61",
+                "A15",
+                "A26",
+                "A32",
+                "A43",
+                "A52",
+                "A62",
+                "A13",
+                "A24",
+                "A35",
+                "A41",
+                "A53",
+                "A63",
+                "A12",
+                "A23",
+                "A36",
+                "A45",
+                "A54",
+                "A64",
+                "A11",
+                "A22",
+                "A34",
+                "A46",
+                "A55",
+                "A65",
+                "A14",
+                "A21",
+                "A31",
+                "A44",
+                "A56",
+                "A66"
+            ],
+            "summary_index": "1. Core Capability: Computes the cofactor at the (3,4) position of a 6x6 matrix.\n2. Algorithms/Logic: Initializes cofactor to zero. Iterates through each term in the cofactor formula, accumulating the result.\n3. Key Variables: A16, A25, A33, A42, A51, A61, A15, A26, A32, A43, A52, A62, A13, A24, A35, A41, A53, A63, A12, A23, A36, A45, A54, A64, A11, A22, A34, A46, A55, A65, A14, A21, A31, A44, A56, A66\n4. Keywords: cofactor, matrix, 6x6, position, formula, accumulation, iteration"
+        },
+        {
+            "name": "COFACTOR(4,4)",
+            "core_purpose": "Calculates the cofactor for the (4,4) position of a 6x6 matrix.",
+            "pseudocode": [
+                "COFACTOR(4,4) = 0",
+                "FOR each term in the cofactor formula:",
+                "    COFACTOR(4,4) += term",
+                "END FOR"
+            ],
+            "dependencies": [],
+            "key_variables": [
+                "A16",
+                "A25",
+                "A33",
+                "A42",
+                "A51",
+                "A61",
+                "A15",
+                "A26",
+                "A32",
+                "A43",
+                "A52",
+                "A62",
+                "A13",
+                "A24",
+                "A35",
+                "A41",
+                "A53",
+                "A63",
+                "A12",
+                "A23",
+                "A36",
+                "A45",
+                "A54",
+                "A64",
+                "A11",
+                "A22",
+                "A34",
+                "A46",
+                "A55",
+                "A65",
+                "A14",
+                "A21",
+                "A31",
+                "A44",
+                "A56",
+                "A66"
+            ],
+            "summary_index": "1. Core Capability: Calculates the cofactor for the (4,4) position of a 6x6 matrix.\n2. Algorithms/Logic: Initializes COFACTOR(4,4) to 0. Iterates through each term in the cofactor formula, adding each term to COFACTOR(4,4).\n3. Key Variables: A16, A25, A33, A42, A51, A61, A15, A26, A32, A43, A52, A62, A13, A24, A35, A41, A53, A63, A12, A23, A36, A45, A54, A64, A11, A22, A34, A46, A55, A65, A14, A21, A31, A44, A56, A66\n4. Keywords: cofactor, matrix, 6x6, position, formula, iteration, calculation, Fortran, algorithm, logic, variables, indexing"
+        },
+        {
+            "name": "COFACTOR(5,4)",
+            "core_purpose": "Calculates the cofactor for the (5,4) position of a 6x6 matrix.",
+            "pseudocode": [
+                "COFACTOR(5,4) = 0",
+                "FOR each term in the cofactor formula:",
+                "    COFACTOR(5,4) += term",
+                "END FOR"
+            ],
+            "dependencies": [],
+            "key_variables": [
+                "A16",
+                "A25",
+                "A33",
+                "A42",
+                "A51",
+                "A61",
+                "A15",
+                "A26",
+                "A32",
+                "A43",
+                "A52",
+                "A62",
+                "A13",
+                "A24",
+                "A35",
+                "A41",
+                "A53",
+                "A63",
+                "A12",
+                "A23",
+                "A36",
+                "A45",
+                "A54",
+                "A64",
+                "A11",
+                "A22",
+                "A34",
+                "A46",
+                "A55",
+                "A65",
+                "A14",
+                "A21",
+                "A31",
+                "A44",
+                "A56",
+                "A66"
+            ],
+            "summary_index": "1. Core Capability: Calculates cofactor for matrix position (5,4).\n2. Algorithms/Logic: Initializes cofactor to zero. Iterates through cofactor formula terms, accumulating results.\n3. Key Variables: A16, A25, A33, A42, A51, A61, A15, A26, A32, A43, A52, A62, A13, A24, A35, A41, A53, A63, A12, A23, A36, A45, A54, A64, A11, A22, A34, A46, A55, A65, A14, A21, A31, A44, A56, A66\n4. Keywords: cofactor, matrix, position, calculation, accumulation, formula, iteration, Fortran, 6x6, determinant"
+        },
+        {
+            "name": "COFACTOR(6,4)",
+            "core_purpose": "Calculates the cofactor for the (6,4) position of a 6x6 matrix.",
+            "pseudocode": [
+                "COFACTOR(6,4) = 0",
+                "FOR each term in the cofactor formula:",
+                "    COFACTOR(6,4) += term",
+                "END FOR"
+            ],
+            "dependencies": [],
+            "key_variables": [
+                "A16",
+                "A25",
+                "A33",
+                "A42",
+                "A51",
+                "A61",
+                "A15",
+                "A26",
+                "A32",
+                "A43",
+                "A52",
+                "A62",
+                "A13",
+                "A24",
+                "A35",
+                "A41",
+                "A53",
+                "A63",
+                "A12",
+                "A23",
+                "A36",
+                "A45",
+                "A54",
+                "A64",
+                "A11",
+                "A22",
+                "A34",
+                "A46",
+                "A55",
+                "A65",
+                "A14",
+                "A21",
+                "A31",
+                "A44",
+                "A56",
+                "A66"
+            ],
+            "summary_index": "1. Core Capability: Computes the cofactor at the (6,4) position of a 6x6 matrix.\n2. Algorithms/Logic: Initializes cofactor to zero; iterates through cofactor formula terms; accumulates each term's value.\n3. Key Variables: A16, A25, A33, A42, A51, A61, A15, A26, A32, A43, A52, A62, A13, A24, A35, A41, A53, A63, A12, A23, A36, A45, A54, A64, A11, A22, A34, A46, A55, A65, A14, A21, A31, A44, A56, A66\n4. Keywords: cofactor, matrix, 6x6, position, formula, accumulation, iteration"
+        },
+        {
+            "name": "AINV",
+            "core_purpose": "Calculates the inverse of a 6x6 matrix using the cofactor matrix and determinant.",
+            "pseudocode": [
+                "AINV = TRANSPOSE(COFACTOR) / DET"
+            ],
+            "dependencies": [
+                "COFACTOR",
+                "DET"
+            ],
+            "key_variables": [
+                "COFACTOR",
+                "DET"
+            ],
+            "summary_index": "1. Core Capability: Calculates the inverse of a 6x6 matrix.\n2. Algorithms/Logic: Computes the cofactor matrix, calculates the determinant, then divides the transpose of the cofactor matrix by the determinant.\n3. Key Variables: COFACTOR, DET\n4. Keywords: matrix inversion, 6x6 matrix, cofactor matrix, determinant, transpose, Fortran function"
+        },
+        {
+            "name": "OK_FLAG",
+            "core_purpose": "Sets a flag indicating the success of the matrix inversion process.",
+            "pseudocode": [
+                "OK_FLAG = .TRUE."
+            ],
+            "dependencies": [],
+            "key_variables": [
+                "OK_FLAG"
+            ],
+            "summary_index": "1. Core Capability: Determines success of matrix inversion.\n2. Algorithms/Logic: Sets flag based on inversion outcome.\n3. Key Variables: OK_FLAG\n4. Keywords: matrix inversion, success flag, OK_FLAG, boolean check"
+        }
+    ]
+}
