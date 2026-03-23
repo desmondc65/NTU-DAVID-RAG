@@ -90,7 +90,15 @@ def describe_mineru_images(json_path: str | Path):
         raise FileNotFoundError(f"JSON file not found: {json_path}")
         
     with open(json_path, 'r', encoding='utf-8') as f:
-        data = json.load(f)
+        raw_data = json.load(f)
+
+    # Handle both wrapped {"items": [...]} and plain list formats
+    if isinstance(raw_data, dict) and "items" in raw_data:
+        data = raw_data["items"]
+        wrapper = raw_data
+    else:
+        data = raw_data
+        wrapper = None
         
     print("Initializing client...")
     client = LocalLLMClient(
@@ -168,8 +176,11 @@ def describe_mineru_images(json_path: str | Path):
                 print(f"Description added for {img_rel_path}")
                 
                 # Incrementally save progress to avoid data loss if interrupted
+                save_data = wrapper if wrapper is not None else data
+                if wrapper is not None:
+                    wrapper["items"] = data
                 with open(json_path, 'w', encoding='utf-8') as f:
-                    json.dump(data, f, indent=4, separators=(',', ': '), ensure_ascii=False)
+                    json.dump(save_data, f, indent=4, separators=(',', ': '), ensure_ascii=False)
                     
             except Exception as e:
                 print(f"Error describing {img_rel_path}: {e}")
@@ -191,7 +202,15 @@ def describe_mineru_equations(json_path: str | Path):
         raise FileNotFoundError(f"JSON file not found: {json_path}")
         
     with open(json_path, 'r', encoding='utf-8') as f:
-        data = json.load(f)
+        raw_data = json.load(f)
+
+    # Handle both wrapped {"items": [...]} and plain list formats
+    if isinstance(raw_data, dict) and "items" in raw_data:
+        data = raw_data["items"]
+        wrapper = raw_data
+    else:
+        data = raw_data
+        wrapper = None
         
     print("Initializing client...")
     client = LocalLLMClient(
@@ -272,8 +291,11 @@ def describe_mineru_equations(json_path: str | Path):
                 print(f"Description added for {img_rel_path}")
                 
                 # Incrementally save progress to avoid data loss if interrupted
+                save_data = wrapper if wrapper is not None else data
+                if wrapper is not None:
+                    wrapper["items"] = data
                 with open(json_path, 'w', encoding='utf-8') as f:
-                    json.dump(data, f, indent=4, separators=(',', ': '), ensure_ascii=False)
+                    json.dump(save_data, f, indent=4, separators=(',', ': '), ensure_ascii=False)
                     
             except Exception as e:
                 print(f"Error describing equation {img_rel_path}: {e}")
@@ -295,7 +317,15 @@ def describe_mineru_tables(json_path: str | Path):
         raise FileNotFoundError(f"JSON file not found: {json_path}")
         
     with open(json_path, 'r', encoding='utf-8') as f:
-        data = json.load(f)
+        raw_data = json.load(f)
+
+    # Handle both wrapped {"items": [...]} and plain list formats
+    if isinstance(raw_data, dict) and "items" in raw_data:
+        data = raw_data["items"]
+        wrapper = raw_data
+    else:
+        data = raw_data
+        wrapper = None
         
     print("Initializing client...")
     client = LocalLLMClient(
@@ -385,8 +415,11 @@ def describe_mineru_tables(json_path: str | Path):
                 print(f"Description added for {img_rel_path}")
                 
                 # Incrementally save progress to avoid data loss if interrupted
+                save_data = wrapper if wrapper is not None else data
+                if wrapper is not None:
+                    wrapper["items"] = data
                 with open(json_path, 'w', encoding='utf-8') as f:
-                    json.dump(data, f, indent=4, separators=(',', ': '), ensure_ascii=False)
+                    json.dump(save_data, f, indent=4, separators=(',', ': '), ensure_ascii=False)
                     
             except Exception as e:
                 print(f"Error describing table {img_rel_path}: {e}")
