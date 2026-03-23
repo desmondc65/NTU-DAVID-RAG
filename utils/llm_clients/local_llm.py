@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Any, Optional, Type
+from typing import Any, Optional, Type, Union
 
 from dotenv import load_dotenv
 from openai import OpenAI
@@ -37,7 +37,7 @@ class LocalLLMClient:
 
 	def generate_response(
 		self,
-		user_prompt: str,
+		user_prompt: Union[str, list],
 		system_prompt: Optional[str] = None,
 		response_schema: Optional[Type[BaseModel]] = None,
 		response_mime_type: str = "application/json",
@@ -48,7 +48,7 @@ class LocalLLMClient:
 		Generate a response from the local model.
 
 		Args:
-			user_prompt (str): Main prompt from the user.
+			user_prompt (Union[str, list]): Main prompt from the user. Can be a string or a list of OpenAI content blocks.
 			system_prompt (str, optional): Optional system instruction.
 			response_schema (Type[BaseModel], optional): Pydantic schema for structured output.
 			response_mime_type (str): "application/json" for JSON, otherwise plain text.
