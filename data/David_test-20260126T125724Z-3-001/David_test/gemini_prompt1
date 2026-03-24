@@ -1,3 +1,0 @@
-1. I am going to build a RAG system that stores this fortran code. However, the code is too long and hard to understand for Large language model. Can you suggest me a way to make the code easier for storage in the RAG system?
-2. How should I modify the code so that my research assistant can easily to input the RAG system? Another word, can I add comments in the code for instruction?
-3. Can you write the prompt for me to do all this work automatically by LLM?
