@@ -1,7 +1,4 @@
-docling
-google-genai
 python-dotenv
-openai
 pdf2image
 mineru[all]
 sentence-transformers

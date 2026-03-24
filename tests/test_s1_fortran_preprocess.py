@@ -1,5 +1,11 @@
-import os
 from pathlib import Path
+import sys
+
+# Allow running this test file directly via `python tests/...`.
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
 from utils.s1_data_ingestion.fortran_code_digest import digest_fortran_code, summarize_fortran_digest
 
 def test_benchmark_f90_digest():
