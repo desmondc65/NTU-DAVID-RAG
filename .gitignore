@@ -11,3 +11,8 @@ personal/
 *.sqlite3
 
 log.txt
+tests/ingest_results/*
+db/*
+
+data/*
+archieve/*

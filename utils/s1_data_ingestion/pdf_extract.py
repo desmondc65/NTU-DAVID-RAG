@@ -101,11 +101,7 @@ def describe_mineru_images(json_path: str | Path):
         wrapper = None
         
     print("Initializing client...")
-    client = LocalLLMClient(
-        model_name="qwen2.5-vl-72b-instruct",
-        base_url="http://localhost:8000/v1",
-        api_key="local-dev-key",
-    )
+    client = LocalLLMClient()
     
     modified = False
     for idx, item in enumerate(data):
@@ -213,11 +209,7 @@ def describe_mineru_equations(json_path: str | Path):
         wrapper = None
         
     print("Initializing client...")
-    client = LocalLLMClient(
-        model_name="qwen2.5-vl-72b-instruct",
-        base_url="http://localhost:8000/v1",
-        api_key="local-dev-key",
-    )
+    client = LocalLLMClient()
     
     modified = False
     for idx, item in enumerate(data):
@@ -328,11 +320,7 @@ def describe_mineru_tables(json_path: str | Path):
         wrapper = None
         
     print("Initializing client...")
-    client = LocalLLMClient(
-        model_name="qwen2.5-vl-72b-instruct",
-        base_url="http://localhost:8000/v1",
-        api_key="local-dev-key",
-    )
+    client = LocalLLMClient()
     
     modified = False
     for idx, item in enumerate(data):

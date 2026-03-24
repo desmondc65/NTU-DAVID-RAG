@@ -138,3 +138,13 @@ class QdrantVectorStore:
         """Return the number of documents in the collection."""
         info = self.client.get_collection(self.collection_name)
         return info.points_count
+
+    def close(self) -> None:
+        """Close the underlying Qdrant client and release local storage locks."""
+        client = getattr(self, "client", None)
+        if client is None:
+            return
+        try:
+            client.close()
+        except Exception:
+            pass

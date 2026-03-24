@@ -14,7 +14,10 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
+import shutil
 import sys
+import uuid
 from pathlib import Path
 from typing import Dict, Optional, Union
 
@@ -146,6 +149,27 @@ def _inject_metadata_into_json(
     logger.info("Injected metadata into %s", json_path)
 
 
+def _safe_title_dirname(title: str) -> str:
+    """Create a filesystem-safe directory name from a paper title."""
+    cleaned = re.sub(r"[^A-Za-z0-9._ -]+", "", title).strip()
+    cleaned = re.sub(r"\s+", " ", cleaned)
+    if not cleaned:
+        cleaned = "untitled-paper"
+    return cleaned[:180]
+
+
+def _unique_dir(base_dir: Path) -> Path:
+    """Return a non-conflicting directory path by appending a numeric suffix."""
+    if not base_dir.exists():
+        return base_dir
+    idx = 2
+    while True:
+        candidate = base_dir.parent / f"{base_dir.name}-{idx}"
+        if not candidate.exists():
+            return candidate
+        idx += 1
+
+
 # ── main orchestrator ─────────────────────────────────────────────────────
 
 def ingest_paper_and_code(
@@ -202,76 +226,118 @@ def ingest_paper_and_code(
     base_url = base_url or os.getenv("LOCAL_LLM_BASE_URL", "http://localhost:8000/v1")
     api_key = api_key or os.getenv("LOCAL_LLM_API_KEY", "local-dev-key")
 
-    # ── 1. PDF extraction ────────────────────────────────────────────────
-    logger.info("═══ Step 1/5: Extracting PDF via MinerU ═══")
-    subdir = _parse_subdir(backend, method)
-    expected_json = output_dir / pdf_path.stem / subdir / f"{pdf_path.stem}_content_list.json"
-    expected_md = output_dir / pdf_path.stem / subdir / f"{pdf_path.stem}.md"
+    # ── staged ingest paths ───────────────────────────────────────────────
+    stage_root = output_dir / "_tmp_ingest" / uuid.uuid4().hex
+    stage_source_dir = stage_root / "source"
+    stage_extract_dir = stage_root / "extract"
+    stage_source_dir.mkdir(parents=True, exist_ok=True)
+    stage_extract_dir.mkdir(parents=True, exist_ok=True)
 
-    if expected_json.exists() and expected_md.exists():
-        logger.info("MinerU output already exists – skipping extraction.")
-        md_path = expected_md
-    else:
+    staged_pdf = stage_source_dir / pdf_path.name
+    staged_fortran = stage_source_dir / fortran_path.name
+    shutil.copy2(pdf_path, staged_pdf)
+    shutil.copy2(fortran_path, staged_fortran)
+
+    try:
+        # ── 1. PDF extraction ────────────────────────────────────────────
+        logger.info("═══ Step 1/5: Extracting PDF via MinerU ═══")
+        subdir = _parse_subdir(backend, method)
         md_path = extract_pdf_mineru(
-            input_path=pdf_path,
-            output_dir=output_dir,
+            input_path=staged_pdf,
+            output_dir=stage_extract_dir,
             backend=backend,
             method=method,
             lang=lang,
         )
-    json_path = expected_json
+        json_path = stage_extract_dir / staged_pdf.stem / subdir / f"{staged_pdf.stem}_content_list.json"
 
-    # ── 2. Metadata extraction (title + authors) ─────────────────────────
-    logger.info("═══ Step 2/5: Extracting paper metadata via LLM ═══")
-    metadata = extract_paper_metadata(
-        md_path=md_path,
-        model_name=model_name,
-        base_url=base_url,
-        api_key=api_key,
-    )
-    if db_path is not None:
-        metadata["db_path"] = str(db_path)
+        # ── 2. Metadata extraction (title + authors) ─────────────────────
+        logger.info("═══ Step 2/5: Extracting paper metadata via LLM ═══")
+        metadata = extract_paper_metadata(
+            md_path=md_path,
+            model_name=model_name,
+            base_url=base_url,
+            api_key=api_key,
+        )
 
-    metadata_json_path = output_dir / "metadata.json"
-    with open(metadata_json_path, "w", encoding="utf-8") as f:
-        json.dump(metadata, f, indent=4, ensure_ascii=False)
-    logger.info("Saved metadata to %s", metadata_json_path)
+        title_dirname = _safe_title_dirname(metadata.get("paper_title", ""))
+        paper_dir = _unique_dir(output_dir / title_dirname)
+        paper_source_dir = paper_dir / "source"
+        paper_extract_dir = paper_dir / "ingest_output"
+        paper_source_dir.mkdir(parents=True, exist_ok=True)
+        paper_extract_dir.mkdir(parents=True, exist_ok=True)
 
-    # ── 3. Enrich images / equations / tables ────────────────────────────
-    logger.info("═══ Step 3/5: Describing images, equations & tables ═══")
-    describe_mineru_images(json_path)
-    describe_mineru_equations(json_path)
-    describe_mineru_tables(json_path)
+        final_pdf_path = paper_source_dir / staged_pdf.name
+        final_fortran_path = paper_source_dir / staged_fortran.name
+        shutil.move(str(staged_pdf), str(final_pdf_path))
+        shutil.move(str(staged_fortran), str(final_fortran_path))
 
-    # ── 4. Fortran code digestion ────────────────────────────────────────
-    logger.info("═══ Step 4/5: Digesting Fortran code ═══")
-    fortran_digest_path = output_dir / f"{fortran_path.stem}_digest.json"
-    code_content = fortran_path.read_text(encoding="utf-8", errors="replace")
-    digest_fortran_code(
-        code_content=code_content,
-        output_json_path=str(fortran_digest_path),
-        model_name=model_name,
-        base_url=base_url,
-        api_key=api_key,
-    )
-    summarize_fortran_digest(
-        json_path=fortran_digest_path,
-        model_name=model_name,
-        base_url=base_url,
-        api_key=api_key,
-    )
+        extracted_pdf_dir = stage_extract_dir / staged_pdf.stem
+        final_extracted_pdf_dir = paper_extract_dir / staged_pdf.stem
+        shutil.move(str(extracted_pdf_dir), str(final_extracted_pdf_dir))
 
-    # ── 5. Inject metadata into output JSONs ─────────────────────────────
-    logger.info("═══ Step 5/5: Injecting metadata into output JSONs ═══")
-    _inject_metadata_into_json(json_path, metadata)
-    _inject_metadata_into_json(fortran_digest_path, metadata)
+        md_path = final_extracted_pdf_dir / subdir / f"{staged_pdf.stem}.md"
+        json_path = final_extracted_pdf_dir / subdir / f"{staged_pdf.stem}_content_list.json"
 
-    summary = {
-        "md_path": str(md_path),
-        "content_list_json": str(json_path),
-        "metadata_json": str(metadata_json_path),
-        "fortran_digest_json": str(fortran_digest_path),
-    }
+        if db_path is not None:
+            metadata["db_path"] = str(db_path)
+        metadata["paper_dir"] = str(paper_dir)
+        metadata["source_pdf_path"] = str(final_pdf_path)
+        metadata["source_fortran_path"] = str(final_fortran_path)
+        metadata["ingest_output_dir"] = str(paper_extract_dir)
+        metadata["md_path"] = str(md_path)
+        metadata["content_list_path"] = str(json_path)
+
+        metadata_json_path = paper_dir / "metadata.json"
+        with open(metadata_json_path, "w", encoding="utf-8") as f:
+            json.dump(metadata, f, indent=4, ensure_ascii=False)
+        logger.info("Saved metadata to %s", metadata_json_path)
+
+        # ── 3. Enrich images / equations / tables ────────────────────────
+        logger.info("═══ Step 3/5: Describing images, equations & tables ═══")
+        describe_mineru_images(json_path)
+        describe_mineru_equations(json_path)
+        describe_mineru_tables(json_path)
+
+        # ── 4. Fortran code digestion ────────────────────────────────────
+        logger.info("═══ Step 4/5: Digesting Fortran code ═══")
+        fortran_digest_path = paper_dir / f"{final_fortran_path.stem}_digest.json"
+        code_content = final_fortran_path.read_text(encoding="utf-8", errors="replace")
+        digest_fortran_code(
+            code_content=code_content,
+            output_json_path=str(fortran_digest_path),
+            model_name=model_name,
+            base_url=base_url,
+            api_key=api_key,
+        )
+        summarize_fortran_digest(
+            json_path=fortran_digest_path,
+            model_name=model_name,
+            base_url=base_url,
+            api_key=api_key,
+        )
+
+        metadata["fortran_digest_path"] = str(fortran_digest_path)
+        with open(metadata_json_path, "w", encoding="utf-8") as f:
+            json.dump(metadata, f, indent=4, ensure_ascii=False)
+
+        # ── 5. Inject metadata into output JSONs ─────────────────────────
+        logger.info("═══ Step 5/5: Injecting metadata into output JSONs ═══")
+        _inject_metadata_into_json(json_path, metadata)
+        _inject_metadata_into_json(fortran_digest_path, metadata)
+
+        summary = {
+            "paper_dir": str(paper_dir),
+            "md_path": str(md_path),
+            "content_list_json": str(json_path),
+            "metadata_json": str(metadata_json_path),
+            "fortran_digest_json": str(fortran_digest_path),
+            "source_pdf_path": str(final_pdf_path),
+            "source_fortran_path": str(final_fortran_path),
+        }
+    finally:
+        shutil.rmtree(stage_root, ignore_errors=True)
+
     logger.info("✅  Ingestion complete. Artefacts:\n%s", json.dumps(summary, indent=2))
     return summary
 

@@ -176,7 +176,14 @@ def chunk_content_list(
             if item_type == "image":
                 img_path = item.get("img_path", "")
                 if img_path:
-                    meta["img_path"] = str(images_base / img_path)
+                    absolute_img_path = images_base / img_path
+                    meta["img_path"] = str(absolute_img_path)
+                    paper_dir = data.get("paper_dir", "")
+                    if paper_dir:
+                        try:
+                            meta["img_rel_path"] = str(absolute_img_path.relative_to(Path(paper_dir)))
+                        except Exception:
+                            meta["img_rel_path"] = str(img_path)
 
             if item_type == "table":
                 meta["table_caption"] = str(item.get("table_caption", ""))
@@ -264,19 +271,25 @@ def _update_paper_registry(
     else:
         registry = []
 
-    # Check for duplicates by title
+    # Upsert by title so canonical paths are always refreshed.
+    updated = False
     for entry in registry:
         if entry.get("paper_title") == paper_title:
-            logger.info("Paper '%s' already in registry — skipping.", paper_title)
-            return
+            entry["authors"] = authors
+            entry["ingest_date"] = datetime.now(timezone.utc).isoformat()
+            entry["content_list_path"] = content_list_path
+            entry["fortran_digest_path"] = fortran_digest_path
+            updated = True
+            break
 
-    registry.append({
-        "paper_title": paper_title,
-        "authors": authors,
-        "ingest_date": datetime.now(timezone.utc).isoformat(),
-        "content_list_path": content_list_path,
-        "fortran_digest_path": fortran_digest_path,
-    })
+    if not updated:
+        registry.append({
+            "paper_title": paper_title,
+            "authors": authors,
+            "ingest_date": datetime.now(timezone.utc).isoformat(),
+            "content_list_path": content_list_path,
+            "fortran_digest_path": fortran_digest_path,
+        })
 
     with open(registry_path, "w", encoding="utf-8") as f:
         json.dump(registry, f, indent=4, ensure_ascii=False)
@@ -354,26 +367,29 @@ def store_ingested_data(
         vector_size=vector_size,
     )
 
-    ids = []
-    metadatas = []
-    for c in all_chunks:
-        meta = c["metadata"]
-        doc_id = _make_id(
-            meta["content_type"],
-            meta.get("source_file", ""),
-            meta.get("sequence_idx", meta.get("chunk_idx", 0)),
+    try:
+        ids = []
+        metadatas = []
+        for c in all_chunks:
+            meta = c["metadata"]
+            doc_id = _make_id(
+                meta["content_type"],
+                meta.get("source_file", ""),
+                meta.get("sequence_idx", meta.get("chunk_idx", 0)),
+            )
+            ids.append(doc_id)
+            metadatas.append(meta)
+
+        store.add_documents(
+            texts=texts,
+            embeddings=embeddings,
+            metadatas=metadatas,
+            ids=ids,
         )
-        ids.append(doc_id)
-        metadatas.append(meta)
 
-    store.add_documents(
-        texts=texts,
-        embeddings=embeddings,
-        metadatas=metadatas,
-        ids=ids,
-    )
-
-    total = store.count
+        total = store.count
+    finally:
+        store.close()
     logger.info("✅  Stored %d documents (total in collection: %d)", len(all_chunks), total)
 
     # ── 4. Update paper registry ─────────────────────────────────────────
