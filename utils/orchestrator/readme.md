@@ -375,6 +375,38 @@ Hybrid retrieval path in `RAGQueryEngine.retrieve(...)`:
 4. Keep top candidates (currently 50).
 5. Rerank with cross-encoder and return final top-K.
 
+RRF formula used by the code (`_reciprocal_rank_fusion(..., k=60)`):
+
+$$
+RRF(d) = \sum_{r \in R} \frac{1}{k + \operatorname{rank}_r(d)}
+$$
+
+Where:
+
+- $d$ is a candidate document.
+- $R$ is the set of ranked retriever outputs (here: BM25 list and dense list).
+- $\operatorname{rank}_r(d)$ is the 1-based position of $d$ in retriever $r$.
+- $k$ is the smoothing constant (here $k=60$).
+
+Important behavior in this implementation:
+
+- Only documents present in at least one input list receive a score.
+- Contributions are additive across retrievers, so appearing in both lists increases rank robustness.
+- A better position (smaller rank) contributes more because $1/(k+\text{rank})$ is larger.
+- With $k=60$, rank gaps are intentionally damped (for example, rank 1 and rank 20 remain relatively close), which reduces over-trusting any single retriever's raw ordering.
+
+Worked intuition (two retrievers):
+
+- If a document is rank 1 in BM25 and rank 4 in dense, score is $1/61 + 1/64$.
+- If another document is rank 2 in BM25 only, score is $1/62$.
+- The first document usually wins because consensus across retrievers is rewarded.
+
+Why this matters before reranking:
+
+- RRF is score-scale agnostic, so BM25 and dense outputs can be blended without score normalization.
+- The fused shortlist (top 50) improves candidate recall.
+- The cross-encoder reranker then performs expensive fine-grained relevance judgment on this better candidate set, improving final precision.
+
 Why this design helps:
 
 - BM25 catches exact keyword/identifier matches.

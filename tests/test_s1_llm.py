@@ -70,7 +70,7 @@ def test_vision():
         api_key="local-dev-key",
     )
     
-    image_path = "/home3/davidlcs/Econ-Rag/NTU-DAVID-RAG/tests/output_pdf_extract/Manuscript/auto/images/0e27e520e29fbfa7df94a49cca74b94056a565b472257fe0d097ebcbf4bc111d.jpg"
+    image_path = "/home3/davidlcs/Econ-Rag/NTU-DAVID-RAG/tests/ingest_results/Accounting for Wealth Concentration in the United States/ingest_output/Manuscript/auto/images/0e27e520e29fbfa7df94a49cca74b94056a565b472257fe0d097ebcbf4bc111d.jpg"
     
     print(f"Loading image {image_path}...")
     with open(image_path, "rb") as image_file:
@@ -85,7 +85,22 @@ def test_vision():
             }
         }
     ]
+
+    image_path = "/home3/davidlcs/Econ-Rag/NTU-DAVID-RAG/tests/ingest_results/Accounting for Wealth Concentration in the United States/ingest_output/Manuscript/auto/images/b849cdcc663e25b862c07fc923413dcdac6615cde40e64e85c3ed53029f4f2a2.jpg"
     
+    print(f"Loading image {image_path}...")
+    with open(image_path, "rb") as image_file:
+        base64_image = base64.b64encode(image_file.read()).decode('utf-8')
+    
+    content = [
+        {"type": "text", "text": "Please transcribe all text and mathematical formulas visible in this image. Output in markdown format."},
+        {
+            "type": "image_url",
+            "image_url": {
+                "url": f"data:image/jpeg;base64,{base64_image}"
+            }
+        }
+    ]
     print("Sending vision request to LLM...")
     start_time = time.time()
     resp = client.generate_response(
