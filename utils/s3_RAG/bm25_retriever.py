@@ -18,12 +18,16 @@ def _tokenize(text: str) -> List[str]:
     Tokenize text for BM25 indexing.
 
     Preserves Fortran-specific tokens (underscores, parentheses patterns)
-    alongside standard word tokenization.
+    alongside standard word tokenization.  Also keeps hyphenated compounds
+    (e.g. "overlapping-generations", "two-earner") as additional tokens
+    for better academic-text matching.
     """
-    # Lowercase and split on whitespace + punctuation, keeping underscores
     text = text.lower()
-    # Split on non-alphanumeric except underscores and dots
+    # Primary tokens: alphanumeric + underscores + dots
     tokens = re.findall(r"[a-z0-9_\.]+", text)
+    # Keep hyphenated compounds as single tokens (e.g. "life-cycle", "two-earner")
+    compounds = re.findall(r"[a-z0-9]+-[a-z0-9]+(?:-[a-z0-9]+)*", text)
+    tokens.extend(compounds)
     return tokens
 
 

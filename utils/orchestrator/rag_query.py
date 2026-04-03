@@ -165,6 +165,44 @@ def _reciprocal_rank_fusion(
     return merged
 
 
+# ── Paper-diversity enforcement ──────────────────────────────────────────
+
+def _diversify_results(results: List[Dict], top_k: int = 10) -> List[Dict]:
+    """
+    Ensure results include chunks from diverse papers via round-robin selection.
+
+    Prevents all top-k results from clustering on a single paper, which is
+    critical for comparative / cross-paper queries.
+    """
+    from collections import OrderedDict
+
+    paper_groups: OrderedDict[str, List[Dict]] = OrderedDict()
+    for r in results:
+        paper = r.get("metadata", {}).get("paper_title", "_unknown_")
+        paper_groups.setdefault(paper, []).append(r)
+
+    diversified: List[Dict] = []
+    seen: set = set()
+    round_idx = 0
+
+    while len(diversified) < top_k:
+        added_this_round = False
+        for _paper, group in paper_groups.items():
+            if round_idx < len(group):
+                entry = group[round_idx]
+                if entry["id"] not in seen:
+                    diversified.append(entry)
+                    seen.add(entry["id"])
+                    added_this_round = True
+                    if len(diversified) >= top_k:
+                        break
+        if not added_this_round:
+            break
+        round_idx += 1
+
+    return diversified
+
+
 # ── Context builder ──────────────────────────────────────────────────────
 
 def _build_context(results: List[Dict], max_context_tokens: int = 4000) -> str:
@@ -268,6 +306,28 @@ def _build_context(results: List[Dict], max_context_tokens: int = 4000) -> str:
     return "\n".join(lines)
 
 
+def _format_conversation_history(
+    history: Optional[List[Dict[str, str]]],
+    max_turns: int = 20,
+    max_chars_per_turn: int = 1200,
+) -> str:
+    """Format a bounded chat history block for prompt conditioning."""
+    if not history:
+        return ""
+
+    lines: List[str] = []
+    for turn in history[-max_turns:]:
+        if not isinstance(turn, dict):
+            continue
+        role = str(turn.get("role", "")).strip().lower()
+        content = str(turn.get("content", "")).strip()
+        if role not in {"user", "assistant"} or not content:
+            continue
+        speaker = "User" if role == "user" else "Assistant"
+        lines.append(f"{speaker}: {content[:max_chars_per_turn]}")
+    return "\n".join(lines)
+
+
 # ── Main RAG query function ──────────────────────────────────────────────
 
 class RAGQueryEngine:
@@ -347,32 +407,136 @@ class RAGQueryEngine:
         )
         logger.info("BM25 indexed %d documents.", len(all_docs["ids"]))
 
+    # ── Multi-query expansion ───────────────────────────────────────────
+
+    def _expand_query(self, query: str) -> List[str]:
+        """Use the LLM to generate diverse sub-queries for broader retrieval."""
+        try:
+            result = self.llm.generate_response(
+                user_prompt=(
+                    f"Generate 3 diverse search queries to find relevant passages "
+                    f"in academic economics papers for this question:\n\n"
+                    f"\"{query}\"\n\n"
+                    f"Each query should target a different aspect or use different "
+                    f"vocabulary. Return a JSON object with key \"queries\" "
+                    f"containing an array of query strings."
+                ),
+                system_prompt=(
+                    "You generate search queries for an academic RAG system. "
+                    "Return ONLY valid JSON, no other text."
+                ),
+                max_tokens=256,
+                temperature=0.4,
+            )
+            queries = result.get("queries", []) if isinstance(result, dict) else []
+            return [q for q in queries if isinstance(q, str) and q.strip()][:3]
+        except Exception as exc:
+            logger.warning("Query expansion failed (%s) — using original query only.", exc)
+            return []
+
+    # ── Neighbor chunk expansion ─────────────────────────────────────────
+
+    def _expand_with_neighbors(
+        self, results: List[Dict], n_neighbors: int = 1,
+    ) -> List[Dict]:
+        """
+        Expand retrieved chunks with adjacent chunks from the same paper.
+
+        Uses ``sequence_idx`` to find neighbors in the BM25 document store,
+        providing the LLM with more continuous text for better reasoning.
+        """
+        # Build lookup: (paper_title, sequence_idx) → document info
+        paper_seq_lookup: Dict[tuple, Dict] = {}
+        for i, meta in enumerate(self.bm25.metadatas):
+            paper = meta.get("paper_title", "")
+            seq = meta.get("sequence_idx", -1)
+            if paper and seq >= 0:
+                paper_seq_lookup[(paper, seq)] = {
+                    "id": self.bm25.doc_ids[i],
+                    "text": self.bm25.documents[i],
+                    "metadata": meta,
+                }
+
+        seen_ids = {r["id"] for r in results}
+        expanded = list(results)
+
+        for r in results:
+            meta = r.get("metadata", {})
+            paper = meta.get("paper_title", "")
+            seq = meta.get("sequence_idx", -1)
+            if not paper or seq < 0:
+                continue
+
+            for offset in range(-n_neighbors, n_neighbors + 1):
+                if offset == 0:
+                    continue
+                key = (paper, seq + offset)
+                if key in paper_seq_lookup:
+                    neighbor = paper_seq_lookup[key]
+                    if neighbor["id"] not in seen_ids:
+                        seen_ids.add(neighbor["id"])
+                        entry = neighbor.copy()
+                        # Score slightly below parent so ordering is preserved
+                        entry["rerank_score"] = r.get("rerank_score", 0) - 0.01
+                        expanded.append(entry)
+
+        return expanded
+
+    # ── Retrieval ────────────────────────────────────────────────────────
+
     def retrieve(
         self,
         query: str,
         sparse_top_k: int = 50,
         dense_top_k: int = 50,
-        final_top_k: int = 10,
+        final_top_k: int = 20,
         where_filter: Optional[Dict] = None,
+        expand_queries: bool = True,
+        ensure_diversity: bool = True,
     ) -> List[Dict]:
         """
         Hybrid retrieval: BM25 + Dense + RRF + Reranker.
 
-        Returns the top reranked results.
+        Parameters
+        ----------
+        expand_queries : bool
+            When True, uses LLM to generate sub-queries for broader coverage.
+        ensure_diversity : bool
+            When True, enforces round-robin paper diversity in final results.
         """
-        bm25_results = self.bm25.retrieve(query=query, top_k=sparse_top_k, where_filter=where_filter)
-        dense_results = self.dense.retrieve(query=query, top_k=dense_top_k, where_filter=where_filter)
+        # 1. Build query set (original + optional expansions)
+        queries = [query]
+        if expand_queries:
+            sub_queries = self._expand_query(query)
+            if sub_queries:
+                queries.extend(sub_queries)
+                logger.info("Expanded to %d queries: %s", len(queries), queries)
 
-        fused = _reciprocal_rank_fusion([bm25_results, dense_results])
+        # 2. Retrieve from all queries
+        all_result_lists: List[List[Dict]] = []
+        for q in queries:
+            bm25_results = self.bm25.retrieve(query=q, top_k=sparse_top_k, where_filter=where_filter)
+            dense_results = self.dense.retrieve(query=q, top_k=dense_top_k, where_filter=where_filter)
+            all_result_lists.extend([bm25_results, dense_results])
+
+        # 3. Fuse all result lists via RRF
+        fused = _reciprocal_rank_fusion(all_result_lists)
         candidates = fused[:50]
 
-        reranked = self.reranker.rerank(query=query, results=candidates, top_k=final_top_k)
-        return reranked
+        # 4. Rerank against original query
+        rerank_top = max(final_top_k * 2, 30) if ensure_diversity else final_top_k
+        reranked = self.reranker.rerank(query=query, results=candidates, top_k=rerank_top)
+
+        # 5. Enforce paper diversity if requested
+        if ensure_diversity:
+            return _diversify_results(reranked, top_k=final_top_k)
+        return reranked[:final_top_k]
 
     def query(
         self,
         user_query: str,
         top_k: int = 10,
+        conversation_history: Optional[List[Dict[str, str]]] = None,
         where_filter: Optional[Dict] = None,
         max_context_tokens: int = 128000,
         max_generation_tokens: int = 60000,
@@ -407,20 +571,33 @@ class RAGQueryEngine:
             where_filter=where_filter,
         )
 
-        # 2. Build context
-        context = _build_context(sources, max_context_tokens=max_context_tokens)
+        # 2. Expand with neighboring chunks for context continuity
+        sources = self._expand_with_neighbors(sources, n_neighbors=1)
 
-        # 3. Generate
+        # 3. Build context
+        context = _build_context(sources, max_context_tokens=max_context_tokens)
+        history_block = _format_conversation_history(conversation_history)
+        history_section = ""
+        if history_block:
+            history_section = (
+                f"\n=== CONVERSATION HISTORY ===\n{history_block}\n=== END HISTORY ===\n"
+            )
+
+        # 4. Generate
         system_prompt = (
             "You are an expert research assistant for economics and computational modeling. "
             "Answer the user's question based on the retrieved context below. "
             "Cite specific passages, tables, equations, or Fortran functions when relevant. "
-            "If the context does not contain enough information, say so clearly.\n\n"
+            "When the question involves comparing across papers, explicitly identify similarities "
+            "and differences between the papers' models, assumptions, or findings. "
+            "When writing mathematical expressions, format inline math with single dollar delimiters like $a_t = b_t$ "
+            "and display math with double dollar delimiters like $$a_t = b_t$$. "
+            "Do not use \\(...\\) or \\[...\\] delimiters. "
+            "If the context does not contain enough information, say so clearly."
+            f"{history_section}\n"
             f"=== RETRIEVED CONTEXT ===\n{context}\n=== END CONTEXT ==="
         )
 
-        print(system_prompt)
-        
         logger.info("Sending augmented prompt to LLM (%d context chars)…", len(context))
         answer = self.llm.generate_response(
             user_prompt=user_query,

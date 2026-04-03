@@ -10,7 +10,7 @@ personal/
 *.bin
 *.sqlite3
 
-log.txt
+# log.txt
 tests/ingest_results/*
 db/*
 
