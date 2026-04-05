@@ -1,221 +1,630 @@
 # NTU DAVID RAG
 
-Economics-focused Retrieval-Augmented Generation (RAG) system for:
-- Academic paper PDFs
-- Companion Fortran code
-- Hybrid retrieval and grounded answer generation
+**Project Status**: Active Development
 
-Project status: all three phases are implemented and integrated.
+This project aims to build an efficient and high-quality Retrieval-Augmented Generation (RAG) system specialized for economics-related academic papers and their associated codebases (specifically Fortran).
 
 ![System Design](docs/initial_system_desgin.png)
 
-## What Is Implemented
+## Project Plan & Roadmap
 
-### Phase 1: Data Ingestion
-Location: `utils/s1_data_ingestion`
+The development is divided into three key phases, focusing on deep parsing, storage architecture, and advanced retrieval.
 
-Implemented capabilities:
-- PDF extraction via MinerU
-- Image/equation/table description enrichment
-- Fortran code digestion and summary generation
-- Paper metadata extraction (title/authors) through local LLM
+### Phase 1: Document Parsing and Retrieval (In Progress)
 
-Orchestration entrypoint:
-- `utils/orchestrator/ingest_paper.py`
+Focus on parsing and retrieving context from academic paper PDFs and Fortran code.
 
-### Phase 2: Embedding and Storage
-Location: `utils/s2_embedding`
+- **Deep Parsing**: Processing Thesis PDF Corpus (text, tables, figures).
+- **Code Extraction**: Parsing Fortran code, extracting global variables, and summarization.
+- **Visual Extraction**: Using VLMs (Gemini 1.5 / GPT-4o) for image captioning.
+- **Goal**: Efficiently parse heterogeneous data sources into structured formats.
 
-Implemented capabilities:
-- Chunking of manuscript and Fortran digest outputs
-- Embedding generation (sentence-transformers)
-- Vector persistence in Qdrant local store
-- Paper registry maintenance (`db/paper_registry.json`)
+### Phase 2: Building RAG Database [To Be Done]
 
-Orchestration entrypoint:
-- `utils/orchestrator/store_to_db.py`
+Focus on embedding strategies and database architecture.
 
-### Phase 3: Retrieval and Generation
-Location: `utils/s3_RAG`
+- **Storage Architecture**: Designing Multi-Vector Storage (Doc Store for raw content + Vector DB for embeddings).
+- **Embedding Models**: Selecting optimal models (e.g., text-embedding-3, CLIP).
+- **Metadata & Chunking**: Defining strategies for storing and chunking different context types to maximize retrieval performance.
 
-Implemented capabilities:
-- Dense retrieval (Qdrant)
-- Sparse retrieval (BM25)
-- Reciprocal Rank Fusion (RRF)
-- Cross-encoder reranking
-- Context assembly and answer generation through local LLM
+### Phase 3: Hybrid Retrieval and Generation [To Be Done]
 
-Orchestration entrypoint:
-- `utils/orchestrator/rag_query.py`
+Focus on retrieval quality and answer generation.
 
-## Runtime Components
+- **Hybrid Retrieval**: Combining keyword and semantic search with metadata filtering.
+- **Reranking**: Implementing Cross-Encoder Rerankers (e.g., bge-reranker) to refine search results.
+- **Generation**: Utilizing Multimodal LLMs to generate meaningful, context-aware answers.
 
-- Orchestration logic: `utils/orchestrator`
-- Local LLM server stack: `docker/local_llm`
-- End-to-end RAG web service (Flask + frontend): `docker/RAG`
+## Quick Start
 
-## Repository Map
+### 1. Environment Setup
 
-- `utils/s1_data_ingestion`: phase 1 ingestion modules
-- `utils/s2_embedding`: phase 2 embedding/vector-store modules
-- `utils/s3_RAG`: phase 3 retrieval/reranker modules
-- `utils/orchestrator`: pipeline orchestration between phases
-- `docker/local_llm`: Docker Compose for llama.cpp OpenAI-compatible LLM endpoint
-- `docker/RAG`: Dockerized RAG backend and frontend
-- `db`: persistent vector store data and paper registry
-- `data`: uploads and ingestion outputs
-- `tests`: script-style tests for each stage and orchestrators
-- `docs`: workflow diagrams and phase docs
+Create and activate a Python virtual environment:
 
-## Prerequisites
+```bash
+# Create virtual environment
+python3 -m venv .venv
 
-- Linux host with Docker and Docker Compose
-- NVIDIA GPU + NVIDIA Container Toolkit (for GPU containers)
-- Python 3.10+ for local script execution
+# Activate virtual environment
+# On Linux/Mac:
+source .venv/bin/activate
 
-## Environment Configuration
+# On Windows:
+# .venv\Scripts\activate
 
-### 1. Local LLM config
-File: `docker/local_llm/.env`
+# Upgrade pip
+pip install --upgrade pip
+```
 
-Minimum required fields:
-- `MODEL_DIR`: absolute directory containing GGUF model files
-- `MODEL_FILE`: GGUF model filename under `MODEL_DIR`
-- `MODEL_ALIAS`: model name expected by clients (for example `qwen2.5-vl-72b-instruct`)
-- `SERVICE_PORT`: LLM API port on host (default `8000`)
-- `LOCAL_LLM_API_KEY`: API key used by clients
+### 2. Install Dependencies
 
-Optional performance fields:
-- `TENSOR_SPLIT`, `CTX_SIZE`, `BATCH_SIZE`, `UBATCH_SIZE`, `THREADS`, `PARALLEL`, `MM_PROJ_FILE`
+The root `requirements.txt` covers the base dependencies (e.g. for `fortran_preprocess` and `pdf_crawler`).
 
-### 2. RAG app config
-File: `docker/RAG/.env`
+```bash
+# Install base required Python packages
+pip install -r requirements.txt
 
-Key fields:
-- `DB_PATH=/app/db`
-- `DATA_PATH=/app/data`
-- `PORT=5000`
-- `RAG_PORT=3006`
-- `LOCAL_LLM_BASE_URL=http://host.docker.internal:8000/v1`
-- `LOCAL_LLM_API_KEY` (must match local LLM)
-- `LLM_MODEL_NAME` (must match `MODEL_ALIAS`)
-- `RAG_DEVICE`, `RAG_EMBEDDING_DEVICE`, `RAG_RERANKER_DEVICE`
+# If requirements.txt doesn't exist, install manually:
+# pip install pathlib  # Usually included in Python 3.4+
+```
 
-## Run Services
+> **Note:** Advanced tools located in `utils/data_preprocess/` (specifically `Dolphin`, `Paper2Code`, and `s2orc-doc2json`) have their own `requirements.txt` or setup files. **It is highly recommended to create and use separate virtual environments for these tools** to prevent dependency conflicts. Please refer to the `README.md` within each tool's directory for specific installation instructions.
 
-### Start local LLM service
+#### LaTeX Rendering Environment (for vlm_formula_to_latex)
+
+If you plan to use the `vlm_formula_to_latex` tool with quality comparison features, you need to install LaTeX:
+
+```bash
+# On Ubuntu/Debian
+sudo apt-get update
+sudo apt-get install -y texlive-latex-base texlive-latex-extra
+
+# On macOS (using Homebrew)
+brew install --cask mactex
+
+# On Windows
+# Download and install MiKTeX from https://miktex.org/download
+```
+
+This enables the tool to render transcribed LaTeX formulas back to PNG for visual quality comparison.
+
+### 3. Verify Setup
+
+```bash
+# Test the Fortran parser
+python3 utils/data_preprocess/fortran_parser.py --help
+```
+
+## Running Tests
+
+All tests are located in the `tests/` directory and should be run **from the project root** with the virtual environment activated:
+
+```bash
+source .venv/bin/activate
+```
+
+### Phase 2: Embedding Pipeline
+
+Tests chunking, embedding model, vector store, and end-to-end embed+query:
+
+```bash
+CUDA_VISIBLE_DEVICES=2 python -m tests.test_s2_embedding
+```
+
+### Phase 3: Hybrid RAG Retrieval
+
+Tests BM25 retriever, dense retriever, reranker, RRF fusion, and the full hybrid pipeline:
+
+```bash
+CUDA_VISIBLE_DEVICES=2 python -m tests.test_s3_rag
+```
+
+### LLM Clients
+
+Tests Gemini and GPT clients (text, JSON, and structured output generation). Requires API keys:
+
+```bash
+export GEMINI_API_KEY="your-key"
+export OPENAI_API_KEY="your-key"
+python -m tests.test_llm_clients
+```
+
+> **Note:** Phase 2 and Phase 3 tests require a GPU and an existing vector store at `data/[Paper Name]/vector_store/`. The LLM client tests require valid API keys.
+
+### Local LLM Service (Qwen3-Next-80B Q8_0 on GPU 0 + 1)
+
+This repository includes a Docker Compose setup for a local OpenAI-compatible LLM endpoint using `llama.cpp` server.
+
 ```bash
 cd docker/local_llm
-docker compose -f docker-compose.qwen3-next-80b.yml up -d
+cp .env.example .env
+# Edit .env and set MODEL_DIR + MODEL_FILE
+docker compose --env-file .env -f docker-compose.qwen3-next-80b.yml up -d
 ```
 
-Health check:
+Use it from scripts via `LocalLLMClient`:
+
+```python
+from utils.llm_clients.local_llm import LocalLLMClient
+
+client = LocalLLMClient(
+  model_name="qwen3-next-80b-instruct-q8_0",
+  base_url="http://localhost:8000/v1",
+  api_key="local-dev-key",
+)
+
+response = client.generate_response(
+  user_prompt="Give me three key takeaways from this economics abstract.",
+  response_mime_type="text/plain"
+)
+print(response)
+```
+
+For full setup and remote access details, see `docs/local_llm_qwen3_next_80b_docker.md`.
+
+## Project Structure
+
+```
+NTU-DAVID-RAG/
+├── data/                           # Raw and processed data
+│   ├── Accounting for Wealth.../   # Research project 1
+│   │   ├── coding/                 # Original mixed files
+│   │   ├── codes_fortran/          # Extracted Fortran files
+│   │   ├── codes_fortran_json/     # Parsed JSON outputs
+│   │   └── manuscript_parsed_*/    # Parsed manuscript outputs
+│   ├── Consumption Smoothing.../   # Research project 2
+│   └── The Welfare Implications.../# Research project 3
+├── utils/
+│   └── data_preprocess/
+│       ├── fortran_preprocess/     # Fortran code extraction & parsing
+│       ├── Dolphin/                # PDF parsing with Dolphin (layout-aware)
+│       ├── pdf_crawler/            # PDF parsing with Docling (structured)
+│       ├── vlm_formula_to_latex/   # VLM-based formula extraction
+│       ├── s2orc-doc2json/         # PDF/LaTeX to S2ORC JSON format
+│       └── Paper2Code/             # Auto-generate code from papers
+└── README.md
+```
+
+## Tools Documentation
+
+### [Phase 1] Data Preprocessing Tools Overview
+
+The `utils/data_preprocess/` directory contains specialized tools for extracting and parsing economic research materials:
+
+#### 1. **fortran_preprocess/** - Fortran Code Processing
+
+- **Purpose**: Extract and parse Fortran economic model code for RAG systems
+- **Key Tools & Usage**:
+  - `remove_non_fortran.py` - Extract Fortran files from mixed directories
+  - `fortran_parser.py` - Parse Fortran into structured JSON with dependency tracking
+  - **Conversion Scripts**:
+    - `retrieve_fortran_codes.sh`: Batch script to extract Fortran source files.
+    - `parse_fortrain.sh`: Batch script to parse extracted Fortran files into JSON.
+- **Output**: JSON files with global variables, subroutines, and dependencies
+- **GPU**: Not required
+
+#### 2. **Dolphin/** - Advanced PDF Parsing
+
+- **Purpose**: Parse PDFs using Dolphin v2 model (layout-aware, handles digital & scanned docs)
+- **Best For**: Complex layouts, tables, figures, multi-column documents
+- **Conversion Script**: `parse_manuscript.sh`
+  - Reference this script to see how to run `demo_page.py` for specific PDF files.
+- **Output**: Structured JSON with document elements, layout information
+- **GPU**: Required (vision model inference)
+
+#### 3. **pdf_crawler/** - Basic PDF Parsing
+
+- **Purpose**: Extract structured content from PDFs using Docling
+- **Best For**: Standard academic papers with text and formulas
+- **Conversion Script**: `pdf_crawler.sh`
+  - A bash wrapper around `pdf_crawler.py` that processes specific input PDFs defined within the script.
+- **Features**: LaTeX formula extraction, table detection
+- **Output**: JSON with text, formulas, and metadata
+- **GPU**: Optional (faster with GPU, works on CPU)
+
+#### 4. **vlm_formula_to_latex/** - VLM Formula to LaTeX
+
+- **Purpose**: Uses Vision Language Models (VLMs) to accurately extract mathematical formulas as LaTeX, with quality verification.
+- **Pipeline**:
+  1. Convert PDF pages to PNG images
+  2. Crop formulas using Docling bounding boxes
+  3. Transcribe formulas to LaTeX using Gemini Vision API
+  4. Render LaTeX back to PNG for quality comparison
+  5. Generate interactive HTML comparison page
+- **Conversion Script**: `run_all.sh`
+  - Automates the complete pipeline from PDF to quality-verified LaTeX.
+
+  ```bash
+  # Run for all papers
+  ./utils/data_preprocess/vlm_formula_to_latex/run_all.sh
+
+  # Run for a specific paper
+  ./utils/data_preprocess/vlm_formula_to_latex/run_all.sh --target-folder "Paper Name"
+
+  # Skip already processed papers
+  ./utils/data_preprocess/vlm_formula_to_latex/run_all.sh --skip-existing
+  ```
+
+- **Output Structure**:
+
+  ```
+  data/[Paper Name]/vlm_formula_latex/
+  ├── formula_latex.json           # Transcribed formulas with metadata
+  ├── formula_latex.md             # Human-readable markdown view
+  ├── cost_info.log                # API cost tracking
+  ├── accumulated_cost.json        # Cost summary
+  ├── png/                         # Rendered LaTeX → PNG
+  │   └── page_*_formula_*.png
+  └── quality_comparison/          # Visual quality assessment
+      └── comparison.html          # Interactive comparison page
+  ```
+
+- **Quality Comparison**: The generated HTML file displays original vs transcribed formulas side-by-side with LaTeX code, allowing visual verification of transcription accuracy. The HTML is self-contained and can be shared with others.
+
+- **Requirements**:
+  - Python packages: `pdf2image`, `Pillow`, `google-generativeai`
+  - System: LaTeX distribution (texlive-latex-base, texlive-latex-extra)
+  - API: Gemini API key
+
+- **Cost**: ~$0.01–$0.05 per paper (varies by formula count)
+
+#### 5. **s2orc-doc2json/** - Scientific Paper Parsing
+
+- **Purpose**: Convert PDFs/LaTeX to S2ORC JSON format using Grobid
+- **Best For**: Academic papers requiring bibliographic data and citations
+- **Conversion Script**: `process_all_manuscripts.sh`
+  - Iterates through a defined list of papers and runs the Grobid-to-JSON conversion.
+- **Output**: S2ORC-formatted JSON with sections, citations, bibliography
+- **GPU**: Not required
+
+#### 6. **Paper2Code/** - Code Generation from Papers
+
+- **Purpose**: Multi-agent LLM system to generate code repositories from papers
+- **Best For**: Reproducing ML/computational methods from manuscripts
+- **Pipeline**: Planning → Analysis → Code Generation
+- **GPU**: Optional (uses LLM APIs by default, can use local models with GPU)
+
+##### Installation
+
+Paper2Code requires its own virtual environment to avoid dependency conflicts:
+
 ```bash
-curl http://localhost:8000/health
+# Navigate to Paper2Code directory
+cd utils/data_preprocess/Paper2Code
+
+# Create virtual environment
+python3 -m venv .venv
+
+# Activate virtual environment
+source .venv/bin/activate
+
+# Upgrade pip
+pip install --upgrade pip
+
+# Install dependencies
+pip install -r requirements.txt
 ```
 
-View logs:
+##### API Key Configuration
+
+Paper2Code supports both **Gemini API** (recommended for this project) and **OpenAI API**:
+
+**Using Gemini API (Recommended):**
+
 ```bash
-docker compose -f docker-compose.qwen3-next-80b.yml logs -f
+# Export your Gemini API key to the shell environment
+export GEMINI_API_KEY="your-gemini-api-key-here"
+
+# Verify the key is set
+echo $GEMINI_API_KEY
 ```
 
-### Start RAG web service (production profile)
+**Using OpenAI API (Alternative):**
+
 ```bash
-cd docker/RAG
-docker compose up -d rag-web
+# Export your OpenAI API key to the shell environment
+export OPENAI_API_KEY="your-openai-api-key-here"
+
+# Verify the key is set
+echo $OPENAI_API_KEY
 ```
 
-Access:
-- App/API host port: `http://localhost:3006`
-- API health: `http://localhost:3006/api/status`
+> **Note**: The API key must be exported in the same terminal session where you run the scripts. To make it persistent across sessions, add the export command to your `~/.bashrc` or `~/.zshrc` file.
 
-View logs:
+##### Execution
+
+**Option 1: Process Economics Papers (Automated)**
+
+The `run_econs.sh` script automatically processes all papers in the `data/` directory:
+
 ```bash
-docker compose logs -f rag-web
+# Make sure you're in the Paper2Code directory with the virtual environment activated
+cd utils/data_preprocess/Paper2Code
+source .venv/bin/activate
+
+# Export your API key (if not already done)
+export GEMINI_API_KEY="your-gemini-api-key-here"
+
+# Run the economics paper processing script
+./scripts/run_econs.sh
 ```
 
-### Start RAG dev profile (hot reload backend + Vite frontend)
+This script will:
+
+1. Find all PDF files in `data/[paper]/source/` directories
+2. Convert PDFs to JSON format (or use existing s2orc JSON if available)
+3. Run the Paper2Code pipeline (planning → analysis → code generation)
+4. Save outputs to `data/[paper]/manuscript_paper2code/`
+
+**Option 2: Process a Single Paper (Manual)**
+
+For processing individual papers with more control:
+
 ```bash
-cd docker/RAG
-docker compose --profile dev up -d rag-web-dev rag-frontend-dev
+# Using Gemini API with PDF-based JSON
+export GEMINI_API_KEY="your-gemini-api-key-here"
+cd scripts
+bash run.sh
+
+# Using OpenAI API with PDF-based JSON
+export OPENAI_API_KEY="your-openai-api-key-here"
+cd scripts
+bash run.sh
+
+# Using LaTeX source (if available)
+export GEMINI_API_KEY="your-gemini-api-key-here"
+cd scripts
+bash run_latex.sh
 ```
 
-Access:
-- Frontend dev server: `http://localhost:5173`
-- Backend dev API: `http://localhost:3006/api/status`
+**Option 3: Using Open Source Models with vLLM**
 
-## API Endpoints (RAG service)
+For local model inference (requires GPU):
 
-Base URL: `http://localhost:3006`
-
-- `GET /api/status`: health and paper count
-- `GET /api/papers`: list ingested papers
-- `POST /api/papers`: upload pair (`pdf` + `fortran` multipart fields), ingest, embed, and store
-- `DELETE /api/papers/<paper_title>`: delete vectors and registry entry for one paper
-- `POST /api/query`: run RAG query
-
-Example query request:
 ```bash
-curl -X POST http://localhost:3006/api/query \
-	-H "Content-Type: application/json" \
-	-d '{"query":"What drives wealth concentration in the U.S.?","top_k":5}'
+# Using PDF-based JSON
+cd scripts
+bash run_llm.sh
+
+# Using LaTeX source
+cd scripts
+bash run_latex_llm.sh
 ```
 
-## Run Pipeline Locally (Without Web API)
+##### Output Structure
 
-If you want direct orchestration in Python:
+After processing, outputs are organized as follows:
 
-1. Run ingestion via `utils/orchestrator/ingest_paper.py`
-2. Pass its output dict into `utils/orchestrator/store_to_db.py`
-3. Query with `utils/orchestrator/rag_query.py`
+```
+data/[Paper Name]/manuscript_paper2code/
+├── [Paper]_cleaned.json          # Preprocessed paper JSON
+├── outputs/
+│   ├── planning_artifacts/       # Planning stage outputs
+│   ├── analyzing_artifacts/      # Analysis stage outputs
+│   └── coding_artifacts/         # Code generation outputs
+└── repository/                   # Final generated code repository
+    ├── config.yaml               # Extracted configuration
+    └── [generated code files]
+```
 
-Example scripts are in module `if __name__ == "__main__"` sections and in `tests/`.
+##### Cost Estimates
 
-## Testing
+- **Gemini API (gemini-3-flash-preview)**: ~$0.30–$0.50 per paper
+  - Input: $0.50 per 1M tokens
+  - Output: $3.00 per 1M tokens
+- **OpenAI API (o3-mini)**: ~$0.50–$0.70 per paper
 
-Representative stage/orchestrator tests:
-- `tests/test_orch_ingest_paper_n_code.py`
-- `tests/test_orch_store_to_db.py`
-- `tests/test_orch_rag_query.py`
-- `tests/test_s1_pdf_extract.py`
-- `tests/test_s2_embedding.py`
-- `tests/test_s3_rag.py`
+##### Troubleshooting
 
-Run a test script:
+- **Missing s2orc-doc2json**: If you see an error about missing s2orc-doc2json, ensure it's installed in `utils/data_preprocess/s2orc-doc2json/`
+- **Grobid service not running**: Start the Grobid service for PDF processing:
+  ```bash
+  cd utils/data_preprocess/s2orc-doc2json/grobid-0.7.3
+  ./gradlew run
+  ```
+- **API key not found**: Ensure you've exported the API key in the current terminal session
+- **Virtual environment issues**: Always activate the Paper2Code virtual environment before running scripts
+
+### [Phase 2] RAG Database & Embeddings
+
+The `utils/s2_embedding/` directory contains the embedding pipeline that chunks, embeds, and stores academic paper text and Fortran code into a local vector database for retrieval.
+
+#### Architecture Overview
+
+```
+JSON Data Files ──→ Chunker ──→ Embedding Model ──→ ChromaDB Vector Store
+                   (chunker.py)  (embedder.py)      (vector_store.py)
+```
+
+| Component | Choice | Rationale |
+|-----------|--------|-----------|
+| **Embedding Model** | `BAAI/bge-large-en-v1.5` | 1024-dim, strong on academic text + code, runs locally on GPU |
+| **Vector Database** | ChromaDB (persistent) | Lightweight, local-first, zero-config, supports metadata filtering |
+| **Chunking** | Section-aware (text) + Line-based (code) | Preserves semantic coherence for papers; summary-prefixed for code |
+
+#### File Structure
+
+```
+utils/s2_embedding/
+├── __init__.py          # Package init
+├── chunker.py           # Chunking strategies for manuscript text and Fortran code
+├── embedder.py          # BAAI/bge-large-en-v1.5 embedding model wrapper
+├── vector_store.py      # ChromaDB persistent vector store wrapper
+└── run_embed.py         # CLI orchestration script (chunk → embed → store → test)
+```
+
+#### Chunking Strategy
+
+**Manuscript Text** (`Manuscript_content_list.json`):
+- Filters `type == "text"` entries only (ignores headers, footers, page numbers)
+- Merges consecutive paragraphs into chunks of ~384 tokens with 64-token overlap
+- Preserves page index metadata for traceability
+
+**Fortran Code** (`fortran_chunks.json`):
+- Reads each code file referenced in the JSON
+- Splits into sub-chunks of 150 lines with 30-line overlap
+- Prepends the summary description to each chunk for retrieval context
+
+#### Usage
+
+**Prerequisites**: Install dependencies from the project root:
+
 ```bash
-python3 tests/test_orch_rag_query.py
+source .venv/bin/activate
+pip install -r requirements.txt  # includes sentence-transformers and chromadb
 ```
 
-## Maintenance Runbook
+**Run the embedding pipeline**:
 
-### Stop services
 ```bash
-cd docker/local_llm && docker compose -f docker-compose.qwen3-next-80b.yml down
-cd docker/RAG && docker compose down
+# Using GPU #2 (adjust CUDA_VISIBLE_DEVICES as needed)
+CUDA_VISIBLE_DEVICES=2 python -m utils.s2_embedding.run_embed \
+  --manuscript "data/Accounting for Wealth Concentration in the United States/manuscript_parsed_mineru/Manuscript/hybrid_auto/Manuscript_content_list.json" \
+  --fortran "data/Accounting for Wealth Concentration in the United States/RAG_Chunks/fortran_chunks.json" \
+  --output "data/Accounting for Wealth Concentration in the United States/vector_store" \
+  --device cuda:0 \
+  --test-query
 ```
 
-### Rebuild RAG image after dependency/code changes
+**CLI Arguments**:
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `--manuscript` | No* | Path to `Manuscript_content_list.json` |
+| `--fortran` | No* | Path to `fortran_chunks.json` |
+| `--output` | Yes | Output directory for ChromaDB persistent storage |
+| `--model` | No | Embedding model name (default: `BAAI/bge-large-en-v1.5`) |
+| `--device` | No | Device for inference, e.g. `cuda:0` (default: auto-detect) |
+| `--test-query` | No | Run smoke queries after embedding to verify results |
+
+\* At least one of `--manuscript` or `--fortran` must be specified.
+
+**Output**: The vector store is saved to the `--output` directory and persists across runs:
+
+```
+data/[Paper Name]/vector_store/
+├── chroma.sqlite3           # ChromaDB persistent storage
+└── [collection files]       # HNSW index and metadata
+```
+
+#### Programmatic Usage
+
+You can also use the components directly in Python:
+
+```python
+from utils.s2_embedding.chunker import chunk_manuscript, chunk_fortran
+from utils.s2_embedding.embedder import EmbeddingModel
+from utils.s2_embedding.vector_store import VectorStore
+
+# Chunk
+chunks = chunk_manuscript("path/to/Manuscript_content_list.json")
+
+# Embed
+model = EmbeddingModel(device="cuda:0")
+embeddings = model.embed_documents([c["text"] for c in chunks])
+
+# Store
+store = VectorStore(persist_dir="path/to/vector_store")
+store.add_documents(texts=..., embeddings=..., metadatas=..., ids=...)
+
+# Query
+query_emb = model.embed_query("What drives wealth concentration?")
+results = store.query(query_emb, n_results=5, where_filter={"content_type": "manuscript"})
+```
+
+### [Phase 3] Hybrid Retrieval & Generation
+
+#### Retrieval Pipeline (`utils/s3_RAG/`) ✅
+
+The retrieval pipeline combines sparse and dense search with cross-encoder reranking:
+
+```
+Query
+  ├──→ BM25 Sparse (top 50)  ──┐
+  │     exact variable names,   │
+  │     algorithm names         ├──→ RRF Fusion ──→ Cross-Encoder Reranker (top 10)
+  └──→ Dense Vector (top 50) ──┘     (merge +       (BGE-Reranker-v2-m3)
+        semantic intent               deduplicate)
+```
+
+| Component | Model / Library | Purpose |
+|-----------|----------------|---------|
+| **Sparse Retrieval** | BM25 (`rank-bm25`) | Lexical matching for exact Fortran identifiers like `REAL*8`, `NGRIDA`, subroutine names |
+| **Dense Retrieval** | ChromaDB + `BAAI/bge-large-en-v1.5` | Semantic similarity for concept-level queries |
+| **Fusion** | Reciprocal Rank Fusion (RRF) | Merges + deduplicates results from both retrievers |
+| **Reranker** | `BAAI/bge-reranker-v2-m3` | Cross-encoder that rigorously scores each passage against the query |
+
+##### Retrieval Strategy
+
+**1. Reciprocal Rank Fusion (RRF)**
+
+BM25 and dense retrieval produce scores on different scales (BM25 is unbounded, cosine similarity is 0–1), so raw scores can't be compared directly. RRF solves this by discarding scores entirely and using only **rank positions**:
+
+```
+RRF(doc) = Σ  1 / (k + rank_i)     where k = 60
+```
+
+- Documents found by **both** retrievers receive additive RRF contributions, boosting them above single-source results
+- The constant `k = 60` (from [Cormack et al., 2009](https://plg.uwaterloo.ca/~gvcormac/cormacksigir09-rrf.pdf)) smooths out rank differences so neither retriever dominates
+- Deduplication is built-in: each document appears once, keeping the first occurrence's metadata
+
+**2. Cross-Encoder Reranking**
+
+The top 50 RRF-fused results are refined by `BAAI/bge-reranker-v2-m3`, a cross-encoder that scores (query, passage) pairs jointly — unlike bi-encoders like BGE which embed query and passage independently. This makes it significantly more accurate at judging relevance, but too slow to run on the whole corpus (hence applied only to the fused top-50). The final top 10 results are returned sorted by `rerank_score`.
+
+##### File Structure
+
+```
+utils/s3_RAG/
+├── __init__.py            # Package init
+├── bm25_retriever.py      # BM25Okapi sparse retrieval with Fortran-aware tokenization
+├── dense_retriever.py     # ChromaDB + BGE dense vector retrieval
+├── reranker.py            # BGE-Reranker-v2-m3 cross-encoder
+├── hybrid_rag.py          # Full pipeline: BM25 + Dense + RRF + Reranker
+└── run_rag.py             # Interactive CLI query interface
+```
+
+##### Usage
+
 ```bash
-cd docker/RAG
-docker compose build --no-cache rag-web
-docker compose up -d rag-web
+# Interactive query mode (GPU #2)
+CUDA_VISIBLE_DEVICES=2 python -m utils.s3_RAG.run_rag \
+  --vector-store "data/Accounting for Wealth Concentration in the United States/vector_store" \
+  --device cuda:0
+
+# With content type filter
+CUDA_VISIBLE_DEVICES=2 python -m utils.s3_RAG.run_rag \
+  --vector-store "data/.../vector_store" \
+  --device cuda:0 \
+  --filter code       # or 'manuscript' or 'all'
 ```
 
-### Clear vector DB (full reset)
-This removes all indexed vectors:
-```bash
-rm -rf db/qdrant_data
-rm -f db/paper_registry.json
+In the interactive prompt, you can also switch filters on the fly:
+
+```
+>>> filter:code
+Filter: code
+>>> REAL*8 dimension asset grid
+  [1] rerank=0.9256 | type=code | ...
+>>> filter:all
+Filter: all (no filter)
 ```
 
-### Common integration checks
-- Local LLM reachable from host: `curl http://localhost:8000/health`
-- RAG API reachable: `curl http://localhost:3006/api/status`
-- `LLM_MODEL_NAME` in `docker/RAG/.env` equals `MODEL_ALIAS` in `docker/local_llm/.env`
-- `LOCAL_LLM_API_KEY` matches in both env files
+##### Programmatic Usage
 
-## Workflow Docs
+```python
+from utils.s3_RAG.hybrid_rag import HybridRAG
 
-- `docs/phase2_embedding_workflow.md`
-- `docs/phase3_rag_workflow.md`
-- `docs/rag_pipeline_flow.mermaid`
+rag = HybridRAG(
+    vector_store_dir="data/.../vector_store",
+    device="cuda:0",
+)
+
+results = rag.query("What drives wealth concentration?", final_top_k=5)
+for r in results:
+    print(r["rerank_score"], r["metadata"]["content_type"], r["text"][:100])
+```
+
+#### Generation 🔲 (To Be Implemented)
+
+The generation component — using Multimodal LLMs to produce context-aware answers from retrieved passages — is planned for future development.

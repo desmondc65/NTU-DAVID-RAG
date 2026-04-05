@@ -9,11 +9,8 @@ __pycache__/
 personal/
 *.bin
 *.sqlite3
-
-# log.txt
-tests/ingest_results/*
-db/*
-
 data/*
-archieve/*
-docker/*
+log.txt
+db/*
+tests/ingest_results/*
+docker/RAG/frontend/node_modules/*
