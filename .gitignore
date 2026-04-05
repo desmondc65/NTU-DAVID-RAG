@@ -10,8 +10,7 @@ personal/
 *.bin
 *.sqlite3
 data/*
-archieve/*
 log.txt
 db/*
-node_modules/*
-archieve/*
+tests/ingest_results/*
+docker/RAG/frontend/node_modules/*
