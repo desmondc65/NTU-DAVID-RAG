@@ -9,6 +9,7 @@ with overlap, prepends the summary for retrieval context.
 """
 
 import json
+import re
 from pathlib import Path
 from typing import Dict, List, Set
 
@@ -16,6 +17,27 @@ from typing import Dict, List, Set
 def _estimate_tokens(text: str) -> int:
     """Rough token estimate: ~0.75 tokens per whitespace-delimited word."""
     return int(len(text.split()) * 1.33)
+
+
+def _is_section_heading(item: dict) -> bool:
+    """Check if a content-list item is a section heading (has text_level)."""
+    return "text_level" in item
+
+
+def _heading_depth(text: str) -> int:
+    """Infer heading depth from academic paper text patterns.
+
+    Returns 1 for major sections (Roman numerals, Appendix),
+    2 for subsections (A., B., etc.), 0 for unrecognised.
+    """
+    stripped = text.strip()
+    if re.match(r'^[IVX]+\.\s', stripped):
+        return 1
+    if re.match(r'^Appendix\b', stripped, re.IGNORECASE):
+        return 1
+    if re.match(r'^[A-Z]\.\s', stripped):
+        return 2
+    return 0
 
 
 def chunk_manuscript(
@@ -26,46 +48,73 @@ def chunk_manuscript(
     """
     Chunk manuscript content_list.json into retrieval-ready pieces.
 
-    Filters for type=="text" entries only, merges consecutive paragraphs
-    into chunks up to `max_tokens` with `overlap_tokens` overlap.
+    Recognises section headings (items with ``text_level``) as chunk
+    boundaries and prepends the current section path to each chunk for
+    richer embedding context.  Handles both wrapped
+    ``{"paper_title": ..., "items": [...]}`` and bare ``[...]`` JSON formats.
 
     Returns list of dicts with keys:
-        - text: the chunk text
-        - metadata: dict with source_file, page_idx, chunk_idx, content_type
+        - text: the chunk text (with ``[Section: ...]`` prefix when available)
+        - metadata: dict with source_file, page_indices, chunk_idx,
+                     content_type, section
     """
     with open(json_path, "r", encoding="utf-8") as f:
-        entries = json.load(f)
+        raw = json.load(f)
 
-    # Filter text-only entries and keep relevant fields
-    text_entries = [
-        e for e in entries if e.get("type") == "text"
-    ]
+    # Handle both wrapped {"items": [...]} and bare [...] formats
+    if isinstance(raw, dict):
+        entries = raw.get("items", [])
+    elif isinstance(raw, list):
+        entries = raw
+    else:
+        return []
+
+    # Filter text-only entries
+    text_entries = [e for e in entries if e.get("type") == "text"]
 
     if not text_entries:
         return []
 
-    # Build chunks by merging consecutive paragraphs
+    # Section tracking
+    section_path: list[str] = []
+
+    def _current_section() -> str:
+        return " > ".join(section_path) if section_path else ""
+
+    # Build chunks by merging consecutive paragraphs, respecting sections
     chunks = []
     current_texts: list[str] = []
     current_tokens = 0
     current_pages: set[int] = set()
     chunk_idx = 0
 
-    def _flush():
+    def _flush(at_section_boundary: bool = False):
         nonlocal chunk_idx, current_texts, current_tokens, current_pages
         if not current_texts:
             return
+
         merged = "\n\n".join(current_texts)
+        section = _current_section()
+        embed_text = f"[Section: {section}]\n\n{merged}" if section else merged
+
         chunks.append({
-            "text": merged,
+            "text": embed_text,
             "metadata": {
                 "source_file": str(json_path),
                 "page_indices": sorted(current_pages),
                 "chunk_idx": chunk_idx,
                 "content_type": "manuscript",
+                "section": section,
             },
         })
         chunk_idx += 1
+
+        # No overlap across section boundaries
+        if at_section_boundary:
+            current_texts = []
+            current_tokens = 0
+            current_pages = set()
+            return
 
         # Compute overlap: keep trailing text that fits within overlap_tokens
         overlap_texts = []
@@ -84,6 +133,18 @@ def chunk_manuscript(
     for entry in text_entries:
         text = entry.get("text", "").strip()
         if not text:
+            continue
+
+        # Detect section headings
+        if _is_section_heading(entry):
+            _flush(at_section_boundary=True)
+            depth = _heading_depth(text)
+            if depth == 1:
+                section_path = [text]
+            elif depth == 2:
+                section_path = section_path[:1] + [text]
+            else:
+                section_path = [text]
             continue
 
         entry_tokens = _estimate_tokens(text)

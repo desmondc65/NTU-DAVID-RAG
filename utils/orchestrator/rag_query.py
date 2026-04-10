@@ -32,7 +32,7 @@ PROJECT_ROOT = CURRENT_DIR.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from utils.s2_embedding.embedder import EmbeddingModel
+from utils.s2_embedding.embedder import EmbeddingModel, _DEFAULT_MODEL
 from utils.s2_embedding.qdrant_store import QdrantVectorStore
 from utils.s3_RAG.bm25_retriever import BM25Retriever
 from utils.s3_RAG.reranker import Reranker
@@ -71,7 +71,7 @@ class QdrantDenseRetriever:
         self,
         qdrant_dir: str,
         collection_name: str = "rag_embeddings",
-        embedding_model: str = "BAAI/bge-large-en-v1.5",
+        embedding_model: str = _DEFAULT_MODEL,
         device: Optional[str] = None,
     ):
         self.store = QdrantVectorStore(
@@ -205,105 +205,228 @@ def _diversify_results(results: List[Dict], top_k: int = 10) -> List[Dict]:
 
 # ── Context builder ──────────────────────────────────────────────────────
 
+def _format_manuscript_chunk(r: Dict, ref_id: str) -> str:
+    """Format a single manuscript text chunk."""
+    meta = r.get("metadata", {})
+    section = meta.get("section", "")
+    pages = meta.get("page_indices", "")
+    header = f"[{ref_id}]"
+    if section:
+        header += f" Section: {section}"
+    if pages:
+        header += f" (pages {pages})"
+    return f"{header}\n{r['text']}"
+
+
+def _format_equation_chunk(r: Dict, ref_id: str) -> str:
+    """Format an equation chunk with LaTeX."""
+    meta = r.get("metadata", {})
+    section = meta.get("section", "")
+    latex = meta.get("equation_latex", "")
+    header = f"[{ref_id}] Equation"
+    if section:
+        header += f" in {section}"
+    lines = [header]
+    if latex:
+        lines.append(f"$$\n{latex}\n$$")
+    lines.append(f"Context: {r['text']}")
+    return "\n".join(lines)
+
+
+def _format_table_chunk(r: Dict, ref_id: str) -> str:
+    """Format a table chunk with caption and body."""
+    meta = r.get("metadata", {})
+    caption = meta.get("table_caption", "")
+    table_body = meta.get("table_body", "")
+    header = f"[{ref_id}] Table"
+    if caption:
+        header += f": {caption}"
+    lines = [header]
+    if table_body:
+        lines.append(table_body)
+    lines.append(f"Description: {r['text']}")
+    return "\n".join(lines)
+
+
+def _format_image_chunk(r: Dict, ref_id: str) -> str:
+    """Format an image/figure chunk."""
+    meta = r.get("metadata", {})
+    section = meta.get("section", "")
+    header = f"[{ref_id}] Figure"
+    if section:
+        header += f" in {section}"
+    return f"{header}\n{r['text']}"
+
+
+def _format_fortran_chunk(r: Dict, ref_id: str) -> str:
+    """Format a Fortran code chunk with structured metadata."""
+    meta = r.get("metadata", {})
+    func_name = meta.get("function_name", "")
+    kind = meta.get("kind", "")
+    purpose = meta.get("purpose", "") or meta.get("core_purpose", "")
+    calls = meta.get("calls", "") or meta.get("dependencies", "")
+    called_by = meta.get("called_by", "")
+    econ = meta.get("economic_concepts", "")
+    algorithm = meta.get("algorithm", "")
+    inputs = meta.get("inputs", "")
+    outputs = meta.get("outputs", "")
+
+    label = kind.replace("_", " ").title() if kind else "Function"
+    header = f"[{ref_id}] {label}: {func_name}"
+    lines = [header]
+    if purpose:
+        lines.append(f"  Purpose: {purpose}")
+    if econ:
+        lines.append(f"  Economic concepts: {econ}")
+    if algorithm:
+        lines.append(f"  Algorithm: {algorithm}")
+    if inputs:
+        lines.append(f"  Inputs: {inputs}")
+    if outputs:
+        lines.append(f"  Outputs: {outputs}")
+    if calls:
+        lines.append(f"  Calls: {calls}")
+    if called_by:
+        lines.append(f"  Called by: {called_by}")
+    lines.append(r["text"])
+    return "\n".join(lines)
+
+
+_CONTENT_FORMATTERS = {
+    "manuscript": _format_manuscript_chunk,
+    "equation": _format_equation_chunk,
+    "table": _format_table_chunk,
+    "image": _format_image_chunk,
+    "fortran_function": _format_fortran_chunk,
+    "fortran_section": _format_fortran_chunk,
+    "fortran_architecture": _format_fortran_chunk,
+}
+
+
 def _build_context(results: List[Dict], max_context_tokens: int = 4000) -> str:
     """
-    Build a context string from retrieval results for the LLM prompt.
+    Build a structured context string from retrieval results.
 
-    Results from the same paper are sorted by ``sequence_idx`` so the
-    context preserves the original document ordering.  Rich metadata is
-    included for non-text items (LaTeX for equations, table body/caption,
-    image paths).
+    Groups results by paper, separates Fortran code into its own section,
+    preserves document order within each paper, and adds a source inventory
+    so the LLM knows what papers and content types are available.
     """
     from collections import OrderedDict
 
-    # ── Group by paper, preserving first-seen order ──────────────────────
-    paper_groups: OrderedDict = OrderedDict()
-    other_results: List[Dict] = []  # fortran / no-paper items
+    # ── Classify results ────────────────────────────────────────────────
+    paper_groups: OrderedDict[str, List[Dict]] = OrderedDict()
+    fortran_results: List[Dict] = []
+    other_results: List[Dict] = []
 
     for r in results:
-        meta = r.get("metadata", {})
-        paper = meta.get("paper_title", "")
-        if paper:
-            paper_groups.setdefault(paper, []).append(r)
-        else:
-            other_results.append(r)
-
-    # Sort each paper group by sequence_idx to preserve document order
-    ordered_results: List[Dict] = []
-    for paper, group in paper_groups.items():
-        group.sort(key=lambda x: x.get("metadata", {}).get("sequence_idx", 0))
-        ordered_results.extend(group)
-    ordered_results.extend(other_results)
-
-    # ── Format each result ───────────────────────────────────────────────
-    lines = []
-    token_count = 0
-
-    for i, r in enumerate(ordered_results, 1):
         meta = r.get("metadata", {})
         content_type = meta.get("content_type", "unknown")
         paper = meta.get("paper_title", "")
 
-        header_parts = [f"[{i}] type={content_type}"]
-        if paper:
-            header_parts.append(f"paper=\"{paper}\"")
+        if content_type in ("fortran_function", "fortran_section", "fortran_architecture"):
+            fortran_results.append(r)
+        elif paper:
+            paper_groups.setdefault(paper, []).append(r)
+        else:
+            other_results.append(r)
 
-        # --- body text beyond the index key ---
-        extra_lines = []
+    # Sort within each paper by sequence_idx for reading order
+    for group in paper_groups.values():
+        group.sort(key=lambda x: x.get("metadata", {}).get("sequence_idx", 0))
 
-        if content_type == "fortran_function":
-            func_name = meta.get("function_name", "")
-            purpose = meta.get("core_purpose", "")
-            header_parts.append(f"function={func_name}")
-            if purpose:
-                header_parts.append(f"purpose=\"{purpose}\"")
-            deps = meta.get("dependencies", "")
-            if deps:
-                extra_lines.append(f"Dependencies: {deps}")
-            key_vars = meta.get("key_variables", "")
-            if key_vars:
-                extra_lines.append(f"Key variables: {key_vars}")
+    # ── Source inventory ────────────────────────────────────────────────
+    inventory_lines = ["# SOURCE INVENTORY"]
+    for pidx, (paper, group) in enumerate(paper_groups.items(), 1):
+        authors = group[0].get("metadata", {}).get("authors", "")
+        types = sorted({r.get("metadata", {}).get("content_type", "?") for r in group})
+        auth_str = f" by {authors}" if authors else ""
+        inventory_lines.append(
+            f"  Paper {pidx}: \"{paper}\"{auth_str} — "
+            f"{len(group)} passages ({', '.join(types)})"
+        )
+    if fortran_results:
+        fortran_papers = sorted({
+            r.get("metadata", {}).get("paper_title", "unknown")
+            for r in fortran_results
+        })
+        inventory_lines.append(
+            f"  Fortran code: {len(fortran_results)} units from "
+            + ", ".join(f"\"{p}\"" for p in fortran_papers)
+        )
+    inventory = "\n".join(inventory_lines)
 
-        elif content_type == "equation":
-            latex = meta.get("equation_latex", "")
-            if latex:
-                extra_lines.append(f"LaTeX: {latex}")
+    # ── Build formatted blocks ──────────────────────────────────────────
+    blocks: List[str] = [inventory, ""]
+    token_count = _estimate_tokens(inventory)
+    ref_counter = 1
 
-        elif content_type == "table":
-            caption = meta.get("table_caption", "")
-            if caption:
-                header_parts.append(f"caption={caption}")
-            table_body = meta.get("table_body", "")
-            if table_body:
-                extra_lines.append(f"Table content: {table_body}")
+    # Paper sections
+    for paper, group in paper_groups.items():
+        paper_header = f"# PAPER: {paper}"
+        authors = group[0].get("metadata", {}).get("authors", "")
+        if authors:
+            paper_header += f"\n# Authors: {authors}"
 
-        elif content_type == "image":
-            img_path = meta.get("img_path", "")
-            if img_path:
-                header_parts.append(f"img_path={img_path}")
-
-        elif content_type == "manuscript":
-            pages = meta.get("page_indices", "")
-            if pages:
-                header_parts.append(f"pages={pages}")
-
-        header = " | ".join(header_parts)
-        body = r["text"]
-        # Label description explicitly for non-text items
-        if content_type in ("table", "equation", "image"):
-            body = f"Description: {body}"
-        if extra_lines:
-            body += "\n" + "\n".join(extra_lines)
-        block = f"--- {header} ---\n{body}\n"
-
-        block_tokens = int(len(block.split()) * 1.33)
-        if token_count + block_tokens > max_context_tokens:
+        header_tokens = _estimate_tokens(paper_header)
+        if token_count + header_tokens > max_context_tokens:
             break
+        blocks.append(paper_header)
+        token_count += header_tokens
 
-        lines.append(block)
-        token_count += block_tokens
+        for r in group:
+            content_type = r.get("metadata", {}).get("content_type", "unknown")
+            ref_id = str(ref_counter)
+            formatter = _CONTENT_FORMATTERS.get(content_type, _format_manuscript_chunk)
+            block = formatter(r, ref_id)
 
-    return "\n".join(lines)
+            block_tokens = _estimate_tokens(block)
+            if token_count + block_tokens > max_context_tokens:
+                break
+            blocks.append(block)
+            token_count += block_tokens
+            ref_counter += 1
+
+        blocks.append("")  # blank line between papers
+
+    # Fortran section
+    if fortran_results:
+        fortran_header = "# COMPUTATIONAL IMPLEMENTATION (Fortran)"
+        header_tokens = _estimate_tokens(fortran_header)
+        if token_count + header_tokens <= max_context_tokens:
+            blocks.append(fortran_header)
+            token_count += header_tokens
+
+            for r in fortran_results:
+                content_type = r.get("metadata", {}).get("content_type", "unknown")
+                ref_id = str(ref_counter)
+                formatter = _CONTENT_FORMATTERS.get(content_type, _format_fortran_chunk)
+                block = formatter(r, ref_id)
+
+                block_tokens = _estimate_tokens(block)
+                if token_count + block_tokens > max_context_tokens:
+                    break
+                blocks.append(block)
+                token_count += block_tokens
+                ref_counter += 1
+
+    # Other (no paper title) — rare fallback
+    if other_results:
+        for r in other_results:
+            ref_id = str(ref_counter)
+            block = _format_manuscript_chunk(r, ref_id)
+            block_tokens = _estimate_tokens(block)
+            if token_count + block_tokens > max_context_tokens:
+                break
+            blocks.append(block)
+            token_count += block_tokens
+            ref_counter += 1
+
+    return "\n\n".join(blocks)
+
+
+def _estimate_tokens(text: str) -> int:
+    """Rough token estimate: ~1.33 tokens per whitespace word."""
+    return int(len(text.split()) * 1.33)
 
 
 def _format_conversation_history(
@@ -340,7 +463,7 @@ class RAGQueryEngine:
         self,
         db_path: Union[str, Path],
         collection_name: str = "rag_embeddings",
-        embedding_model: str = "BAAI/bge-large-en-v1.5",
+        embedding_model: str = _DEFAULT_MODEL,
         reranker_model: str = "BAAI/bge-reranker-v2-m3",
         model_name: Optional[str] = None,
         base_url: Optional[str] = None,
@@ -375,9 +498,9 @@ class RAGQueryEngine:
         logger.info("Loading reranker…")
         self.reranker = Reranker(model_name=reranker_model, device=self.reranker_device)
 
-        self.model_name = model_name or os.getenv("LLM_MODEL_NAME", "qwen2.5-vl-72b-instruct")
-        self.base_url = base_url or os.getenv("LOCAL_LLM_BASE_URL", "http://localhost:8000/v1")
-        self.api_key = api_key or os.getenv("LOCAL_LLM_API_KEY", "local-dev-key")
+        self.model_name = model_name or os.getenv("LLM_MODEL_NAME", "gemma4:31b")
+        self.base_url = base_url or os.getenv("LOCAL_LLM_BASE_URL", "http://localhost:11434/v1")
+        self.api_key = api_key or os.getenv("LOCAL_LLM_API_KEY", "ollama")
 
         self.llm = LocalLLMClient(
             model_name=self.model_name,
@@ -538,12 +661,19 @@ class RAGQueryEngine:
         top_k: int = 10,
         conversation_history: Optional[List[Dict[str, str]]] = None,
         where_filter: Optional[Dict] = None,
-        max_context_tokens: int = 128000,
+        max_context_tokens: int = 192000,
         max_generation_tokens: int = 60000,
         temperature: float = 0.3,
     ) -> Dict:
         """
         Full RAG pipeline: retrieve → build context → generate answer.
+
+        Prompt architecture:
+        - **system_prompt**: Role identity + behavioral instructions (compact,
+          always visible to the model's attention).
+        - **user_prompt**: Retrieved context (grouped by paper, then Fortran) →
+          conversation history → user question.  Placing context before the
+          question lets the model attend to evidence first.
 
         Parameters
         ----------
@@ -577,30 +707,58 @@ class RAGQueryEngine:
         # 3. Build context
         context = _build_context(sources, max_context_tokens=max_context_tokens)
         history_block = _format_conversation_history(conversation_history)
-        history_section = ""
+
+        # 4. System prompt — identity and instructions only
+        system_prompt = (
+            "You are an expert research assistant specializing in economics and "
+            "computational modeling. Your knowledge base contains academic economics "
+            "papers and their companion Fortran implementations.\n\n"
+            "## Instructions\n"
+            "- Answer ONLY based on the retrieved context provided. Do not use outside knowledge.\n"
+            "- Cite sources using bracket notation [1], [2], etc. matching the reference IDs in the context.\n"
+            "- When the question spans multiple papers, structure your answer with explicit comparisons: "
+            "similarities, differences in models, assumptions, or findings.\n"
+            "- When discussing Fortran code, explain what the code computes economically, "
+            "not just its programming logic. Link subroutines back to the equations or model "
+            "sections they implement.\n"
+            "- For equations, reproduce the LaTeX when it clarifies the answer.\n"
+            "- For tables, reference specific rows/columns and interpret the economic meaning.\n"
+            "- If the context does not contain enough information to answer, say so explicitly "
+            "and suggest what kind of source might help.\n\n"
+            "## Formatting\n"
+            "- Use markdown headers (##, ###) to organize multi-part answers.\n"
+            "- Inline math: $a_t = b_t$  |  Display math: $$a_t = b_t$$\n"
+            "- Do not use \\\\(...\\\\) or \\\\[...\\\\] delimiters.\n"
+        )
+
+        # 5. User prompt — context → history → question
+        user_parts: List[str] = []
+
+        # Context block
+        user_parts.append(
+            "<retrieved_context>\n"
+            f"{context}\n"
+            "</retrieved_context>"
+        )
+
+        # Conversation history (if any)
         if history_block:
-            history_section = (
-                f"\n=== CONVERSATION HISTORY ===\n{history_block}\n=== END HISTORY ===\n"
+            user_parts.append(
+                "<conversation_history>\n"
+                f"{history_block}\n"
+                "</conversation_history>"
             )
 
-        # 4. Generate
-        system_prompt = (
-            "You are an expert research assistant for economics and computational modeling. "
-            "Answer the user's question based on the retrieved context below. "
-            "Cite specific passages, tables, equations, or Fortran functions when relevant. "
-            "When the question involves comparing across papers, explicitly identify similarities "
-            "and differences between the papers' models, assumptions, or findings. "
-            "When writing mathematical expressions, format inline math with single dollar delimiters like $a_t = b_t$ "
-            "and display math with double dollar delimiters like $$a_t = b_t$$. "
-            "Do not use \\(...\\) or \\[...\\] delimiters. "
-            "If the context does not contain enough information, say so clearly."
-            f"{history_section}\n"
-            f"=== RETRIEVED CONTEXT ===\n{context}\n=== END CONTEXT ==="
+        # The actual question — placed last so it's closest to the response
+        user_parts.append(
+            f"<question>\n{user_query}\n</question>"
         )
+
+        user_prompt = "\n\n".join(user_parts)
 
         logger.info("Sending augmented prompt to LLM (%d context chars)…", len(context))
         answer = self.llm.generate_response(
-            user_prompt=user_query,
+            user_prompt=user_prompt,
             system_prompt=system_prompt,
             max_tokens=max_generation_tokens,
             temperature=temperature,

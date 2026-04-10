@@ -79,9 +79,9 @@ def extract_paper_metadata(
 
     snippet = _first_n_words(full_text, 600)
 
-    model_name = model_name or os.getenv("LLM_MODEL_NAME", "qwen2.5-vl-72b-instruct")
-    base_url = base_url or os.getenv("LOCAL_LLM_BASE_URL", "http://localhost:8000/v1")
-    api_key = api_key or os.getenv("LOCAL_LLM_API_KEY", "local-dev-key")
+    model_name = model_name or os.getenv("LLM_MODEL_NAME", "gemma4:31b")
+    base_url = base_url or os.getenv("LOCAL_LLM_BASE_URL", "http://localhost:11434/v1")
+    api_key = api_key or os.getenv("LOCAL_LLM_API_KEY", "ollama")
 
     client = LocalLLMClient(
         model_name=model_name,
@@ -222,9 +222,9 @@ def ingest_paper_and_code(
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # Resolve LLM config from env if not provided
-    model_name = model_name or os.getenv("LLM_MODEL_NAME", "qwen2.5-vl-72b-instruct")
-    base_url = base_url or os.getenv("LOCAL_LLM_BASE_URL", "http://localhost:8000/v1")
-    api_key = api_key or os.getenv("LOCAL_LLM_API_KEY", "local-dev-key")
+    model_name = model_name or os.getenv("LLM_MODEL_NAME", "gemma4:31b")
+    base_url = base_url or os.getenv("LOCAL_LLM_BASE_URL", "http://localhost:11434/v1")
+    api_key = api_key or os.getenv("LOCAL_LLM_API_KEY", "ollama")
 
     # ── staged ingest paths ───────────────────────────────────────────────
     stage_root = output_dir / "_tmp_ingest" / uuid.uuid4().hex
@@ -337,19 +337,19 @@ def ingest_paper_and_code(
         logger.info("═══ Step 4/5: Digesting Fortran code ═══")
         fortran_digest_path = paper_dir / f"{final_fortran_path.stem}_digest.json"
         code_content = final_fortran_path.read_text(encoding="utf-8", errors="replace")
-        # digest_fortran_code(
-        #     code_content=code_content,
-        #     output_json_path=str(fortran_digest_path),
-        #     model_name=model_name,
-        #     base_url=base_url,
-        #     api_key=api_key,
-        # )
-        # summarize_fortran_digest(
-        #     json_path=fortran_digest_path,
-        #     model_name=model_name,
-        #     base_url=base_url,
-        #     api_key=api_key,
-        # )
+        digest_fortran_code(
+            code_content=code_content,
+            output_json_path=str(fortran_digest_path),
+            model_name=model_name,
+            base_url=base_url,
+            api_key=api_key,
+        )
+        summarize_fortran_digest(
+            json_path=fortran_digest_path,
+            model_name=model_name,
+            base_url=base_url,
+            api_key=api_key,
+        )
 
         metadata["fortran_digest_path"] = str(fortran_digest_path)
         with open(metadata_json_path, "w", encoding="utf-8") as f:
