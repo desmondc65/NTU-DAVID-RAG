@@ -1,0 +1,19 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: gemma4_ollama
+    restart: unless-stopped
+    privileged: true
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=2
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      - CUDA_VISIBLE_DEVICES=2
+      - OLLAMA_KEEP_ALIVE=-1
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_storage:/root/.ollama
+
+volumes:
+  ollama_storage:

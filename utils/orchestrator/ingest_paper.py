@@ -251,6 +251,7 @@ def ingest_paper_and_code(
         )
         json_path = stage_extract_dir / staged_pdf.stem / subdir / f"{staged_pdf.stem}_content_list.json"
 
+
         # ── 2. Metadata extraction (title + authors) ─────────────────────
         logger.info("═══ Step 2/5: Extracting paper metadata via LLM ═══")
         metadata = extract_paper_metadata(
@@ -279,6 +280,8 @@ def ingest_paper_and_code(
         md_path = final_extracted_pdf_dir / subdir / f"{staged_pdf.stem}.md"
         json_path = final_extracted_pdf_dir / subdir / f"{staged_pdf.stem}_content_list.json"
 
+        # load json and clearn reference 
+        
         if db_path is not None:
             metadata["db_path"] = str(db_path)
         metadata["paper_dir"] = str(paper_dir)
@@ -293,6 +296,37 @@ def ingest_paper_and_code(
             json.dump(metadata, f, indent=4, ensure_ascii=False)
         logger.info("Saved metadata to %s", metadata_json_path)
 
+        # ── 2b. Trim content after "References" ────────────────────────
+        logger.info("Trimming content list after References section …")
+        with open(json_path, "r", encoding="utf-8") as f:
+            cl_raw = json.load(f)
+
+        if isinstance(cl_raw, dict) and "items" in cl_raw:
+            cl_items = cl_raw["items"]
+        else:
+            cl_items = cl_raw
+
+        ref_idx = None
+        for i, item in enumerate(cl_items):
+            if item.get("type") == "text" and re.match(
+                r"^\s*references\s*$", item.get("text", ""), re.IGNORECASE
+            ):
+                ref_idx = i
+                break
+
+        if ref_idx is not None:
+            removed = len(cl_items) - ref_idx
+            cl_items = cl_items[:ref_idx]
+            logger.info("Removed %d items after 'References' (index %d)", removed, ref_idx)
+            if isinstance(cl_raw, dict) and "items" in cl_raw:
+                cl_raw["items"] = cl_items
+            else:
+                cl_raw = cl_items
+            with open(json_path, "w", encoding="utf-8") as f:
+                json.dump(cl_raw, f, indent=4, ensure_ascii=False)
+        else:
+            logger.info("No 'References' heading found; keeping full content list.")
+
         # ── 3. Enrich images / equations / tables ────────────────────────
         logger.info("═══ Step 3/5: Describing images, equations & tables ═══")
         describe_mineru_images(json_path)
@@ -303,19 +337,19 @@ def ingest_paper_and_code(
         logger.info("═══ Step 4/5: Digesting Fortran code ═══")
         fortran_digest_path = paper_dir / f"{final_fortran_path.stem}_digest.json"
         code_content = final_fortran_path.read_text(encoding="utf-8", errors="replace")
-        digest_fortran_code(
-            code_content=code_content,
-            output_json_path=str(fortran_digest_path),
-            model_name=model_name,
-            base_url=base_url,
-            api_key=api_key,
-        )
-        summarize_fortran_digest(
-            json_path=fortran_digest_path,
-            model_name=model_name,
-            base_url=base_url,
-            api_key=api_key,
-        )
+        # digest_fortran_code(
+        #     code_content=code_content,
+        #     output_json_path=str(fortran_digest_path),
+        #     model_name=model_name,
+        #     base_url=base_url,
+        #     api_key=api_key,
+        # )
+        # summarize_fortran_digest(
+        #     json_path=fortran_digest_path,
+        #     model_name=model_name,
+        #     base_url=base_url,
+        #     api_key=api_key,
+        # )
 
         metadata["fortran_digest_path"] = str(fortran_digest_path)
         with open(metadata_json_path, "w", encoding="utf-8") as f:

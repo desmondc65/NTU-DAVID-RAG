@@ -1,6 +1,20 @@
-python-dotenv
-pdf2image
+# Flask backend
+flask>=3.0
+flask-cors>=4.0
+gunicorn>=21.2
+python-dotenv>=1.0
+werkzeug>=3.0
+
+# Embedding & vector store
+sentence-transformers>=2.2
+qdrant-client>=1.7
+
+# RAG components
+rank-bm25>=0.2
+
+# PDF extraction (MinerU)
 mineru[all]
-sentence-transformers
-chromadb
-rank-bm25
+
+# Other
+pydantic>=2.0
+pdf2image
