@@ -17,7 +17,7 @@ class LocalLLMClient:
 
 	def __init__(
 		self,
-		model_name: str = "qwen3-next-80b-instruct-q8_0",
+		model_name: str = "gemma4:31b",
 		base_url: Optional[str] = None,
 		api_key: Optional[str] = None,
 	):
@@ -30,8 +30,8 @@ class LocalLLMClient:
 			api_key (str, optional): API key used by the local endpoint.
 		"""
 		self.model_name = model_name
-		self.base_url = base_url or os.getenv("LOCAL_LLM_BASE_URL", "http://localhost:8000/v1")
-		self.api_key = api_key or os.getenv("LOCAL_LLM_API_KEY", "local-dev-key")
+		self.base_url = base_url or os.getenv("LOCAL_LLM_BASE_URL", "http://localhost:11434/v1")
+		self.api_key = api_key or os.getenv("LOCAL_LLM_API_KEY", "ollama")
 
 		self.client = OpenAI(base_url=self.base_url, api_key=self.api_key)
 
