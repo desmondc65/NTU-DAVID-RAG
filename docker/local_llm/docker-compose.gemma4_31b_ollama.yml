@@ -6,14 +6,24 @@ services:
     privileged: true
     runtime: nvidia
     environment:
-      - NVIDIA_VISIBLE_DEVICES=2
+      - NVIDIA_VISIBLE_DEVICES=1,2
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility
-      - CUDA_VISIBLE_DEVICES=2
+      - CUDA_VISIBLE_DEVICES=1,2
       - OLLAMA_KEEP_ALIVE=-1
     ports:
       - "11434:11434"
     volumes:
       - ollama_storage:/root/.ollama
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        ollama serve &
+        until ollama list >/dev/null 2>&1; do sleep 1; done
+        ollama pull gemma4:31b
+        echo "Warming up model..."
+        ollama run gemma4:31b "hi" > /dev/null 2>&1
+        echo "Model ready."
+        wait
 
 volumes:
   ollama_storage:
