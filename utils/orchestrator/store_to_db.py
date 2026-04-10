@@ -360,7 +360,7 @@ def store_ingested_data(
     logger.info("═══ Step 3/3: Storing in Qdrant ═══")
 
     # Determine vector size from first embedding
-    vector_size = len(embeddings[0]) if embeddings else 1024
+    vector_size = len(embeddings[0]) if embeddings else 3584
     store = QdrantVectorStore(
         persist_dir=str(db_path / "qdrant_data"),
         collection_name=collection_name,

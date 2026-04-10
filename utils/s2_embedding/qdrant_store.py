@@ -20,7 +20,7 @@ class QdrantVectorStore:
         self,
         persist_dir: str,
         collection_name: str = "rag_embeddings",
-        vector_size: int = 1024,
+        vector_size: int = 3584,
     ):
         """
         Args:

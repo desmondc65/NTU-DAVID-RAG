@@ -1,8 +1,11 @@
 """
 Embedding model wrapper using sentence-transformers.
 
-Uses BAAI/bge-large-en-v1.5 by default — strong on both academic text
-and code retrieval, 1024-dim embeddings, 512-token context.
+Uses Alibaba-NLP/gte-Qwen2-7B-instruct by default — top-tier MTEB
+performance, 3584-dim embeddings, 8192-token context.  Needs ~15 GB
+VRAM in fp16 (fits comfortably on a 30 GB GPU).
+
+Falls back to BAAI/bge-large-en-v1.5 when passed explicitly.
 """
 
 from typing import List, Optional
@@ -10,9 +13,32 @@ from typing import List, Optional
 from sentence_transformers import SentenceTransformer
 
 
-# BGE models use a query instruction prefix for asymmetric retrieval
-_DEFAULT_MODEL = "BAAI/bge-large-en-v1.5"
+_DEFAULT_MODEL = "Alibaba-NLP/gte-Qwen2-7B-instruct"
+
+# Instruction prefixes per model family (asymmetric retrieval)
 _BGE_QUERY_PREFIX = "Represent this sentence for searching relevant passages: "
+_GTE_QUERY_PREFIX = "Instruct: Given a web search query, retrieve relevant passages that answer the query\nQuery: "
+_E5_QUERY_PREFIX = "query: "
+
+
+def _query_prefix(model_name: str) -> str:
+    """Return the appropriate query-side instruction prefix."""
+    name = model_name.lower()
+    if "gte-qwen" in name:
+        return _GTE_QUERY_PREFIX
+    if "bge" in name:
+        return _BGE_QUERY_PREFIX
+    if "e5" in name:
+        return _E5_QUERY_PREFIX
+    return ""
+
+
+def _doc_prefix(model_name: str) -> str:
+    """Return the appropriate document-side instruction prefix."""
+    name = model_name.lower()
+    if "e5" in name:
+        return "passage: "
+    return ""
 
 
 class EmbeddingModel:
@@ -25,11 +51,12 @@ class EmbeddingModel:
             device: 'cuda', 'cpu', or None (auto-detect).
         """
         self.model_name = model_name
-        self.model = SentenceTransformer(model_name, device=device)
-        self.is_bge = "bge" in model_name.lower()
+        self.model = SentenceTransformer(model_name, device=device, trust_remote_code=True)
+        self._query_prefix = _query_prefix(model_name)
+        self._doc_prefix = _doc_prefix(model_name)
 
     def embed_documents(
-        self, texts: List[str], batch_size: int = 32, show_progress: bool = True
+        self, texts: List[str], batch_size: int = 8, show_progress: bool = True
     ) -> List[List[float]]:
         """
         Embed a list of document texts (passages to be stored).
@@ -42,6 +69,8 @@ class EmbeddingModel:
         Returns:
             List of embedding vectors (list of floats).
         """
+        if self._doc_prefix:
+            texts = [f"{self._doc_prefix}{t}" for t in texts]
         embeddings = self.model.encode(
             texts,
             batch_size=batch_size,
@@ -53,7 +82,6 @@ class EmbeddingModel:
     def embed_query(self, query: str) -> List[float]:
         """
         Embed a single query text (for retrieval).
-        Applies BGE query instruction prefix if using a BGE model.
 
         Args:
             query: The search query string.
@@ -61,7 +89,7 @@ class EmbeddingModel:
         Returns:
             Embedding vector as list of floats.
         """
-        text = f"{_BGE_QUERY_PREFIX}{query}" if self.is_bge else query
+        text = f"{self._query_prefix}{query}" if self._query_prefix else query
         embedding = self.model.encode(
             [text], normalize_embeddings=True
         )
