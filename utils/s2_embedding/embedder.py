@@ -12,6 +12,21 @@ from typing import List, Optional
 
 from sentence_transformers import SentenceTransformer
 
+# gte-Qwen2-7B-instruct ships custom modeling_qwen.py pinned to an older HF
+# transformers API; it calls DynamicCache.get_usable_length, which was removed
+# in transformers >=4.47. Re-add it as a thin alias so the remote code runs
+# unchanged against current transformers.
+try:
+    from transformers.cache_utils import DynamicCache
+
+    if not hasattr(DynamicCache, "get_usable_length"):
+        def _get_usable_length(self, new_seq_length: int, layer_idx: int = 0) -> int:
+            return self.get_seq_length(layer_idx)
+
+        DynamicCache.get_usable_length = _get_usable_length  # type: ignore[attr-defined]
+except ImportError:
+    pass
+
 
 _DEFAULT_MODEL = "Alibaba-NLP/gte-Qwen2-7B-instruct"
 

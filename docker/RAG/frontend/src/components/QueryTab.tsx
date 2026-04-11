@@ -65,6 +65,8 @@ export default function QueryTab({ isBlocked }: QueryTabProps) {
     const map: Record<string, string> = {
       manuscript: 'manuscript',
       fortran_function: 'fortran_function',
+      fortran_section: 'fortran_function',
+      fortran_architecture: 'fortran_function',
       equation: 'equation',
       table: 'table',
       image: 'image',
@@ -187,6 +189,12 @@ export default function QueryTab({ isBlocked }: QueryTabProps) {
                             className="source-image-preview"
                             src={s.metadata.image_data_url}
                             alt={s.metadata?.img_rel_path || 'Retrieved source image'}
+                          />
+                        )}
+                        {contentType === 'table' && s.metadata?.table_body && (
+                          <div
+                            className="source-table"
+                            dangerouslySetInnerHTML={{ __html: s.metadata.table_body }}
                           />
                         )}
                         <div className="source-text">
