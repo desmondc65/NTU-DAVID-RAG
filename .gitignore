@@ -9,7 +9,7 @@ __pycache__/
 personal/
 *.bin
 *.sqlite3
-data/*
+
 log.txt
 db/*
 tests/ingest_results/*
