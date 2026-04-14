@@ -34,6 +34,13 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from utils.s2_embedding.embedder import EmbeddingModel, _DEFAULT_MODEL
 from utils.s2_embedding.qdrant_store import QdrantVectorStore
+from utils.orchestrator.paper_profiler import (
+    PROFILE_COLLECTION,
+    build_paper_profile,
+    profile_to_embed_text,
+    profile_to_payload,
+)
+from utils.llm_clients.local_llm import LocalLLMClient
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -418,12 +425,63 @@ def _update_paper_registry(
 
 # ── main orchestrator ─────────────────────────────────────────────────────
 
+def _store_paper_profile(
+    db_path: Path,
+    paper_title: str,
+    authors: str,
+    content_list_json: str,
+    fortran_digest_json: str,
+    embedder: EmbeddingModel,
+    vector_size: int,
+    llm_client: Optional[LocalLLMClient] = None,
+) -> Optional[Dict]:
+    """Build a paper profile via LLM, embed it, upsert into the profile collection.
+
+    Returns the profile dict on success, None on failure (logged).
+    """
+    try:
+        llm = llm_client or LocalLLMClient()
+        profile = build_paper_profile(
+            content_list_json=content_list_json,
+            fortran_digest_json=fortran_digest_json,
+            paper_title=paper_title,
+            authors=authors,
+            llm_client=llm,
+        )
+    except Exception as exc:
+        logger.warning("Paper profile extraction failed for '%s': %s", paper_title, exc)
+        return None
+
+    embed_text = profile_to_embed_text(profile)
+    profile_embedding = embedder.embed_documents([embed_text])[0]
+
+    profile_store = QdrantVectorStore(
+        persist_dir=str(db_path / "qdrant_data"),
+        collection_name=PROFILE_COLLECTION,
+        vector_size=vector_size,
+    )
+    try:
+        profile_id = hashlib.md5(f"profile:{paper_title}".encode()).hexdigest()
+        profile_store.add_documents(
+            texts=[embed_text],
+            embeddings=[profile_embedding],
+            metadatas=[profile_to_payload(profile)],
+            ids=[profile_id],
+        )
+        logger.info("Upserted paper profile for '%s' into '%s'", paper_title, PROFILE_COLLECTION)
+    finally:
+        profile_store.close()
+
+    return profile
+
+
 def store_ingested_data(
     ingest_result: Dict[str, str],
     db_path: Union[str, Path],
     collection_name: str = "rag_embeddings",
     embedding_model: str = _DEFAULT_MODEL,
     embedding_device: Optional[str] = None,
+    build_profile: bool = True,
 ) -> Dict[str, int]:
     """
     Chunk, embed, and store ingested paper + Fortran code into Qdrant.
@@ -452,7 +510,7 @@ def store_ingested_data(
     fortran_digest_json = ingest_result["fortran_digest_json"]
 
     # ── 1. Chunking ──────────────────────────────────────────────────────
-    logger.info("═══ Step 1/3: Chunking ═══")
+    logger.info("═══ Step 1/4: Chunking ═══")
     ms_chunks = chunk_content_list(content_list_json)
     ft_chunks = chunk_fortran_digest(fortran_digest_json)
     all_chunks = ms_chunks + ft_chunks
@@ -465,7 +523,7 @@ def store_ingested_data(
                 len(ms_chunks), len(ft_chunks), len(all_chunks))
 
     # ── 2. Embedding ─────────────────────────────────────────────────────
-    logger.info("═══ Step 2/3: Embedding ═══")
+    logger.info("═══ Step 2/4: Embedding ═══")
     embedder = EmbeddingModel(model_name=embedding_model, device=embedding_device)
 
     texts = [c["text"] for c in all_chunks]
@@ -476,7 +534,7 @@ def store_ingested_data(
                 len(texts), elapsed, len(texts) / elapsed if elapsed else 0)
 
     # ── 3. Store in Qdrant ───────────────────────────────────────────────
-    logger.info("═══ Step 3/3: Storing in Qdrant ═══")
+    logger.info("═══ Step 3/4: Storing in Qdrant ═══")
 
     # Determine vector size from first embedding
     vector_size = len(embeddings[0]) if embeddings else 3584
@@ -513,16 +571,33 @@ def store_ingested_data(
 
     # ── 4. Update paper registry ─────────────────────────────────────────
     # Read title/authors from the metadata JSON
+    paper_title = ""
+    authors = ""
     metadata_json = ingest_result.get("metadata_json", "")
     if metadata_json and Path(metadata_json).exists():
         with open(metadata_json, "r", encoding="utf-8") as f:
             meta = json.load(f)
+        paper_title = meta.get("paper_title", "")
+        authors = meta.get("authors", "")
         _update_paper_registry(
             registry_path=db_path / "paper_registry.json",
-            paper_title=meta.get("paper_title", ""),
-            authors=meta.get("authors", ""),
+            paper_title=paper_title,
+            authors=authors,
             content_list_path=content_list_json,
             fortran_digest_path=fortran_digest_json,
+        )
+
+    # ── 5. Build and store paper profile (global-query index) ────────────
+    if build_profile and paper_title:
+        logger.info("═══ Step 4/4: Building paper profile ═══")
+        _store_paper_profile(
+            db_path=db_path,
+            paper_title=paper_title,
+            authors=authors,
+            content_list_json=content_list_json,
+            fortran_digest_json=fortran_digest_json,
+            embedder=embedder,
+            vector_size=vector_size,
         )
 
     return {

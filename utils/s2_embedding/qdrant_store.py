@@ -21,18 +21,30 @@ class QdrantVectorStore:
         persist_dir: str,
         collection_name: str = "rag_embeddings",
         vector_size: int = 3584,
+        client: Optional[QdrantClient] = None,
     ):
         """
         Args:
             persist_dir: Directory for Qdrant on-disk storage.
             collection_name: Name of the collection.
             vector_size: Dimensionality of embedding vectors.
+            client: Optional existing QdrantClient to reuse. Qdrant's local
+                path mode acquires a filesystem lock, so sharing a client
+                is required when opening multiple collections in the same
+                process (e.g. the chunk collection + the paper_profiles
+                collection). When ``None`` a new client is created and
+                owned by this instance.
         """
         self.persist_dir = persist_dir
         self.collection_name = collection_name
         Path(persist_dir).mkdir(parents=True, exist_ok=True)
 
-        self.client = QdrantClient(path=persist_dir)
+        if client is not None:
+            self.client = client
+            self._owns_client = False
+        else:
+            self.client = QdrantClient(path=persist_dir)
+            self._owns_client = True
 
         # Create collection if it doesn't exist
         existing = [c.name for c in self.client.get_collections().collections]
@@ -140,7 +152,12 @@ class QdrantVectorStore:
         return info.points_count
 
     def close(self) -> None:
-        """Close the underlying Qdrant client and release local storage locks."""
+        """Close the underlying Qdrant client and release local storage locks.
+
+        No-op when the client was provided externally — the owner closes it.
+        """
+        if not getattr(self, "_owns_client", True):
+            return
         client = getattr(self, "client", None)
         if client is None:
             return

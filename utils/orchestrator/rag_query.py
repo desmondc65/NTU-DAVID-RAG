@@ -37,6 +37,11 @@ from utils.s2_embedding.qdrant_store import QdrantVectorStore
 from utils.s3_RAG.bm25_retriever import BM25Retriever
 from utils.s3_RAG.reranker import Reranker
 from utils.llm_clients.local_llm import LocalLLMClient
+from utils.orchestrator.paper_profiler import (
+    PROFILE_COLLECTION,
+    format_profile_block,
+)
+from utils.orchestrator.query_router import classify_query
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -303,13 +308,21 @@ _CONTENT_FORMATTERS = {
 }
 
 
-def _build_context(results: List[Dict], max_context_tokens: int = 4000) -> str:
+def _build_context(
+    results: List[Dict],
+    max_context_tokens: int = 4000,
+    profiles: Optional[List[Dict]] = None,
+) -> str:
     """
     Build a structured context string from retrieval results.
 
     Groups results by paper, separates Fortran code into its own section,
     preserves document order within each paper, and adds a source inventory
     so the LLM knows what papers and content types are available.
+
+    When ``profiles`` is non-empty (global-query path), a PAPER PROFILES
+    section is prepended so the LLM can reason about paper identities
+    (models, methods, concepts) before seeing individual chunks.
     """
     from collections import OrderedDict
 
@@ -359,6 +372,27 @@ def _build_context(results: List[Dict], max_context_tokens: int = 4000) -> str:
     blocks: List[str] = [inventory, ""]
     token_count = _estimate_tokens(inventory)
     ref_counter = 1
+
+    # Profile section for global queries — prepended so the LLM can anchor
+    # each paper's identity before reading individual chunks. Profile refs
+    # use a "P"-prefixed namespace so they don't collide with chunk refs.
+    if profiles:
+        profile_header = "# PAPER PROFILES (for cross-paper comparison)"
+        header_tokens = _estimate_tokens(profile_header)
+        if token_count + header_tokens <= max_context_tokens:
+            blocks.append(profile_header)
+            token_count += header_tokens
+            profile_counter = 1
+            for p in profiles:
+                ref_id = f"P{profile_counter}"
+                block = format_profile_block(p.get("metadata", {}) or p, ref_id)
+                block_tokens = _estimate_tokens(block)
+                if token_count + block_tokens > max_context_tokens:
+                    break
+                blocks.append(block)
+                token_count += block_tokens
+                profile_counter += 1
+            blocks.append("")
 
     # Paper sections
     for paper, group in paper_groups.items():
@@ -491,6 +525,21 @@ class RAGQueryEngine:
             device=self.embedding_device,
         )
 
+        # Profile collection — share the dense client (Qdrant local path locks
+        # the storage directory so we must not open a second client on it).
+        try:
+            existing_collections = {
+                c.name for c in self.dense.store.client.get_collections().collections
+            }
+            self.profile_enabled = PROFILE_COLLECTION in existing_collections
+        except Exception as exc:
+            logger.warning("Could not list Qdrant collections: %s", exc)
+            self.profile_enabled = False
+        if self.profile_enabled:
+            logger.info("Profile collection '%s' detected — global-query routing enabled.", PROFILE_COLLECTION)
+        else:
+            logger.info("Profile collection missing — global queries will fall back to local retrieval.")
+
         logger.info("Building BM25 index from Qdrant…")
         self.bm25 = BM25Retriever()
         self._build_bm25()
@@ -605,6 +654,105 @@ class RAGQueryEngine:
 
         return expanded
 
+    # ── Profile retrieval (global queries) ──────────────────────────────
+
+    def _retrieve_profiles(self, query: str, top_k: int = 5) -> List[Dict]:
+        """Vector-search the paper_profiles collection for candidate papers."""
+        if not self.profile_enabled:
+            return []
+        try:
+            query_emb = self.dense.embedder.embed_query(query)
+            points = self.dense.store.client.query_points(
+                collection_name=PROFILE_COLLECTION,
+                query=query_emb,
+                limit=top_k,
+                with_payload=True,
+            ).points
+        except Exception as exc:
+            logger.warning("Profile retrieval failed: %s", exc)
+            return []
+
+        out: List[Dict] = []
+        for pt in points:
+            payload = dict(pt.payload) if pt.payload else {}
+            doc = payload.pop("document", "")
+            out.append({
+                "id": pt.id,
+                "text": doc,
+                "metadata": payload,
+                "score": pt.score,
+                "paper_title": payload.get("paper_title", ""),
+            })
+        return out
+
+    def retrieve_global(
+        self,
+        query: str,
+        focus_concepts: Optional[List[str]] = None,
+        profile_top_k: int = 6,
+        chunks_per_paper: int = 4,
+    ) -> Dict[str, List[Dict]]:
+        """
+        Profile-first retrieval for comparative / cross-document queries.
+
+        1. Rank papers against the profile index (paper identities).
+        2. For each candidate paper, retrieve top-N chunks via filtered hybrid
+           retrieval — guarantees balanced per-paper evidence.
+
+        Returns
+        -------
+        dict with keys:
+            - ``profiles``: list of candidate paper profile records
+            - ``chunks``: list of chunks aggregated across all candidates
+        """
+        # Enrich the query with focus concepts so the profile vector captures
+        # the comparison axis, not just the interrogative phrasing.
+        profile_query = query
+        if focus_concepts:
+            profile_query = f"{query}\nConcepts: {', '.join(focus_concepts)}"
+
+        profiles = self._retrieve_profiles(profile_query, top_k=profile_top_k)
+        if not profiles:
+            logger.info("No profiles retrieved — falling back to local pipeline.")
+            return {"profiles": [], "chunks": []}
+
+        logger.info(
+            "Global route: %d candidate papers (%s)",
+            len(profiles),
+            ", ".join(p.get("paper_title", "?") for p in profiles),
+        )
+
+        # Per-paper filtered retrieval — hybrid BM25 + dense, capped per paper.
+        aggregated: List[Dict] = []
+        for p in profiles:
+            title = p.get("paper_title") or ""
+            if not title:
+                continue
+            where = {"paper_title": title}
+            try:
+                bm25_hits = self.bm25.retrieve(
+                    query=query, top_k=chunks_per_paper * 3, where_filter=where,
+                )
+            except Exception as exc:
+                logger.debug("BM25 paper-filtered retrieval failed for '%s': %s", title, exc)
+                bm25_hits = []
+            try:
+                dense_hits = self.dense.retrieve(
+                    query=query, top_k=chunks_per_paper * 3, where_filter=where,
+                )
+            except Exception as exc:
+                logger.debug("Dense paper-filtered retrieval failed for '%s': %s", title, exc)
+                dense_hits = []
+            fused = _reciprocal_rank_fusion([bm25_hits, dense_hits])
+            if not fused:
+                continue
+            reranked = self.reranker.rerank(
+                query=query, results=fused[: chunks_per_paper * 3], top_k=chunks_per_paper,
+            )
+            aggregated.extend(reranked)
+
+        return {"profiles": profiles, "chunks": aggregated}
+
     # ── Retrieval ────────────────────────────────────────────────────────
 
     def retrieve(
@@ -693,19 +841,46 @@ class RAGQueryEngine:
             - ``sources``: List of retrieved source dicts.
             - ``context``: The context string sent to the LLM.
         """
-        # 1. Retrieve
-        logger.info("Retrieving context for: '%s'", user_query)
-        sources = self.retrieve(
-            query=user_query,
-            final_top_k=top_k,
-            where_filter=where_filter,
-        )
+        # 1. Route query: local vs global
+        route = classify_query(user_query, self.llm) if self.profile_enabled else {"scope": "local", "focus_concepts": []}
+        logger.info("Query scope: %s | focus: %s", route.get("scope"), route.get("focus_concepts"))
+
+        profiles: List[Dict] = []
+        if route.get("scope") == "global" and self.profile_enabled and where_filter is None:
+            # Global route: profile-first retrieval with per-paper chunk budgets.
+            global_result = self.retrieve_global(
+                query=user_query,
+                focus_concepts=route.get("focus_concepts"),
+                profile_top_k=6,
+                chunks_per_paper=4,
+            )
+            profiles = global_result["profiles"]
+            sources = global_result["chunks"]
+            # Fall back to local retrieval if the global path produced nothing.
+            if not sources:
+                logger.info("Global route empty — falling back to local retrieval.")
+                sources = self.retrieve(
+                    query=user_query,
+                    final_top_k=top_k,
+                    where_filter=where_filter,
+                )
+        else:
+            logger.info("Retrieving context for: '%s'", user_query)
+            sources = self.retrieve(
+                query=user_query,
+                final_top_k=top_k,
+                where_filter=where_filter,
+            )
 
         # 2. Expand with neighboring chunks for context continuity
         sources = self._expand_with_neighbors(sources, n_neighbors=1)
 
-        # 3. Build context
-        context = _build_context(sources, max_context_tokens=max_context_tokens)
+        # 3. Build context (prepend profile blocks for global queries)
+        context = _build_context(
+            sources,
+            max_context_tokens=max_context_tokens,
+            profiles=profiles,
+        )
         history_block = _format_conversation_history(conversation_history)
 
         # 4. System prompt — identity and instructions only
@@ -715,7 +890,10 @@ class RAGQueryEngine:
             "papers and their companion Fortran implementations.\n\n"
             "## Instructions\n"
             "- Answer ONLY based on the retrieved context provided. Do not use outside knowledge.\n"
-            "- Cite sources using bracket notation [1], [2], etc. matching the reference IDs in the context.\n"
+            "- Cite sources using bracket notation: [1], [2] for chunk passages and [P1], [P2] for paper profiles.\n"
+            "- When a PAPER PROFILES section is present, the question is comparative. Use the profiles to "
+            "identify which papers share models/methods/concepts and anchor comparisons on their structured "
+            "fields; then back each claim with passage citations when specific evidence is relevant.\n"
             "- When the question spans multiple papers, structure your answer with explicit comparisons: "
             "similarities, differences in models, assumptions, or findings.\n"
             "- When discussing Fortran code, explain what the code computes economically, "
