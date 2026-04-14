@@ -16,7 +16,9 @@ import textwrap
 
 from dotenv import load_dotenv
 
+from utils.s2_embedding.embedder import _DEFAULT_MODEL
 from utils.s3_RAG.hybrid_rag import HybridRAG
+from utils.s3_RAG.reranker import _DEFAULT_RERANKER
 
 
 def _print_results(results, query):
@@ -76,14 +78,14 @@ def main():
     parser.add_argument(
         "--embedding-model",
         type=str,
-        default="BAAI/bge-large-en-v1.5",
-        help="Dense embedding model (default: BAAI/bge-large-en-v1.5)",
+        default=_DEFAULT_MODEL,
+        help=f"Dense embedding model (default: {_DEFAULT_MODEL})",
     )
     parser.add_argument(
         "--reranker-model",
         type=str,
-        default="BAAI/bge-reranker-v2-m3",
-        help="Cross-encoder reranker model (default: BAAI/bge-reranker-v2-m3)",
+        default=_DEFAULT_RERANKER,
+        help=f"Cross-encoder reranker model (default: {_DEFAULT_RERANKER})",
     )
     parser.add_argument(
         "--device",
