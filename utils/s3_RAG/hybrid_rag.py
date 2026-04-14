@@ -10,6 +10,7 @@ Orchestrates the full retrieval flow:
 
 from typing import Dict, List, Optional
 
+from utils.s2_embedding.embedder import _DEFAULT_MODEL
 from utils.s3_RAG.bm25_retriever import BM25Retriever
 from utils.s3_RAG.dense_retriever import DenseRetriever
 from utils.s3_RAG.reranker import Reranker
@@ -65,7 +66,7 @@ class HybridRAG:
         self,
         vector_store_dir: str,
         collection_name: str = "rag_embeddings",
-        embedding_model: str = "BAAI/bge-large-en-v1.5",
+        embedding_model: str = _DEFAULT_MODEL,
         reranker_model: str = "BAAI/bge-reranker-v2-m3",
         device: Optional[str] = None,
     ):

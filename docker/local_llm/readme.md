@@ -398,3 +398,91 @@ docker logs -f qwen3-vl-server
 # stop
 docker compose -f docker-compose.qwen3-next-80b.yml down
 ```
+
+## 15) Gemma 4 31B Service (Transformers)
+
+This folder now also includes a dedicated Gemma service:
+
+- Compose file: `docker-compose.gemma4-31b.yml`
+- App server: `gemma_server/app.py`
+- Runtime: FastAPI + Hugging Face Transformers `pipeline(task="any-to-any")`
+
+It exposes an OpenAI-compatible endpoint at:
+
+- `POST /v1/chat/completions`
+- `GET /v1/models`
+- `GET /health`
+
+### 15.1 Configure `.env`
+
+Set/confirm these variables in `.env`:
+
+- `GEMMA_MODEL_ID` (default: `google/gemma-4-31b-it`)
+- `GEMMA_MODEL_ALIAS` (default: `gemma4-31b-it`)
+- `GEMMA_DTYPE` (`bfloat16` recommended on modern GPUs)
+- `GEMMA_MAX_NEW_TOKENS`
+- `HUGGING_FACE_HUB_TOKEN` (required for gated/private models)
+- `HF_CACHE_DIR` (persistent model cache on host)
+
+### 15.2 Start / Stop
+
+```bash
+cd docker/local_llm
+
+# Start Gemma service
+docker compose --env-file .env -f docker-compose.gemma4-31b.yml up -d --build
+
+# Check health
+curl -fsS http://localhost:${SERVICE_PORT:-8000}/health
+
+# Tail logs
+docker logs -f gemma4-31b-server
+
+# Stop
+docker compose -f docker-compose.gemma4-31b.yml down
+```
+
+### 15.3 Text chat example
+
+```bash
+curl http://localhost:8000/v1/chat/completions \
+	-H "Content-Type: application/json" \
+	-H "Authorization: Bearer local-dev-key" \
+	-d '{
+		"model": "gemma4-31b-it",
+		"messages": [
+			{"role": "system", "content": "You are a helpful assistant."},
+			{"role": "user", "content": "Summarize this paper in 3 bullet points."}
+		],
+		"max_tokens": 256
+	}'
+```
+
+### 15.4 Image + text example
+
+The service accepts content blocks compatible with chat templates:
+
+```bash
+curl http://localhost:8000/v1/chat/completions \
+	-H "Content-Type: application/json" \
+	-H "Authorization: Bearer local-dev-key" \
+	-d '{
+		"model": "gemma4-31b-it",
+		"messages": [
+			{
+				"role": "user",
+				"content": [
+					{"type": "image", "url": "https://ai.google.dev/static/gemma/docs/images/thali-indian-plate.jpg"},
+					{"type": "text", "text": "What is shown in this image?"}
+				]
+			}
+		],
+		"max_tokens": 256
+	}'
+```
+
+### 15.5 Notes
+
+- If `GEMMA_MODEL_ID` is not available on Hugging Face, set it to the exact model ID you have access to.
+- First startup can take a long time while model weights are downloaded.
+- Keep `HF_CACHE_DIR` on a disk with enough free space for model artifacts.

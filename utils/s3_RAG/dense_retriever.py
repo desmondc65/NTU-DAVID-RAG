@@ -8,7 +8,7 @@ exact words are not in the comments.
 
 from typing import Dict, List, Optional
 
-from utils.s2_embedding.embedder import EmbeddingModel
+from utils.s2_embedding.embedder import EmbeddingModel, _DEFAULT_MODEL
 from utils.s2_embedding.vector_store import VectorStore
 
 
@@ -19,7 +19,7 @@ class DenseRetriever:
         self,
         vector_store_dir: str,
         collection_name: str = "rag_embeddings",
-        embedding_model: str = "BAAI/bge-large-en-v1.5",
+        embedding_model: str = _DEFAULT_MODEL,
         device: Optional[str] = None,
     ):
         """

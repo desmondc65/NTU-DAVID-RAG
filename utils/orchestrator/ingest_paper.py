@@ -79,9 +79,9 @@ def extract_paper_metadata(
 
     snippet = _first_n_words(full_text, 600)
 
-    model_name = model_name or os.getenv("LLM_MODEL_NAME", "qwen2.5-vl-72b-instruct")
-    base_url = base_url or os.getenv("LOCAL_LLM_BASE_URL", "http://localhost:8000/v1")
-    api_key = api_key or os.getenv("LOCAL_LLM_API_KEY", "local-dev-key")
+    model_name = model_name or os.getenv("LLM_MODEL_NAME", "gemma4:31b")
+    base_url = base_url or os.getenv("LOCAL_LLM_BASE_URL", "http://localhost:11434/v1")
+    api_key = api_key or os.getenv("LOCAL_LLM_API_KEY", "ollama")
 
     client = LocalLLMClient(
         model_name=model_name,
@@ -222,9 +222,9 @@ def ingest_paper_and_code(
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # Resolve LLM config from env if not provided
-    model_name = model_name or os.getenv("LLM_MODEL_NAME", "qwen2.5-vl-72b-instruct")
-    base_url = base_url or os.getenv("LOCAL_LLM_BASE_URL", "http://localhost:8000/v1")
-    api_key = api_key or os.getenv("LOCAL_LLM_API_KEY", "local-dev-key")
+    model_name = model_name or os.getenv("LLM_MODEL_NAME", "gemma4:31b")
+    base_url = base_url or os.getenv("LOCAL_LLM_BASE_URL", "http://localhost:11434/v1")
+    api_key = api_key or os.getenv("LOCAL_LLM_API_KEY", "ollama")
 
     # ── staged ingest paths ───────────────────────────────────────────────
     stage_root = output_dir / "_tmp_ingest" / uuid.uuid4().hex
@@ -250,6 +250,7 @@ def ingest_paper_and_code(
             lang=lang,
         )
         json_path = stage_extract_dir / staged_pdf.stem / subdir / f"{staged_pdf.stem}_content_list.json"
+
 
         # ── 2. Metadata extraction (title + authors) ─────────────────────
         logger.info("═══ Step 2/5: Extracting paper metadata via LLM ═══")
@@ -279,6 +280,8 @@ def ingest_paper_and_code(
         md_path = final_extracted_pdf_dir / subdir / f"{staged_pdf.stem}.md"
         json_path = final_extracted_pdf_dir / subdir / f"{staged_pdf.stem}_content_list.json"
 
+        # load json and clearn reference 
+        
         if db_path is not None:
             metadata["db_path"] = str(db_path)
         metadata["paper_dir"] = str(paper_dir)
@@ -292,6 +295,37 @@ def ingest_paper_and_code(
         with open(metadata_json_path, "w", encoding="utf-8") as f:
             json.dump(metadata, f, indent=4, ensure_ascii=False)
         logger.info("Saved metadata to %s", metadata_json_path)
+
+        # ── 2b. Trim content after "References" ────────────────────────
+        logger.info("Trimming content list after References section …")
+        with open(json_path, "r", encoding="utf-8") as f:
+            cl_raw = json.load(f)
+
+        if isinstance(cl_raw, dict) and "items" in cl_raw:
+            cl_items = cl_raw["items"]
+        else:
+            cl_items = cl_raw
+
+        ref_idx = None
+        for i, item in enumerate(cl_items):
+            if item.get("type") == "text" and re.match(
+                r"^\s*references\s*$", item.get("text", ""), re.IGNORECASE
+            ):
+                ref_idx = i
+                break
+
+        if ref_idx is not None:
+            removed = len(cl_items) - ref_idx
+            cl_items = cl_items[:ref_idx]
+            logger.info("Removed %d items after 'References' (index %d)", removed, ref_idx)
+            if isinstance(cl_raw, dict) and "items" in cl_raw:
+                cl_raw["items"] = cl_items
+            else:
+                cl_raw = cl_items
+            with open(json_path, "w", encoding="utf-8") as f:
+                json.dump(cl_raw, f, indent=4, ensure_ascii=False)
+        else:
+            logger.info("No 'References' heading found; keeping full content list.")
 
         # ── 3. Enrich images / equations / tables ────────────────────────
         logger.info("═══ Step 3/5: Describing images, equations & tables ═══")

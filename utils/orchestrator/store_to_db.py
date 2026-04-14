@@ -14,6 +14,7 @@ import hashlib
 import json
 import logging
 import os
+import re
 import sys
 import time
 from datetime import datetime, timezone
@@ -31,7 +32,7 @@ PROJECT_ROOT = CURRENT_DIR.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from utils.s2_embedding.embedder import EmbeddingModel
+from utils.s2_embedding.embedder import EmbeddingModel, _DEFAULT_MODEL
 from utils.s2_embedding.qdrant_store import QdrantVectorStore
 
 logging.basicConfig(level=logging.INFO)
@@ -51,6 +52,27 @@ def _make_id(content_type: str, source: str, index: int) -> str:
     return hashlib.md5(raw.encode()).hexdigest()
 
 
+def _is_section_heading(item: dict) -> bool:
+    """Check if a content-list item is a section heading (has text_level)."""
+    return "text_level" in item
+
+
+def _heading_depth(text: str) -> int:
+    """Infer heading depth from academic paper text patterns.
+
+    Returns 1 for major sections (Roman numerals, Appendix),
+    2 for subsections (A., B., etc.), 0 for unrecognised.
+    """
+    stripped = text.strip()
+    if re.match(r'^[IVX]+\.\s', stripped):
+        return 1
+    if re.match(r'^Appendix\b', stripped, re.IGNORECASE):
+        return 1
+    if re.match(r'^[A-Z]\.\s', stripped):
+        return 2
+    return 0
+
+
 # ── manuscript chunking ──────────────────────────────────────────────────
 
 def chunk_content_list(
@@ -64,10 +86,15 @@ def chunk_content_list(
     The JSON has top-level keys ``paper_title``, ``authors``, ``items``.
     Items have ``type`` in {text, image, equation, table, discarded}.
 
-    - **text** items are merged and chunked with overlap (same as before).
+    - **text** items with ``text_level`` are treated as **section headings**:
+      they mark chunk boundaries and provide hierarchical section context.
+    - **text** items without ``text_level`` are merged and chunked with overlap.
     - **image / equation / table** items become one document each,
       using ``description`` as the index key for RAG.
     - **discarded** items are skipped.
+
+    Section context (e.g. ``[Section: III. Model > A. Environment]``) is
+    prepended to every chunk for better embedding relevance.
 
     Each returned dict has ``text`` (the index key) and ``metadata``.
     ``sequence_idx`` preserves the original ordering in the JSON.
@@ -93,6 +120,12 @@ def chunk_content_list(
             continue
         entries.append((seq_idx, item))
 
+    # ── Section tracking ────────────────────────────────────────────────
+    section_path: List[str] = []   # hierarchical breadcrumb
+
+    def _current_section() -> str:
+        return " > ".join(section_path) if section_path else ""
+
     # ── Pass 2: process by type ──────────────────────────────────────────
 
     # Buffer for merging consecutive text items
@@ -102,17 +135,24 @@ def chunk_content_list(
     text_seq_indices: List[int] = []
     chunk_idx = 0
 
-    def _flush_text():
+    def _flush_text(at_section_boundary: bool = False):
         nonlocal chunk_idx, text_buffer, text_tokens, text_pages, text_seq_indices
         if not text_buffer:
             return
+
         merged = "\n\n".join(text_buffer)
+        section = _current_section()
+
+        # Prepend section context for better embedding relevance
+        embed_text = f"[Section: {section}]\n\n{merged}" if section else merged
+
         chunks.append({
-            "text": merged,
+            "text": embed_text,
             "metadata": {
                 "paper_title": paper_title,
                 "authors": authors,
                 "content_type": "manuscript",
+                "section": section,
                 "page_indices": str(sorted(text_pages)),
                 "chunk_idx": chunk_idx,
                 "sequence_idx": text_seq_indices[0],  # first item in chunk
@@ -120,6 +160,14 @@ def chunk_content_list(
             },
         })
         chunk_idx += 1
+
+        # No overlap across section boundaries — context changes too much
+        if at_section_boundary:
+            text_buffer = []
+            text_tokens = 0
+            text_pages = set()
+            text_seq_indices = []
+            return
 
         # Overlap: keep trailing text that fits within overlap_tokens
         overlap_texts = []
@@ -145,6 +193,20 @@ def chunk_content_list(
             text = item.get("text", "").strip()
             if not text:
                 continue
+
+            # Section headings: flush buffer and update section path
+            if _is_section_heading(item):
+                _flush_text(at_section_boundary=True)
+                depth = _heading_depth(text)
+                if depth == 1:
+                    section_path = [text]
+                elif depth == 2:
+                    section_path = section_path[:1] + [text]
+                else:
+                    # Has text_level but unrecognised pattern — new top section
+                    section_path = [text]
+                continue
+
             entry_tokens = _estimate_tokens(text)
             page_idx = item.get("page_idx", -1)
 
@@ -164,10 +226,13 @@ def chunk_content_list(
             if not description:
                 continue  # nothing to index
 
+            section = _current_section()
+
             meta = {
                 "paper_title": paper_title,
                 "authors": authors,
                 "content_type": item_type,
+                "section": section,
                 "sequence_idx": seq_idx,
                 "page_idx": item.get("page_idx", -1),
                 "source_file": str(json_path),
@@ -192,8 +257,11 @@ def chunk_content_list(
             if item_type == "equation":
                 meta["equation_latex"] = item.get("text", "")
 
+            # Prepend section context for non-text items too
+            embed_text = f"[Section: {section}]\n\n{description}" if section else description
+
             chunks.append({
-                "text": description,
+                "text": embed_text,
                 "metadata": meta,
             })
 
@@ -215,8 +283,11 @@ def chunk_fortran_digest(
     """
     Process a Fortran digest JSON into documents for RAG.
 
-    One document per function. The ``summary_index`` field is used
-    as the index key (the text that gets embedded and searched).
+    Uses the new structure-aware digest format:
+    - ``composite_text`` as the embedding text (combines name, purpose,
+      economic concepts, call graph, and algorithm summary).
+    - ``architecture_overview`` becomes a special document for broad queries.
+    - Falls back to old ``summary_index`` format for backward compatibility.
     """
     json_path = Path(json_path)
     with open(json_path, "r", encoding="utf-8") as f:
@@ -227,30 +298,78 @@ def chunk_fortran_digest(
     functions = data.get("key_functions", [])
 
     chunks: List[Dict] = []
-    for idx, func in enumerate(functions):
-        summary_index = func.get("summary_index", "")
-        if not summary_index:
-            continue
 
-        deps = func.get("dependencies", [])
-        key_vars = func.get("key_variables", [])
-
+    # Architecture overview document (new format)
+    arch_overview = data.get("architecture_overview", "")
+    if arch_overview:
         chunks.append({
-            "text": summary_index,
+            "text": arch_overview,
             "metadata": {
                 "paper_title": paper_title,
                 "authors": authors,
-                "content_type": "fortran_function",
-                "function_name": func.get("name", ""),
-                "core_purpose": func.get("core_purpose", ""),
-                "dependencies": str(deps),
-                "key_variables": str(key_vars),
+                "content_type": "fortran_architecture",
+                "function_name": "_architecture_overview",
+                "purpose": "Global overview of the Fortran program structure and computational pipeline",
+                "source_file": str(json_path),
+                "sequence_idx": -1,
+            },
+        })
+
+    for idx, func in enumerate(functions):
+        # New format: use composite_text for embedding
+        embed_text = func.get("composite_text", "")
+
+        # Fallback: old format used summary_index
+        if not embed_text:
+            embed_text = func.get("summary_index", "")
+
+        if not embed_text:
+            continue
+
+        # Build purpose from new or old format
+        purpose = (
+            func.get("purpose", "")
+            or func.get("core_purpose", "")
+        )
+
+        # Calls/dependencies from new or old format
+        calls = func.get("calls", func.get("dependencies", []))
+        called_by = func.get("called_by", [])
+        economic_concepts = func.get("economic_concepts", [])
+        inputs = func.get("inputs", [])
+        outputs = func.get("outputs", [])
+        algorithm = func.get("algorithm", "")
+
+        # Determine content_type based on unit kind
+        kind = func.get("kind", "subroutine")
+        if kind == "program_section":
+            content_type = "fortran_section"
+        else:
+            content_type = "fortran_function"
+
+        chunks.append({
+            "text": embed_text,
+            "metadata": {
+                "paper_title": paper_title,
+                "authors": authors,
+                "content_type": content_type,
+                "function_name": func.get("function_name", func.get("name", "")),
+                "kind": kind,
+                "purpose": purpose,
+                "calls": str(calls) if calls else "",
+                "called_by": str(called_by) if called_by else "",
+                "economic_concepts": str(economic_concepts) if economic_concepts else "",
+                "algorithm": str(algorithm) if algorithm else "",
+                "inputs": str(inputs) if inputs else "",
+                "outputs": str(outputs) if outputs else "",
+                "start_line": func.get("start_line", -1),
+                "end_line": func.get("end_line", -1),
                 "source_file": str(json_path),
                 "sequence_idx": idx,
             },
         })
 
-    logger.info("Processed Fortran digest: %d function documents", len(chunks))
+    logger.info("Processed Fortran digest: %d documents (incl. architecture)", len(chunks))
     return chunks
 
 
@@ -303,7 +422,7 @@ def store_ingested_data(
     ingest_result: Dict[str, str],
     db_path: Union[str, Path],
     collection_name: str = "rag_embeddings",
-    embedding_model: str = "BAAI/bge-large-en-v1.5",
+    embedding_model: str = _DEFAULT_MODEL,
     embedding_device: Optional[str] = None,
 ) -> Dict[str, int]:
     """
@@ -360,7 +479,7 @@ def store_ingested_data(
     logger.info("═══ Step 3/3: Storing in Qdrant ═══")
 
     # Determine vector size from first embedding
-    vector_size = len(embeddings[0]) if embeddings else 1024
+    vector_size = len(embeddings[0]) if embeddings else 3584
     store = QdrantVectorStore(
         persist_dir=str(db_path / "qdrant_data"),
         collection_name=collection_name,

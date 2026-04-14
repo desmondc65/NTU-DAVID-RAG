@@ -12,9 +12,9 @@ from utils.llm_clients.local_llm import LocalLLMClient
 def main():
     print("Initializing client...")
     client = LocalLLMClient(
-        model_name="qwen2.5-vl-72b-instruct",
-        base_url="http://localhost:8000/v1",
-        api_key="local-dev-key",
+        model_name="gemma4:31b",
+        base_url="http://localhost:11434/v1",
+        api_key="ollama",
     )
     
     prompt = """# Accounting for Wealth Concentration in the United States†
@@ -65,9 +65,9 @@ Differences in bequests and asset returns together explain the remainder of weal
 def test_vision():
     print("Initializing vision client...")
     client = LocalLLMClient(
-        model_name="qwen2.5-vl-72b-instruct",
-        base_url="http://localhost:8000/v1",
-        api_key="local-dev-key",
+        model_name="gemma4:31b",
+        base_url="http://localhost:11434/v1",
+        api_key="ollama",
     )
     
     image_path = "/home3/davidlcs/Econ-Rag/NTU-DAVID-RAG/tests/ingest_results/Accounting for Wealth Concentration in the United States/ingest_output/Manuscript/auto/images/0e27e520e29fbfa7df94a49cca74b94056a565b472257fe0d097ebcbf4bc111d.jpg"

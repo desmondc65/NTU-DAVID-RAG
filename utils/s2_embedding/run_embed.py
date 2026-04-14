@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import Optional
 
 from utils.s2_embedding.chunker import chunk_manuscript, chunk_fortran
-from utils.s2_embedding.embedder import EmbeddingModel
+from utils.s2_embedding.embedder import EmbeddingModel, _DEFAULT_MODEL
 from utils.s2_embedding.vector_store import VectorStore
 
 
@@ -32,7 +32,7 @@ def run_embedding_pipeline(
     manuscript_path: Optional[str],
     fortran_path: Optional[str],
     output_dir: str,
-    model_name: str = "BAAI/bge-large-en-v1.5",
+    model_name: str = _DEFAULT_MODEL,
     device: Optional[str] = None,
     test_query: bool = False,
 ) -> None:
@@ -168,8 +168,8 @@ def main():
     parser.add_argument(
         "--model",
         type=str,
-        default="BAAI/bge-large-en-v1.5",
-        help="Embedding model name (default: BAAI/bge-large-en-v1.5)",
+        default=_DEFAULT_MODEL,
+        help=f"Embedding model name (default: {_DEFAULT_MODEL})",
     )
     parser.add_argument(
         "--test-query",

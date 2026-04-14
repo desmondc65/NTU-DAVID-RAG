@@ -1,0 +1,47 @@
+services:
+  qwen3.5-35b-a3b-server:
+    image: vllm/vllm-openai:latest
+    container_name: qwen3.5-35b-a3b-server
+    restart: unless-stopped
+    gpus: all
+    ipc: host
+
+    ports:
+      - "${QWEN_SERVICE_PORT:-8090}:8000"
+
+    environment:
+      NVIDIA_VISIBLE_DEVICES: "${QWEN_NVIDIA_VISIBLE_DEVICES:-1,2}"
+      CUDA_VISIBLE_DEVICES: "${QWEN_CUDA_VISIBLE_DEVICES:-1,2}"
+      NVIDIA_DRIVER_CAPABILITIES: "compute,utility"
+      HUGGING_FACE_HUB_TOKEN: "${HUGGING_FACE_HUB_TOKEN:-}"
+      HF_HOME: /hf-cache
+
+    volumes:
+      - "${QWEN_MODEL_DIR}:/models/qwen:ro"
+      - "${HF_CACHE_DIR:-/home3/davidlcs/Econ-Rag/Models/hf-cache}:/hf-cache"
+      - "/home3/davidlcs/Econ-Rag/NTU-DAVID-RAG/docker/local_llm:/logs"
+
+    command: >
+      /bin/bash -lc "
+      python -m vllm.entrypoints.openai.api_server
+      --host 0.0.0.0
+      --port 8000
+      --model /models/qwen
+      --served-model-name ${QWEN_MODEL_ALIAS:-qwen3.5-35b-a3b}
+      --api-key ${LOCAL_LLM_API_KEY:-local-dev-key}
+      --trust-remote-code
+      --tensor-parallel-size ${QWEN_TENSOR_PARALLEL_SIZE:-2}
+      --dtype ${QWEN_DTYPE:-bfloat16}
+      --max-model-len ${QWEN_MAX_MODEL_LEN:-65536}
+      --gpu-memory-utilization ${QWEN_GPU_MEMORY_UTILIZATION:-0.92}
+      --max-num-seqs ${QWEN_MAX_NUM_SEQS:-16}
+      2>&1 | tee /logs/log.qwen3.5-35b-a3b.txt;
+      exit $${PIPESTATUS[0]}
+      "
+
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 180s

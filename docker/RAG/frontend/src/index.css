@@ -616,6 +616,36 @@ body {
   background: rgba(255, 255, 255, 0.02);
 }
 
+.source-table {
+  margin: 0.5rem 0 0.75rem;
+  overflow-x: auto;
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.source-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.source-table th,
+.source-table td {
+  padding: 0.4rem 0.65rem;
+  border: 1px solid var(--border-glass);
+  text-align: left;
+  vertical-align: top;
+  white-space: normal;
+}
+
+.source-table tr:first-child td {
+  background: rgba(99, 102, 241, 0.08);
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
 .source-meta {
   display: flex;
   gap: 0.75rem;
