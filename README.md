@@ -628,3 +628,77 @@ for r in results:
 #### Generation 🔲 (To Be Implemented)
 
 The generation component — using Multimodal LLMs to produce context-aware answers from retrieved passages — is planned for future development.
+
+### Solving the Global Query Problem
+
+Chunk-level retrieval is strong on *local* questions ("what is the Euler equation used in this paper?") but fails on *global*, cross-document ones ("which papers share the same mathematical model?", "how do these papers differ in their computational methods?"). A query like this needs paper-level identity, not a bag of passages — top-k dense + BM25 results from a single paper's chunks can drown out the smaller evidence from other papers, and chunk text rarely contains the canonical model/method terms needed to compare papers.
+
+The orchestrator under [utils/orchestrator/](utils/orchestrator/) addresses this through a **profile-first retrieval path** backed by a second Qdrant collection (`paper_profiles`) that stores one structured record per paper.
+
+#### 1. Paper-level identity index — [paper_profiler.py](utils/orchestrator/paper_profiler.py)
+
+`build_paper_profile()` runs the LLM over each paper's full manuscript + Fortran digest and emits a structured JSON profile with canonical fields:
+
+| Field | Purpose |
+|-------|---------|
+| `research_question`, `summary` | One-line identity of the paper |
+| `mathematical_models` | Canonicalised model families (e.g. `overlapping-generations`, `heterogeneous-agent Bewley`) |
+| `key_equations` | Distinctive equations (`Euler`, `Bellman`, `HJB`) |
+| `economic_concepts` | Central concepts (wealth inequality, idiosyncratic risk) |
+| `computational_methods` | Numerical methods (VFI, EGM, Krusell-Smith) |
+| `data_sources`, `main_findings`, `keywords` | Empirical + narrative anchors |
+
+`profile_to_embed_text()` composes these fields into a dense embedding input, and `profile_to_payload()` stores the lists as Qdrant payload for filter-based lookup. A deterministic `compute_profile_overlap()` uses canonicalisation tables (`_MODEL_CANON`, `_METHOD_CANON`) to collapse synonyms (`OLG` = `overlapping-generations` = `life-cycle`) and emit pairwise overlap text **before** the LLM sees any chunks — so cross-paper comparisons quote concrete shared fields instead of hallucinating them.
+
+#### 2. Query scope router — [query_router.py](utils/orchestrator/query_router.py)
+
+`classify_query()` decides whether a query is `local` or `global`:
+
+- A **heuristic regex** (`_GLOBAL_PATTERNS`) catches obviously comparative phrasing: *"which papers…"*, *"compare"*, *"differ"*, *"share the same model"*, *"across papers"*. This avoids an LLM call for clear cases.
+- Otherwise an **LLM classifier** returns `{scope, focus_concepts}`, where `focus_concepts` are canonicalised concept phrases that steer profile retrieval.
+
+Global queries trigger the profile-first path; local queries go through the original chunk-first pipeline unchanged.
+
+#### 3. Paper-profile injection at ingestion — [ingest_paper.py](utils/orchestrator/ingest_paper.py)
+
+The ingestion pipeline extracts `paper_title` and `authors` from the first 600 words of the MinerU markdown and injects them into every output JSON (`_inject_metadata_into_json`). This is the prerequisite that makes all downstream paper-level operations possible — diversification, inventory listing, and per-paper grouping in the context builder all key off `paper_title`.
+
+#### 4. Retrofitting existing databases — [backfill_profiles.py](utils/orchestrator/backfill_profiles.py)
+
+For databases created before the profile collection existed, `backfill()` reads `paper_registry.json`, regenerates each paper's profile via the LLM, and upserts it into the `paper_profiles` Qdrant collection. `--skip-existing` makes it idempotent so repeated runs only fill gaps.
+
+```bash
+python -m utils.orchestrator.backfill_profiles --db-path ./db
+```
+
+#### 5. Profile-aware query engine — [rag_query.py](utils/orchestrator/rag_query.py)
+
+`RAGQueryEngine` detects the `paper_profiles` collection at startup and enables global-query routing. When `classify_query` returns `scope="global"`, the engine:
+
+1. **Retrieves from the profile collection first** — top candidate papers by profile-level similarity to the query + focus concepts.
+2. **Drills into each candidate paper's chunks** with filtered retrieval (`where_filter={"paper_title": ...}`), so evidence is gathered *per paper* instead of being dominated by a single dense match.
+3. **Diversifies chunks via round-robin** (`_diversify_results`) across `paper_title` groups, guaranteeing top-k contains representatives from every candidate paper.
+4. **Builds a profile-aware context** (`_build_context` with `profiles=...`): the prompt now starts with a `# PAPER PROFILES` section rendered by `format_profile_block`, followed by a deterministic `# CROSS-PAPER OVERLAP ANALYSIS` from `compute_profile_overlap`, and only then the individual passages grouped under `# PAPER: <title>` headers.
+
+The result is that the LLM anchors on paper identity *first* (who is who, what models they use, which concepts they share), reads pre-computed overlaps *second*, and drops into passage-level detail *third* — the order that comparative reasoning actually requires.
+
+#### Summary
+
+```
+User query
+    │
+    ▼
+query_router.classify_query  ── scope? ──► local ──► original chunk pipeline
+    │
+    ▼ global
+profile collection (paper_profiles)  ──► candidate papers
+    │
+    ▼
+per-paper filtered chunk retrieval + round-robin diversification
+    │
+    ▼
+context: PAPER PROFILES  →  OVERLAP ANALYSIS  →  per-paper passages
+    │
+    ▼
+LLM answer grounded in paper identity, not just chunks
+```
