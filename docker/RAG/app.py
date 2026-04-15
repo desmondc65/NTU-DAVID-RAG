@@ -226,6 +226,76 @@ def delete_paper(paper_title: str):
         return jsonify({"error": str(e)}), 500
 
 
+# ── API: Retry metadata extraction ────────────────────────────────────────
+
+@app.route("/api/papers/retry_metadata", methods=["POST"])
+def retry_metadata():
+    """
+    Re-run LLM title/author extraction for a paper already in the database.
+
+    Body (JSON), provide ONE of:
+        {"paper_title": "..."}          # current (possibly empty) title
+        {"paper_dir":   "..."}          # filesystem path to the paper directory
+
+    ``paper_dir`` may be absolute (``/app/data/...``) or relative to the
+    server's ``DATA_PATH``. When only ``paper_title`` is given, it must
+    uniquely identify a registry entry.
+
+    Propagates the new title + authors through ``metadata.json``, the
+    content-list JSON, the Fortran digest JSON, ``paper_registry.json``,
+    and the Qdrant payloads of both ``rag_embeddings`` and
+    ``paper_profiles`` collections.
+    """
+    body = request.get_json(silent=True) or {}
+    paper_title = body.get("paper_title")
+    paper_dir = body.get("paper_dir")
+
+    if paper_title is None and not paper_dir:
+        return jsonify({
+            "error": "Provide paper_title (string, may be \"\") or paper_dir."
+        }), 400
+
+    try:
+        from utils.orchestrator.retry_metadata import (
+            resolve_paper_dir,
+            retry_paper_metadata,
+        )
+    except Exception as e:
+        logger.error("retry_metadata import failed: %s", traceback.format_exc())
+        return jsonify({"error": f"Module import failed: {e}"}), 500
+
+    try:
+        resolved = resolve_paper_dir(
+            db_path=DB_PATH,
+            paper_title=paper_title,
+            paper_dir=paper_dir,
+            data_root=DATA_PATH,
+        )
+    except FileNotFoundError as e:
+        return jsonify({"error": str(e)}), 404
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 409
+
+    try:
+        with _qdrant_access_lock:
+            # Release the active reader engine so retry_paper_metadata can
+            # open its own writer client against the Qdrant on-disk store.
+            _reload_rag_engine()
+            summary = retry_paper_metadata(
+                db_path=DB_PATH,
+                paper_dir=resolved,
+            )
+        return jsonify({"status": "ok", **summary})
+    except FileNotFoundError as e:
+        return jsonify({"error": str(e)}), 404
+    except RuntimeError as e:
+        # LLM still returned empty — no state mutated.
+        return jsonify({"error": str(e)}), 422
+    except Exception as e:
+        logger.error("Retry metadata failed: %s", traceback.format_exc())
+        return jsonify({"error": str(e)}), 500
+
+
 # ── API: Query ────────────────────────────────────────────────────────────
 
 @app.route("/api/query", methods=["POST"])

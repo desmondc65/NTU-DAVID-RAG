@@ -39,6 +39,7 @@ from utils.s3_RAG.reranker import Reranker
 from utils.llm_clients.local_llm import LocalLLMClient
 from utils.orchestrator.paper_profiler import (
     PROFILE_COLLECTION,
+    compute_profile_overlap,
     format_profile_block,
 )
 from utils.orchestrator.query_router import classify_query
@@ -210,25 +211,32 @@ def _diversify_results(results: List[Dict], top_k: int = 10) -> List[Dict]:
 
 # ── Context builder ──────────────────────────────────────────────────────
 
-def _format_manuscript_chunk(r: Dict, ref_id: str) -> str:
-    """Format a single manuscript text chunk."""
+def _format_manuscript_chunk(r: Dict, ref_id: str = "") -> str:
+    """Format a single manuscript text chunk.
+
+    ``ref_id`` is accepted for backwards compatibility but no longer
+    rendered — answers cite by paper title + section instead.
+    """
+    del ref_id
     meta = r.get("metadata", {})
     section = meta.get("section", "")
     pages = meta.get("page_indices", "")
-    header = f"[{ref_id}]"
+    header_parts = ["Passage"]
     if section:
-        header += f" Section: {section}"
+        header_parts.append(f"— Section: {section}")
     if pages:
-        header += f" (pages {pages})"
+        header_parts.append(f"(pages {pages})")
+    header = " ".join(header_parts)
     return f"{header}\n{r['text']}"
 
 
-def _format_equation_chunk(r: Dict, ref_id: str) -> str:
+def _format_equation_chunk(r: Dict, ref_id: str = "") -> str:
     """Format an equation chunk with LaTeX."""
+    del ref_id
     meta = r.get("metadata", {})
     section = meta.get("section", "")
     latex = meta.get("equation_latex", "")
-    header = f"[{ref_id}] Equation"
+    header = "Equation"
     if section:
         header += f" in {section}"
     lines = [header]
@@ -238,12 +246,13 @@ def _format_equation_chunk(r: Dict, ref_id: str) -> str:
     return "\n".join(lines)
 
 
-def _format_table_chunk(r: Dict, ref_id: str) -> str:
+def _format_table_chunk(r: Dict, ref_id: str = "") -> str:
     """Format a table chunk with caption and body."""
+    del ref_id
     meta = r.get("metadata", {})
     caption = meta.get("table_caption", "")
     table_body = meta.get("table_body", "")
-    header = f"[{ref_id}] Table"
+    header = "Table"
     if caption:
         header += f": {caption}"
     lines = [header]
@@ -253,18 +262,20 @@ def _format_table_chunk(r: Dict, ref_id: str) -> str:
     return "\n".join(lines)
 
 
-def _format_image_chunk(r: Dict, ref_id: str) -> str:
+def _format_image_chunk(r: Dict, ref_id: str = "") -> str:
     """Format an image/figure chunk."""
+    del ref_id
     meta = r.get("metadata", {})
     section = meta.get("section", "")
-    header = f"[{ref_id}] Figure"
+    header = "Figure"
     if section:
         header += f" in {section}"
     return f"{header}\n{r['text']}"
 
 
-def _format_fortran_chunk(r: Dict, ref_id: str) -> str:
+def _format_fortran_chunk(r: Dict, ref_id: str = "") -> str:
     """Format a Fortran code chunk with structured metadata."""
+    del ref_id
     meta = r.get("metadata", {})
     func_name = meta.get("function_name", "")
     kind = meta.get("kind", "")
@@ -277,7 +288,7 @@ def _format_fortran_chunk(r: Dict, ref_id: str) -> str:
     outputs = meta.get("outputs", "")
 
     label = kind.replace("_", " ").title() if kind else "Function"
-    header = f"[{ref_id}] {label}: {func_name}"
+    header = f"{label}: {func_name}"
     lines = [header]
     if purpose:
         lines.append(f"  Purpose: {purpose}")
@@ -371,28 +382,35 @@ def _build_context(
     # ── Build formatted blocks ──────────────────────────────────────────
     blocks: List[str] = [inventory, ""]
     token_count = _estimate_tokens(inventory)
-    ref_counter = 1
 
     # Profile section for global queries — prepended so the LLM can anchor
-    # each paper's identity before reading individual chunks. Profile refs
-    # use a "P"-prefixed namespace so they don't collide with chunk refs.
+    # each paper's identity before reading individual chunks. Profiles are
+    # identified by paper title in the rendered block (no bracket tags —
+    # those read as opaque noise in answers).
     if profiles:
         profile_header = "# PAPER PROFILES (for cross-paper comparison)"
         header_tokens = _estimate_tokens(profile_header)
         if token_count + header_tokens <= max_context_tokens:
             blocks.append(profile_header)
             token_count += header_tokens
-            profile_counter = 1
             for p in profiles:
-                ref_id = f"P{profile_counter}"
-                block = format_profile_block(p.get("metadata", {}) or p, ref_id)
+                block = format_profile_block(p.get("metadata", {}) or p)
                 block_tokens = _estimate_tokens(block)
                 if token_count + block_tokens > max_context_tokens:
                     break
                 blocks.append(block)
                 token_count += block_tokens
-                profile_counter += 1
             blocks.append("")
+
+        # Deterministic pairwise overlap — lets the LLM quote concrete
+        # shared fields instead of having to infer them from prose.
+        overlap_block = compute_profile_overlap(profiles)
+        if overlap_block:
+            overlap_tokens = _estimate_tokens(overlap_block)
+            if token_count + overlap_tokens <= max_context_tokens:
+                blocks.append(overlap_block)
+                token_count += overlap_tokens
+                blocks.append("")
 
     # Paper sections
     for paper, group in paper_groups.items():
@@ -409,16 +427,14 @@ def _build_context(
 
         for r in group:
             content_type = r.get("metadata", {}).get("content_type", "unknown")
-            ref_id = str(ref_counter)
             formatter = _CONTENT_FORMATTERS.get(content_type, _format_manuscript_chunk)
-            block = formatter(r, ref_id)
+            block = formatter(r)
 
             block_tokens = _estimate_tokens(block)
             if token_count + block_tokens > max_context_tokens:
                 break
             blocks.append(block)
             token_count += block_tokens
-            ref_counter += 1
 
         blocks.append("")  # blank line between papers
 
@@ -432,28 +448,24 @@ def _build_context(
 
             for r in fortran_results:
                 content_type = r.get("metadata", {}).get("content_type", "unknown")
-                ref_id = str(ref_counter)
                 formatter = _CONTENT_FORMATTERS.get(content_type, _format_fortran_chunk)
-                block = formatter(r, ref_id)
+                block = formatter(r)
 
                 block_tokens = _estimate_tokens(block)
                 if token_count + block_tokens > max_context_tokens:
                     break
                 blocks.append(block)
                 token_count += block_tokens
-                ref_counter += 1
 
     # Other (no paper title) — rare fallback
     if other_results:
         for r in other_results:
-            ref_id = str(ref_counter)
-            block = _format_manuscript_chunk(r, ref_id)
+            block = _format_manuscript_chunk(r)
             block_tokens = _estimate_tokens(block)
             if token_count + block_tokens > max_context_tokens:
                 break
             blocks.append(block)
             token_count += block_tokens
-            ref_counter += 1
 
     return "\n\n".join(blocks)
 
@@ -890,12 +902,20 @@ class RAGQueryEngine:
             "papers and their companion Fortran implementations.\n\n"
             "## Instructions\n"
             "- Answer ONLY based on the retrieved context provided. Do not use outside knowledge.\n"
-            "- Cite sources using bracket notation: [1], [2] for chunk passages and [P1], [P2] for paper profiles.\n"
-            "- When a PAPER PROFILES section is present, the question is comparative. Use the profiles to "
-            "identify which papers share models/methods/concepts and anchor comparisons on their structured "
-            "fields; then back each claim with passage citations when specific evidence is relevant.\n"
+            "- CITATIONS: refer to papers by their TITLE (in quotes) or by a short author-year form "
+            "derived from the provided authors (e.g. \"Nishiyama (2018)\"). DO NOT use bracket tags "
+            "like [1], [2], [P1], [P2] — they are noise to the reader. If you must pinpoint a "
+            "specific passage, reference it as 'Section X of \"Paper Title\"' instead.\n"
+            "- When a PAPER PROFILES section is present, the question is comparative.\n"
+            "    - First consult the 'CROSS-PAPER OVERLAP ANALYSIS' block (if present) — it lists "
+            "deterministic pairwise intersections of model families, methods, and concepts across the "
+            "candidate papers. Report these overlaps EXPLICITLY, naming each paper by title.\n"
+            "    - Do not claim 'no two papers share a model' unless the overlap analysis block is "
+            "empty. Papers that merely mention related prior work by other authors do NOT count as "
+            "overlap — overlap means the two papers themselves use the same model family.\n"
             "- When the question spans multiple papers, structure your answer with explicit comparisons: "
-            "similarities, differences in models, assumptions, or findings.\n"
+            "similarities, differences in models, assumptions, or findings. Always use the paper "
+            "titles, not tags.\n"
             "- When discussing Fortran code, explain what the code computes economically, "
             "not just its programming logic. Link subroutines back to the equations or model "
             "sections they implement.\n"
