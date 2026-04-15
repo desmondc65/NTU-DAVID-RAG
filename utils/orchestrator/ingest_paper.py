@@ -104,23 +104,104 @@ def extract_paper_metadata(
     )
 
     logger.info("Sending first 600 words to LLM for metadata extraction …")
-    response = client.generate_response(
+
+    def _coerce(raw: object) -> Dict[str, str]:
+        if isinstance(raw, dict):
+            return raw
+        if isinstance(raw, str):
+            text = raw.strip()
+            # Some backends wrap the JSON in ```json … ``` fences.
+            if text.startswith("```"):
+                lines = text.split("\n")
+                text = "\n".join(lines[1:-1]) if len(lines) > 2 else text.strip("`")
+            # Extract the first {...} block if extra prose leaked in.
+            start = text.find("{")
+            end = text.rfind("}")
+            if start != -1 and end != -1 and end > start:
+                text = text[start : end + 1]
+            try:
+                return json.loads(text) if text else {}
+            except Exception:
+                return {}
+        return {}
+
+    raw = client.generate_response(
         user_prompt=user_prompt,
         system_prompt=system_prompt,
         response_mime_type="application/json",
         max_tokens=512,
         temperature=0.0,
     )
+    metadata = _coerce(raw)
 
-    # response is already a dict when response_mime_type is application/json
-    if isinstance(response, dict):
-        metadata = response
-    else:
-        metadata = json.loads(response)
+    # Fallback 1: Ollama's OpenAI-compat JSON mode occasionally returns
+    # an empty object. Retry in plain text mode and parse the JSON ourselves.
+    if not metadata.get("paper_title"):
+        logger.info("JSON-mode extraction empty — retrying in text mode.")
+        raw_text = client.generate_response(
+            user_prompt=user_prompt
+            + "\n\nRespond with JSON only, no prose, no code fences.",
+            system_prompt=system_prompt,
+            response_mime_type="text/plain",
+            max_tokens=512,
+            temperature=0.0,
+        )
+        fallback = _coerce(raw_text)
+        if fallback.get("paper_title"):
+            metadata = fallback
+
+    # Fallback 2: some quantised local models reliably refuse strict-JSON
+    # prompts on the same input where they answer plain questions without
+    # issue. Ask for the title and authors as two free-form strings and
+    # assemble the dict ourselves.
+    if not metadata.get("paper_title"):
+        logger.info("Structured extraction still empty — falling back to free-form prompts.")
+        title_raw = client.generate_response(
+            user_prompt=(
+                "What is the title of this paper? Reply with ONLY the "
+                "title, no quotes, no prefix like 'Title:', no commentary.\n\n"
+                f"---\n{snippet}\n---"
+            ),
+            system_prompt="You read academic papers and reply succinctly.",
+            response_mime_type="text/plain",
+            max_tokens=200,
+            temperature=0.0,
+        )
+        authors_raw = client.generate_response(
+            user_prompt=(
+                "Who are the authors of this paper? Reply with ONLY a "
+                "comma-separated list of author names, no affiliations, no "
+                "commentary, no prefix.\n\n"
+                f"---\n{snippet}\n---"
+            ),
+            system_prompt="You read academic papers and reply succinctly.",
+            response_mime_type="text/plain",
+            max_tokens=200,
+            temperature=0.0,
+        )
+
+        def _clean(s: object) -> str:
+            text = str(s or "").strip().strip('"').strip("'")
+            # Strip a leading "Title:" / "Authors:" prefix if the model
+            # added one despite instructions.
+            for prefix in ("Title:", "title:", "Authors:", "authors:"):
+                if text.lower().startswith(prefix.lower()):
+                    text = text[len(prefix):].strip()
+            # Only keep the first line — some models append a rationale.
+            if "\n" in text:
+                text = text.split("\n", 1)[0].strip()
+            return text
+
+        free_title = _clean(title_raw)
+        free_authors = _clean(authors_raw)
+        if free_title:
+            metadata = {"paper_title": free_title, "authors": free_authors}
 
     # Normalise keys
     metadata.setdefault("paper_title", "")
     metadata.setdefault("authors", "")
+    metadata["paper_title"] = str(metadata.get("paper_title") or "").strip()
+    metadata["authors"] = str(metadata.get("authors") or "").strip()
     logger.info("Extracted metadata – title: %s", metadata["paper_title"])
     return metadata
 

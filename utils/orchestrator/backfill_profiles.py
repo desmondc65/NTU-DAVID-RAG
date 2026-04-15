@@ -15,6 +15,7 @@ import argparse
 import hashlib
 import json
 import logging
+import os
 import sys
 from pathlib import Path
 
@@ -60,7 +61,7 @@ def _existing_profile_ids(store: QdrantVectorStore) -> set:
     return ids
 
 
-def backfill(db_path: Path, skip_existing: bool = True) -> int:
+def backfill(db_path: Path, skip_existing: bool = True, device: str = "") -> int:
     registry_path = db_path / "paper_registry.json"
     if not registry_path.exists():
         raise FileNotFoundError(f"Paper registry not found: {registry_path}")
@@ -71,8 +72,21 @@ def backfill(db_path: Path, skip_existing: bool = True) -> int:
         logger.info("Registry empty — nothing to backfill.")
         return 0
 
-    logger.info("Loading embedder…")
-    embedder = EmbeddingModel(model_name=_DEFAULT_MODEL)
+    # Resolve device: explicit arg wins; otherwise honour RAG_EMBEDDING_DEVICE /
+    # RAG_DEVICE env vars so the backfill can share the running container's
+    # device policy (or be overridden for a one-off CPU run).
+    resolved_device = (
+        device
+        or os.getenv("RAG_EMBEDDING_DEVICE")
+        or os.getenv("RAG_DEVICE")
+        or ""
+    ).strip()
+    if resolved_device:
+        logger.info("Loading embedder on device=%s…", resolved_device)
+        embedder = EmbeddingModel(model_name=_DEFAULT_MODEL, device=resolved_device)
+    else:
+        logger.info("Loading embedder (default device)…")
+        embedder = EmbeddingModel(model_name=_DEFAULT_MODEL)
 
     # Probe vector size from the chunk collection if the profile collection
     # doesn't exist yet. Default to 3584 (gte-Qwen2 dim) as a last resort.
@@ -153,11 +167,20 @@ def main() -> None:
         action="store_true",
         help="Rebuild profiles even if they are already in the profile collection.",
     )
+    parser.add_argument(
+        "--device",
+        default="",
+        help=(
+            "Embedding device (e.g. 'cpu', 'cuda:0'). If omitted, reads "
+            "RAG_EMBEDDING_DEVICE / RAG_DEVICE from the environment."
+        ),
+    )
     args = parser.parse_args()
 
     backfill(
         db_path=Path(args.db_path),
         skip_existing=not args.no_skip_existing,
+        device=args.device,
     )
 
 

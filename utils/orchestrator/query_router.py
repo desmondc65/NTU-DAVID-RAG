@@ -22,20 +22,31 @@ logger = logging.getLogger(__name__)
 
 
 _GLOBAL_PATTERNS = [
-    r"\bwhich paper",
-    r"\bwhich papers\b",
-    r"\bacross papers\b",
+    # Direct paper-set references
+    r"\bwhich\s+\w*\s*papers?\b",          # "which paper(s)", "which two papers"
+    r"\bwhat\s+\w*\s*papers?\b",           # "what paper(s)", "what three papers"
+    r"\bany\s+\w*\s*papers?\b",            # "any papers"
+    r"\bmultiple\s+papers?\b",
+    r"\bboth\s+papers?\b",
+    r"\btwo\s+papers?\b",
+    r"\bseveral\s+papers?\b",
+    r"\bthese\s+papers?\b",
+    r"\bacross\s+papers?\b",
+    r"\bamong\s+\w*\s*papers?\b",
+    # Comparison / commonality phrasing
     r"\bcompare\b",
     r"\bcomparison\b",
-    r"\bdiffer(ence|ences)?\b",
-    r"\bsimilar(ly|ities)?\b",
-    r"\bsame model\b",
-    r"\brelated work\b",
-    r"\bin common\b",
+    r"\bcontrast\b",
+    r"\bdiffer(ence|ences|s)?\b",
+    r"\bsimilar(ly|ities|ity)?\b",
+    r"\bsame\s+(model|method|framework|approach|technique)\b",
+    r"\bshared?\s+(model|method|framework|approach|technique)\b",
+    r"\bshare\s+(the\s+same|a\s+similar|similar)\b",
+    r"\bin\s+common\b",
     r"\boverlap\b",
-    r"\bwhat papers\b",
-    r"\bhow do .* differ\b",
-    r"\bshare (the same|similar)\b",
+    r"\brelated\s+work\b",
+    r"\bhow\s+do\s+.*\s+differ\b",
+    r"\bhow\s+are\s+.*\s+(similar|related|connected)\b",
 ]
 
 _GLOBAL_REGEX = re.compile("|".join(_GLOBAL_PATTERNS), re.IGNORECASE)

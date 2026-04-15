@@ -53,14 +53,36 @@ def _load_content_list(path: Union[str, Path]) -> List[Dict]:
     return []
 
 
+def _as_str(value: Any) -> str:
+    """
+    Coerce any JSON-compatible value to a trimmed string.
+
+    Ingest-output JSONs occasionally hold list-valued fields where we
+    expect a string (e.g. multi-line captions, description arrays).
+    Without this helper, downstream ``.strip()`` calls crash the whole
+    profile build.
+    """
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        return value.strip()
+    if isinstance(value, list):
+        return " ".join(_as_str(v) for v in value if v is not None).strip()
+    if isinstance(value, dict):
+        return " ".join(_as_str(v) for v in value.values() if v is not None).strip()
+    return str(value).strip()
+
+
 def _extract_manuscript_text(content_list_json: Union[str, Path], max_chars: int) -> str:
     """Flatten the content-list JSON to a text blob preserving section structure."""
     items = _load_content_list(content_list_json)
     parts: List[str] = []
     for item in items:
-        t = item.get("type", "")
+        if not isinstance(item, dict):
+            continue
+        t = _as_str(item.get("type"))
         if t == "text":
-            text = (item.get("text") or "").strip()
+            text = _as_str(item.get("text"))
             if not text:
                 continue
             if "text_level" in item:
@@ -68,13 +90,13 @@ def _extract_manuscript_text(content_list_json: Union[str, Path], max_chars: int
             else:
                 parts.append(text)
         elif t == "equation":
-            latex = (item.get("text") or "").strip()
-            desc = (item.get("description") or "").strip()
+            latex = _as_str(item.get("text"))
+            desc = _as_str(item.get("description"))
             if latex or desc:
                 parts.append(f"[Equation] {latex}\n{desc}".strip())
         elif t == "table":
-            cap = (item.get("table_caption") or "").strip()
-            desc = (item.get("description") or "").strip()
+            cap = _as_str(item.get("table_caption"))
+            desc = _as_str(item.get("description"))
             if cap or desc:
                 parts.append(f"[Table: {cap}] {desc}".strip())
     blob = "\n".join(parts)
@@ -92,13 +114,15 @@ def _extract_fortran_summary(fortran_digest_json: Union[str, Path]) -> str:
         return ""
     with open(path, "r", encoding="utf-8") as f:
         data = json.load(f)
-    arch = (data.get("architecture_overview") or "").strip()
+    arch = _as_str(data.get("architecture_overview"))
     funcs = data.get("key_functions", []) or []
-    fn_names = [
-        (f.get("function_name") or f.get("name") or "").strip()
-        for f in funcs
-    ]
-    fn_names = [n for n in fn_names if n]
+    fn_names: List[str] = []
+    for f in funcs:
+        if not isinstance(f, dict):
+            continue
+        name = _as_str(f.get("function_name")) or _as_str(f.get("name"))
+        if name:
+            fn_names.append(name)
     lines = []
     if arch:
         lines.append(f"Architecture: {arch}")
@@ -168,8 +192,8 @@ def build_paper_profile(
     clean: Dict[str, Any] = {
         "paper_title": paper_title,
         "authors": authors,
-        "research_question": str(profile.get("research_question", "") or "").strip(),
-        "summary": str(profile.get("summary", "") or "").strip(),
+        "research_question": _as_str(profile.get("research_question")),
+        "summary": _as_str(profile.get("summary")),
         "mathematical_models": _normalise_list(profile.get("mathematical_models")),
         "key_equations": _normalise_list(profile.get("key_equations")),
         "economic_concepts": _normalise_list(profile.get("economic_concepts")),
@@ -240,9 +264,163 @@ def profile_to_payload(profile: Dict[str, Any]) -> Dict[str, Any]:
     return payload
 
 
-def format_profile_block(profile: Dict[str, Any], ref_id: str) -> str:
-    """Human-readable block for inclusion in the LLM context."""
-    lines = [f"[{ref_id}] PAPER PROFILE — {profile.get('paper_title', '')}"]
+# ── Overlap analysis (deterministic cross-paper comparison) ─────────────
+
+# Canonicalisation table: collapse common synonym clusters so "OLG",
+# "overlapping-generations", and "life-cycle model" all hash to the same
+# family. Keys are the normalised output; each set holds the substrings
+# that trigger the mapping. Matching is lowercase-substring, so partial
+# fits work (e.g. "overlapping-generations heterogeneous-agent" → "olg").
+_MODEL_CANON = {
+    "olg / life-cycle": {
+        "olg", "overlapping-generations", "overlapping generations",
+        "life-cycle", "life cycle",
+    },
+    "heterogeneous-agent (Bewley/Aiyagari/Huggett)": {
+        "heterogeneous-agent", "heterogeneous agent",
+        "bewley", "aiyagari", "huggett", "incomplete markets",
+    },
+    "dynastic (Barro-Becker)": {
+        "dynastic", "barro-becker", "altruistic",
+    },
+    "DSGE": {"dsge", "dynamic stochastic general equilibrium"},
+    "Krusell-Smith": {"krusell-smith", "krusell smith"},
+}
+
+_METHOD_CANON = {
+    "value function iteration": {"value function iteration", "vfi"},
+    "endogenous grid method": {"endogenous grid", "egm"},
+    "policy function iteration": {"policy function iteration", "pfi"},
+    "simulated method of moments": {"simulated method of moments", "smm"},
+    "Krusell-Smith algorithm": {"krusell-smith algorithm", "krusell smith algorithm"},
+    "transition path": {"transition path"},
+}
+
+
+def _canonicalise(value: str, table: Dict[str, set]) -> str:
+    v = value.strip().lower()
+    if not v:
+        return v
+    for canonical, triggers in table.items():
+        for t in triggers:
+            if t in v:
+                return canonical
+    return v
+
+
+def _canonical_set(values: Any, table: Dict[str, set]) -> set:
+    """Map a profile list field to a set of canonical family names."""
+    out: set = set()
+    if not values:
+        return out
+    if isinstance(values, str):
+        values = [values]
+    for v in values:
+        c = _canonicalise(str(v), table)
+        if c:
+            out.add(c)
+    return out
+
+
+def compute_profile_overlap(profiles: List[Dict[str, Any]]) -> str:
+    """
+    Return a structured text block describing pairwise overlaps between
+    profile records — canonicalised model/method/concept sets.
+
+    ``profiles`` may be raw profile dicts or retrieval records with
+    ``metadata`` payloads; both are accepted.
+    """
+    from itertools import combinations
+
+    papers: List[Dict[str, Any]] = []
+    for p in profiles:
+        meta = p.get("metadata") if isinstance(p.get("metadata"), dict) else p
+        title = meta.get("paper_title", "") or p.get("paper_title", "")
+        if not title:
+            continue
+        papers.append({
+            "title": title,
+            "models": _canonical_set(meta.get("mathematical_models"), _MODEL_CANON),
+            "methods": _canonical_set(meta.get("computational_methods"), _METHOD_CANON),
+            "concepts": {
+                str(c).strip().lower()
+                for c in (meta.get("economic_concepts") or [])
+                if str(c).strip()
+            },
+            # Raw (non-canonical) sets so we can still surface exact matches
+            # when the canonicaliser produced no fit.
+            "raw_models": {
+                str(m).strip().lower()
+                for m in (meta.get("mathematical_models") or [])
+                if str(m).strip()
+            },
+            "raw_methods": {
+                str(m).strip().lower()
+                for m in (meta.get("computational_methods") or [])
+                if str(m).strip()
+            },
+        })
+
+    if len(papers) < 2:
+        return ""
+
+    lines: List[str] = []
+    lines.append("# CROSS-PAPER OVERLAP ANALYSIS (pre-computed from structured profile fields)")
+    any_overlap = False
+    for a, b in combinations(papers, 2):
+        segments: List[str] = []
+        model_overlap = a["models"] & b["models"]
+        if model_overlap:
+            segments.append(
+                "shared model families: " + ", ".join(sorted(model_overlap))
+            )
+        raw_model_overlap = a["raw_models"] & b["raw_models"]
+        raw_model_overlap -= {m.lower() for m in model_overlap}
+        if raw_model_overlap:
+            segments.append(
+                "shared model terms (verbatim): " + ", ".join(sorted(raw_model_overlap))
+            )
+        method_overlap = a["methods"] & b["methods"]
+        if method_overlap:
+            segments.append(
+                "shared computational methods: " + ", ".join(sorted(method_overlap))
+            )
+        raw_method_overlap = a["raw_methods"] & b["raw_methods"]
+        raw_method_overlap -= {m.lower() for m in method_overlap}
+        if raw_method_overlap:
+            segments.append(
+                "shared method terms (verbatim): " + ", ".join(sorted(raw_method_overlap))
+            )
+        concept_overlap = a["concepts"] & b["concepts"]
+        if concept_overlap:
+            # Cap concept overlap at 6 to avoid flooding the prompt.
+            segments.append(
+                "shared economic concepts: " + ", ".join(sorted(concept_overlap)[:6])
+            )
+
+        if segments:
+            any_overlap = True
+            lines.append(f'- "{a["title"]}" ∩ "{b["title"]}":')
+            for s in segments:
+                lines.append(f"    - {s}")
+
+    if not any_overlap:
+        lines.append(
+            "- No overlap detected between the structured profile fields of the "
+            "candidate papers. The papers likely use distinct model families."
+        )
+    return "\n".join(lines)
+
+
+def format_profile_block(profile: Dict[str, Any], ref_id: str = "") -> str:
+    """Human-readable block for inclusion in the LLM context.
+
+    ``ref_id`` is accepted for backwards compatibility but is no longer
+    rendered — answers now reference papers by title, not by opaque tags.
+    """
+    del ref_id  # intentionally unused
+    title = profile.get("paper_title", "") or "(untitled)"
+    lines = [f'PAPER PROFILE — "{title}"']
     if authors := profile.get("authors"):
         lines.append(f"  Authors: {authors}")
     if rq := profile.get("research_question"):
