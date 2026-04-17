@@ -10,9 +10,8 @@ services:
     env_file:
       - .env
     environment:
-      CUDA_VISIBLE_DEVICES: "0"
-      NVIDIA_VISIBLE_DEVICES: "0"
       NVIDIA_DRIVER_CAPABILITIES: "compute,utility"
+      CUDA_VISIBLE_DEVICES: "1"
       RAG_DEVICE: "cuda:0"
       RAG_EMBEDDING_DEVICE: "cuda:0"
     volumes:
@@ -25,14 +24,13 @@ services:
       - ./log.txt:/app/log.txt
     command: >
       /bin/sh -c "gunicorn --bind 0.0.0.0:5000 --timeout 1200 --workers 1 --threads 4 app:app 2>&1 | tee -a /app/log.txt"
-    gpus: all
     privileged: true
     deploy:
       resources:
         reservations:
           devices:
             - driver: nvidia
-              count: all
+              device_ids: ["1"]
               capabilities: [gpu]
     networks:
       - graphrag-net
@@ -50,9 +48,8 @@ services:
     env_file:
       - .env
     environment:
-      CUDA_VISIBLE_DEVICES: "0"
-      NVIDIA_VISIBLE_DEVICES: "0"
       NVIDIA_DRIVER_CAPABILITIES: "compute,utility"
+      CUDA_VISIBLE_DEVICES: "1"
       RAG_DEVICE: "cuda:0"
       RAG_EMBEDDING_DEVICE: "cuda:0"
     volumes:
@@ -66,8 +63,14 @@ services:
       - ./log.txt:/app/log.txt
     command: >
       /bin/sh -c "python app.py 2>&1 | tee -a /app/log.txt"
-    gpus: all
     privileged: true
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["1"]
+              capabilities: [gpu]
     networks:
       - graphrag-net
     extra_hosts:

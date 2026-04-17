@@ -16,3 +16,5 @@ tests/ingest_results/*
 docker/RAG/frontend/node_modules/*
 tests/output_orchestrator/*
 RAG_quality_test/results/*
+graph_data/*
+graph_db/*

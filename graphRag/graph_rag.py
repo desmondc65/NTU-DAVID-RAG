@@ -104,10 +104,22 @@ class GraphRAGEngine:
         self.db_path = Path(db_path)
         self.qdrant_dir = str(self.db_path / "qdrant_data")
         self.chunk_collection = chunk_collection
-        self.device = device or os.getenv("RAG_DEVICE", "cuda:0")
+        self.device = (
+            device
+            or os.getenv("RAG_EMBEDDING_DEVICE")
+            or os.getenv("RAG_DEVICE", "cuda:0")
+        )
 
-        logger.info("Loading embedder for GraphRAG…")
-        self.embedder = EmbeddingModel(model_name=embedding_model, device=self.device)
+        resolved_embedding_model = embedding_model
+        if resolved_embedding_model == _DEFAULT_MODEL:
+            resolved_embedding_model = os.getenv("RAG_EMBEDDING_MODEL", resolved_embedding_model)
+
+        logger.info(
+            "Loading embedder for GraphRAG (model=%s, device=%s)…",
+            resolved_embedding_model,
+            self.device,
+        )
+        self.embedder = EmbeddingModel(model_name=resolved_embedding_model, device=self.device)
         self.llm = llm_client or LocalLLMClient()
 
         self.chunk_store = QdrantVectorStore(
