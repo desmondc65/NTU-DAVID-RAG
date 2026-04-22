@@ -22,6 +22,7 @@ services:
       - ../../graph_data:/app/data
       - ../../requirements.txt:/app/project_requirements.txt:ro
       - ./log.txt:/app/log.txt
+      - ../../hf_cache:/root/.cache/huggingface
     command: >
       /bin/sh -c "gunicorn --bind 0.0.0.0:5000 --timeout 1200 --workers 1 --threads 4 app:app 2>&1 | tee -a /app/log.txt"
     privileged: true
@@ -61,6 +62,7 @@ services:
       - ../../graph_data:/app/data
       - ../../requirements.txt:/app/project_requirements.txt:ro
       - ./log.txt:/app/log.txt
+      - ../../hf_cache:/root/.cache/huggingface
     command: >
       /bin/sh -c "python app.py 2>&1 | tee -a /app/log.txt"
     privileged: true
