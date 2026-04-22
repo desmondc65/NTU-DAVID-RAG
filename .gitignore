@@ -18,3 +18,4 @@ tests/output_orchestrator/*
 RAG_quality_test/results/*
 graph_data/*
 graph_db/*
+hf_cache/
