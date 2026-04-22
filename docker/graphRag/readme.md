@@ -73,6 +73,7 @@ Rebuild after every new upload — the graph is not incremental.
 ### Query
 
 ```bash
+cd /home3/davidlcs/Econ-Rag/NTU-DAVID-RAG/docker/graphRag
 curl -X POST http://localhost:3007/api/query \
      -H 'content-type: application/json' \
      -d '{"query":"which papers use overlapping-generations models?","mode":"auto"}'

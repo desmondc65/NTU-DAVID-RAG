@@ -27,6 +27,16 @@ try:
 except ImportError:
     pass
 
+# Some older transformers builds expose Qwen2Config without rope_theta.
+# gte-Qwen2's remote modeling code expects the attribute to exist.
+try:
+    from transformers.models.qwen2.configuration_qwen2 import Qwen2Config
+
+    if not hasattr(Qwen2Config, "rope_theta"):
+        Qwen2Config.rope_theta = 10000.0  # type: ignore[attr-defined]
+except ImportError:
+    pass
+
 
 _DEFAULT_MODEL = "Alibaba-NLP/gte-Qwen2-7B-instruct"
 

@@ -162,6 +162,28 @@ print(response)
 
 For full setup and remote access details, see `docs/local_llm_qwen3_next_80b_docker.md`.
 
+### RAGAS Evaluation for the Dockerized Original RAG
+
+The repo now includes a reference-free Ragas runner for the original
+Dockerized vector RAG in `RAG_quality_test/rag_ragas_eval.py`.
+
+Use this sequence:
+
+```bash
+cd docker/graphRag && docker compose down
+cd ../local_llm && docker compose -f docker-compose.gemma4_31b_ollama.yml up -d
+cd ../RAG && docker compose up -d --build rag-web
+
+cd /home3/davidlcs/Econ-Rag/NTU-DAVID-RAG
+. .venv/bin/activate
+pip install -r RAG_quality_test/requirements-ragas.txt
+python RAG_quality_test/rag_ragas_eval.py
+```
+
+Only one RAG framework should be up at a time. Keep `docker/graphRag` down
+while evaluating the original RAG. See `RAG_quality_test/README.md` for the
+full evaluator notes and CLI options.
+
 ## Project Structure
 
 ```

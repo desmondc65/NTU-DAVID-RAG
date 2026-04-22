@@ -8,8 +8,39 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from pydantic import BaseModel
 
+try:
+	from json_repair import repair_json as _repair_json
+except ImportError:
+	_repair_json = None
+
 # Load environment variables from .env file
 load_dotenv()
+
+
+def _parse_json_lenient(text: str) -> Any:
+	"""Parse JSON from LLM output, tolerating code fences and minor malformations."""
+	if not text:
+		return {}
+	# Strip ```json ... ``` or ``` ... ``` fences
+	stripped = text.strip()
+	fence = re.match(r"^```(?:json)?\s*(.*?)\s*```$", stripped, re.DOTALL)
+	if fence:
+		stripped = fence.group(1).strip()
+	try:
+		return json.loads(stripped)
+	except json.JSONDecodeError:
+		pass
+	if _repair_json is not None:
+		try:
+			repaired = _repair_json(stripped, return_objects=False)
+			return json.loads(repaired) if isinstance(repaired, str) else repaired
+		except Exception:
+			pass
+	# Last resort: extract the largest {...} or [...] block and retry
+	match = re.search(r"[\{\[].*[\}\]]", stripped, re.DOTALL)
+	if match:
+		return json.loads(match.group(0))
+	raise json.JSONDecodeError("Could not parse LLM output as JSON", text, 0)
 
 
 class LocalLLMClient:
@@ -144,7 +175,7 @@ class LocalLLMClient:
 					response_format={"type": "json_object"},
 				)
 				response_text = completion.choices[0].message.content
-				payload = json.loads(response_text) if response_text else {}
+				payload = _parse_json_lenient(response_text) if response_text else {}
 				return response_schema.model_validate(payload)
 
 			if response_mime_type == "application/json":
@@ -153,7 +184,7 @@ class LocalLLMClient:
 					response_format={"type": "json_object"},
 				)
 				response_text = completion.choices[0].message.content
-				return json.loads(response_text) if response_text else {}
+				return _parse_json_lenient(response_text) if response_text else {}
 
 			completion = self.client.chat.completions.create(**base_kwargs)
 			return completion.choices[0].message.content
