@@ -131,6 +131,62 @@ python -m tests.test_llm_clients
 
 > **Note:** Phase 2 and Phase 3 tests require a GPU and an existing vector store at `data/[Paper Name]/vector_store/`. The LLM client tests require valid API keys.
 
+### Unified RAG + GraphRAG Stack (Recommended)
+
+The top-level [docker/docker-compose.yml](docker/docker-compose.yml) brings up **both** the vector RAG and the GraphRAG services behind a single nginx proxy, sharing one GPU-resident embedding/reranker container. You get one URL with a landing page and `/rag/` + `/graph/` tabs.
+
+Architecture (see also the TikZ diagrams in [docs/tikz/](docs/tikz/) — [vector_rag.pdf](docs/tikz/vector_rag.pdf), [graph_rag.pdf](docs/tikz/graph_rag.pdf)):
+
+```
+                    ┌───────────────────────────────┐
+                    │  nginx proxy  (one port)      │
+                    │  /  /rag/  /graph/            │
+                    └──────┬──────────────┬─────────┘
+                           │              │
+                    ┌──────▼─────┐ ┌──────▼─────┐
+                    │  rag-web   │ │ graphrag-  │   CPU-only Flask backends,
+                    │  (Flask)   │ │   web      │   chat-style React frontends
+                    └──────┬─────┘ └──────┬─────┘
+                           │              │
+                    ┌──────▼──────────────▼─────────┐
+                    │  embedding-server (GPU)       │   gte-Qwen2-7B +
+                    │  HTTP /embed, /rerank         │   bge-reranker-v2-m3,
+                    └───────────────────────────────┘   loaded once, shared
+```
+
+Per-service internals (container layout + query pipeline):
+
+<p align="center">
+  <img src="docs/tikz/vector_rag.png" alt="Vector RAG — container architecture and query workflow" width="640">
+  <br>
+  <em>Vector RAG: nginx → Flask → shared embedding server, with BM25 + dense + RRF + cross-encoder rerank feeding the LLM.</em>
+</p>
+
+<p align="center">
+  <img src="docs/tikz/graph_rag.png" alt="GraphRAG — container architecture, build workflow, and query workflow" width="640">
+  <br>
+  <em>GraphRAG: entity/relation extraction → community detection → summarization at build time; router picks a local (n-hop subgraph) or global (community summaries) path at query time.</em>
+</p>
+
+Key points:
+
+- **Shared GPU embedder.** `EmbeddingModel` and `Reranker` have a remote HTTP mode (enabled by `RAG_EMBEDDING_SERVER_URL` / `RAG_RERANKER_SERVER_URL`). Both backends delegate all encoding/scoring to a single container, so the 7B embedder loads once.
+- **Isolated databases.** `rag-web` uses `db/` + `data/`; `graphrag-web` uses `graph_db/` + `graph_data/`. The per-service compose files under [docker/RAG/](docker/RAG/) and [docker/graphRag/](docker/graphRag/) still work standalone.
+- **Chat-style UIs.** Both frontends are persistent chat shells: message bubbles, follow-up questions, stop / regenerate / delete, localStorage-backed history, Markdown export. GraphRAG additionally threads `conversation_history` through retrieval so follow-ups like "what about for China?" get rewritten against prior turns before searching.
+- **URL-prefix aware.** Frontends are built with `VITE_BASE_PATH` so assets and API calls resolve correctly when served under `/rag/` or `/graph/` behind the proxy.
+
+Start it:
+
+```bash
+cd docker
+cp .env.example .env
+# Edit .env if defaults don't fit: UNIFIED_PORT (default 3006),
+# EMBEDDING_GPU (default 1), EMBEDDING_MODEL, RERANKER_MODEL, etc.
+docker compose up --build
+```
+
+Then open `http://<host>:3006/` and pick **RAG** or **GraphRAG** from the landing page. The embedding server has a long startup grace (~10 min on a cold HF cache) while the 7B weights download.
+
 ### Local LLM Service (Qwen3-Next-80B Q8_0 on GPU 0 + 1)
 
 This repository includes a Docker Compose setup for a local OpenAI-compatible LLM endpoint using `llama.cpp` server.
@@ -196,7 +252,19 @@ NTU-DAVID-RAG/
 │   │   └── manuscript_parsed_*/    # Parsed manuscript outputs
 │   ├── Consumption Smoothing.../   # Research project 2
 │   └── The Welfare Implications.../# Research project 3
+├── docker/                         # Dockerized stacks
+│   ├── docker-compose.yml          # Unified RAG + GraphRAG + shared embedding server
+│   ├── embedding_server/           # GPU container: gte-Qwen2-7B + bge-reranker HTTP service
+│   ├── proxy/                      # nginx + landing page (/rag/, /graph/)
+│   ├── RAG/                        # Standalone vector-RAG service (Flask + React)
+│   ├── graphRag/                   # Standalone GraphRAG service (Flask + React)
+│   └── local_llm/                  # Local OpenAI-compatible LLM endpoints (llama.cpp / Ollama)
+├── docs/
+│   └── tikz/                       # Architecture diagrams (vector_rag, graph_rag)
 ├── utils/
+│   ├── s2_embedding/               # Chunking + embedding pipeline (ChromaDB)
+│   ├── s3_RAG/                     # Hybrid BM25 + dense + reranker pipeline
+│   ├── orchestrator/               # Profile-first global-query router
 │   └── data_preprocess/
 │       ├── fortran_preprocess/     # Fortran code extraction & parsing
 │       ├── Dolphin/                # PDF parsing with Dolphin (layout-aware)
@@ -460,7 +528,7 @@ JSON Data Files ──→ Chunker ──→ Embedding Model ──→ ChromaDB V
 
 | Component | Choice | Rationale |
 |-----------|--------|-----------|
-| **Embedding Model** | `BAAI/bge-large-en-v1.5` | 1024-dim, strong on academic text + code, runs locally on GPU |
+| **Embedding Model** | `Alibaba-NLP/gte-Qwen2-7B-instruct` (default) | Top-tier MTEB retrieval scores on academic text + code; `BAAI/bge-large-en-v1.5` still selectable via `--model` |
 | **Vector Database** | ChromaDB (persistent) | Lightweight, local-first, zero-config, supports metadata filtering |
 | **Chunking** | Section-aware (text) + Line-based (code) | Preserves semantic coherence for papers; summary-prefixed for code |
 
@@ -470,7 +538,7 @@ JSON Data Files ──→ Chunker ──→ Embedding Model ──→ ChromaDB V
 utils/s2_embedding/
 ├── __init__.py          # Package init
 ├── chunker.py           # Chunking strategies for manuscript text and Fortran code
-├── embedder.py          # BAAI/bge-large-en-v1.5 embedding model wrapper
+├── embedder.py          # Embedding model wrapper (gte-Qwen2-7B-instruct by default; supports remote HTTP mode)
 ├── vector_store.py      # ChromaDB persistent vector store wrapper
 └── run_embed.py         # CLI orchestration script (chunk → embed → store → test)
 ```
@@ -515,7 +583,7 @@ CUDA_VISIBLE_DEVICES=2 python -m utils.s2_embedding.run_embed \
 | `--manuscript` | No* | Path to `Manuscript_content_list.json` |
 | `--fortran` | No* | Path to `fortran_chunks.json` |
 | `--output` | Yes | Output directory for ChromaDB persistent storage |
-| `--model` | No | Embedding model name (default: `BAAI/bge-large-en-v1.5`) |
+| `--model` | No | Embedding model name (default: `Alibaba-NLP/gte-Qwen2-7B-instruct`) |
 | `--device` | No | Device for inference, e.g. `cuda:0` (default: auto-detect) |
 | `--test-query` | No | Run smoke queries after embedding to verify results |
 
@@ -572,7 +640,7 @@ Query
 | Component | Model / Library | Purpose |
 |-----------|----------------|---------|
 | **Sparse Retrieval** | BM25 (`rank-bm25`) | Lexical matching for exact Fortran identifiers like `REAL*8`, `NGRIDA`, subroutine names |
-| **Dense Retrieval** | ChromaDB + `BAAI/bge-large-en-v1.5` | Semantic similarity for concept-level queries |
+| **Dense Retrieval** | ChromaDB + `Alibaba-NLP/gte-Qwen2-7B-instruct` | Semantic similarity for concept-level queries |
 | **Fusion** | Reciprocal Rank Fusion (RRF) | Merges + deduplicates results from both retrievers |
 | **Reranker** | `BAAI/bge-reranker-v2-m3` | Cross-encoder that rigorously scores each passage against the query |
 
@@ -647,9 +715,9 @@ for r in results:
     print(r["rerank_score"], r["metadata"]["content_type"], r["text"][:100])
 ```
 
-#### Generation 🔲 (To Be Implemented)
+#### Generation ✅
 
-The generation component — using Multimodal LLMs to produce context-aware answers from retrieved passages — is planned for future development.
+Answer generation is now shipped end-to-end through the Dockerized RAG and GraphRAG services (see **Unified RAG + GraphRAG Stack** below). Both services use the retrieval pipeline above, feed the top passages into an LLM (local or API), and return a streamed, Markdown-rendered answer in a chat-style web UI.
 
 ### Solving the Global Query Problem
 
