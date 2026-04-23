@@ -71,7 +71,7 @@ export interface ChatTurn {
 export interface QueryRequest {
   query: string;
   mode?: QueryMode;
-  history?: ChatTurn[];
+  conversation_id?: string | null;
   n_hop?: number;
   max_chunks?: number;
   candidate_top_k?: number;
@@ -105,4 +105,10 @@ export interface QueryResponse {
   /** Global mode */
   communities?: CommunityContribution[];
   candidate_count?: number;
+  /** Phase 2: server-side conversation persistence */
+  conversation_id?: string;
+  message_ids?: {
+    user: string;
+    assistant: string;
+  };
 }

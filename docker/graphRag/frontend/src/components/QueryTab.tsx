@@ -11,9 +11,13 @@ import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import renderMathInElement from 'katex/contrib/auto-render';
-import { runQuery } from '../api';
+import {
+  deleteMessage,
+  fetchMessages,
+  runQuery,
+  type ServerMessage,
+} from '../api';
 import type {
-  ChatTurn,
   ChunkSource,
   CommunityContribution,
   GraphStatus,
@@ -23,6 +27,9 @@ import type {
 interface QueryTabProps {
   status: GraphStatus | null;
   isBlocked: boolean;
+  activeConversationId: string | null;
+  onConversationCreated: (id: string) => void;
+  onConversationTouched: () => void;
 }
 
 interface UserMessage {
@@ -30,6 +37,7 @@ interface UserMessage {
   role: 'user';
   content: string;
   mode: QueryMode;
+  tempId?: string;
 }
 
 interface AssistantMessage {
@@ -45,13 +53,12 @@ interface AssistantMessage {
   rewrittenQuery: string | null;
   pending?: boolean;
   errored?: boolean;
+  tempId?: string;
 }
 
 type ChatMessage = UserMessage | AssistantMessage;
 
-const STORAGE_KEY = 'econ-graphrag.chat.v1';
 const MODE_STORAGE_KEY = 'econ-graphrag.mode.v1';
-const HISTORY_TURNS_LIMIT = 30;
 
 const MODE_LABEL: Record<QueryMode, string> = {
   auto: 'Auto',
@@ -95,7 +102,6 @@ function canonicaliseValueForDedupe(s: string): string {
   return out;
 }
 
-/** See RAG QueryTab — same purpose. */
 function collapseDuplicateNotations(text: string): string {
   const lines = text.split('\n');
   const cleaned: string[] = [];
@@ -133,8 +139,8 @@ function collapseDuplicateNotations(text: string): string {
 
 const markdownMathPlugins: any[] = [[remarkMath as any, { singleDollarTextMath: true }]];
 
-function makeId(): string {
-  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+function tempId(): string {
+  return `tmp-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
 function badgeClass(type: string): string {
@@ -151,21 +157,6 @@ function badgeClass(type: string): string {
   return map[type] || 'manuscript';
 }
 
-function loadStoredMessages(): ChatMessage[] {
-  if (typeof window === 'undefined') return [];
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return parsed.filter((m): m is ChatMessage =>
-      m && typeof m === 'object' && (m.role === 'user' || m.role === 'assistant'),
-    );
-  } catch {
-    return [];
-  }
-}
-
 function loadStoredMode(): QueryMode {
   if (typeof window === 'undefined') return 'auto';
   const raw = window.localStorage.getItem(MODE_STORAGE_KEY);
@@ -173,16 +164,71 @@ function loadStoredMode(): QueryMode {
   return 'auto';
 }
 
-function buildHistoryFromMessages(messages: ChatMessage[]): ChatTurn[] {
-  const turns: ChatTurn[] = [];
-  for (const m of messages) {
-    if (m.role === 'user') {
-      turns.push({ role: 'user', content: m.content });
-    } else if (m.role === 'assistant' && m.content && !m.errored) {
-      turns.push({ role: 'assistant', content: m.content });
-    }
+function coerceChunks(raw: unknown): ChunkSource[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((r) => {
+    if (!r || typeof r !== 'object') return [];
+    const rec = r as Record<string, unknown>;
+    const id = typeof rec.id === 'string' ? rec.id : '';
+    const text = typeof rec.text === 'string' ? rec.text : '';
+    const metadata = (rec.metadata && typeof rec.metadata === 'object')
+      ? (rec.metadata as Record<string, string>)
+      : {};
+    return [{ id, text, metadata }];
+  });
+}
+
+function coerceCommunities(raw: unknown): CommunityContribution[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((r) => {
+    if (!r || typeof r !== 'object') return [];
+    const rec = r as Record<string, unknown>;
+    return [{
+      community_id: Number(rec.community_id) || 0,
+      title: typeof rec.title === 'string' ? rec.title : '',
+      theme: typeof rec.theme === 'string' ? rec.theme : '',
+      score: Number(rec.score) || 0,
+      contribution: typeof rec.contribution === 'string' ? rec.contribution : '',
+      papers: Array.isArray(rec.papers) ? rec.papers.filter((p): p is string => typeof p === 'string') : [],
+    }];
+  });
+}
+
+function coerceStringArray(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.filter((s): s is string => typeof s === 'string');
+}
+
+function coerceMode(raw: unknown): QueryMode | null {
+  return raw === 'local' || raw === 'global' || raw === 'auto' ? raw : null;
+}
+
+function serverToChat(msg: ServerMessage): ChatMessage | null {
+  if (msg.role === 'user') {
+    const meta = msg.metadata || {};
+    return {
+      id: msg.id,
+      role: 'user',
+      content: msg.content,
+      mode: coerceMode(meta.mode) ?? 'auto',
+    };
   }
-  return turns.slice(-HISTORY_TURNS_LIMIT);
+  if (msg.role === 'assistant') {
+    const meta = msg.metadata || {};
+    return {
+      id: msg.id,
+      role: 'assistant',
+      content: msg.content,
+      mode: coerceMode(meta.mode),
+      seeds: coerceStringArray(meta.seeds),
+      subgraphNodes: coerceStringArray(meta.subgraph_nodes),
+      chunks: coerceChunks(msg.sources),
+      communities: coerceCommunities(meta.communities),
+      candidateCount: typeof meta.candidate_count === 'number' ? meta.candidate_count : null,
+      rewrittenQuery: typeof meta.rewritten_query === 'string' ? meta.rewritten_query : null,
+    };
+  }
+  return null;
 }
 
 function exportConversationToMarkdown(messages: ChatMessage[]): string {
@@ -229,12 +275,19 @@ function downloadFile(filename: string, content: string, mime = 'text/markdown')
   URL.revokeObjectURL(url);
 }
 
-export default function QueryTab({ status, isBlocked }: QueryTabProps) {
-  const [messages, setMessages] = useState<ChatMessage[]>(() => loadStoredMessages());
+export default function QueryTab({
+  status,
+  isBlocked,
+  activeConversationId,
+  onConversationCreated,
+  onConversationTouched,
+}: QueryTabProps) {
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [mode, setMode] = useState<QueryMode>(() => loadStoredMode());
   const [draft, setDraft] = useState('');
   const [openEvidence, setOpenEvidence] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(false);
+  const [loadingMessages, setLoadingMessages] = useState(false);
   const [error, setError] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -253,13 +306,36 @@ export default function QueryTab({ status, isBlocked }: QueryTabProps) {
 
   const isReady = status?.built === true;
 
+  // Load messages whenever the active conversation changes.
   useEffect(() => {
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
-    } catch {
-      /* ignore */
+    let cancelled = false;
+    if (!activeConversationId) {
+      setMessages([]);
+      setOpenEvidence({});
+      return;
     }
-  }, [messages]);
+    (async () => {
+      setLoadingMessages(true);
+      setError('');
+      try {
+        const rows = await fetchMessages(activeConversationId);
+        if (cancelled) return;
+        const mapped = rows
+          .map(serverToChat)
+          .filter((m): m is ChatMessage => m !== null);
+        setMessages(mapped);
+        setOpenEvidence({});
+      } catch (err) {
+        if (!cancelled) {
+          setMessages([]);
+          setError(err instanceof Error ? err.message : 'Failed to load messages');
+        }
+      } finally {
+        if (!cancelled) setLoadingMessages(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [activeConversationId]);
 
   useEffect(() => {
     window.localStorage.setItem(MODE_STORAGE_KEY, mode);
@@ -288,59 +364,94 @@ export default function QueryTab({ status, isBlocked }: QueryTabProps) {
         { left: '$', right: '$', display: false },
         { left: '\\(', right: '\\)', display: false },
       ],
-      // The runtime accepts these guards even though the TS types omit them.
       ignoredClasses: ['katex', 'katex-mathml', 'katex-html', 'chat-user-text'],
       ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code', 'option', 'annotation'],
       throwOnError: false,
     } as unknown as Parameters<typeof renderMathInElement>[1]);
   }, [messages, openEvidence]);
 
-  const runQueryFor = useCallback(
-    async (
-      userMessageId: string,
-      assistantMessageId: string,
-      historyForRequest: ChatTurn[],
-      questionContent: string,
-      requestMode: QueryMode,
-    ) => {
+  const sendQuery = useCallback(
+    async (questionContent: string, requestMode: QueryMode) => {
       setError('');
       setLoading(true);
+
+      const userTemp: UserMessage = {
+        id: tempId(),
+        tempId: tempId(),
+        role: 'user',
+        content: questionContent,
+        mode: requestMode,
+      };
+      const assistantTemp: AssistantMessage = {
+        id: tempId(),
+        tempId: tempId(),
+        role: 'assistant',
+        content: '',
+        mode: null,
+        seeds: [],
+        subgraphNodes: [],
+        chunks: [],
+        communities: [],
+        candidateCount: null,
+        rewrittenQuery: null,
+        pending: true,
+      };
+      setMessages((prev) => [...prev, userTemp, assistantTemp]);
+
       const controller = new AbortController();
       abortRef.current = controller;
       try {
         const res = await runQuery(
-          { query: questionContent, mode: requestMode, history: historyForRequest },
+          {
+            query: questionContent,
+            mode: requestMode,
+            conversation_id: activeConversationId,
+          },
           controller.signal,
         );
+
+        const convId = res.conversation_id;
+        const ids = res.message_ids;
+        if (convId && convId !== activeConversationId) {
+          onConversationCreated(convId);
+        }
+        onConversationTouched();
+
         setMessages((prev) =>
-          prev.map((m) =>
-            m.id === assistantMessageId && m.role === 'assistant'
-              ? {
-                  ...m,
-                  content: res.answer || '',
-                  mode: res.mode ?? requestMode,
-                  seeds: res.seeds ?? [],
-                  subgraphNodes: res.subgraph_nodes ?? [],
-                  chunks: res.chunks ?? [],
-                  communities: res.communities ?? [],
-                  candidateCount: res.candidate_count ?? null,
-                  rewrittenQuery: res.rewritten_query ?? null,
-                  pending: false,
-                }
-              : m,
-          ),
+          prev.map((m) => {
+            if (m.id === userTemp.id && ids?.user) {
+              return { ...m, id: ids.user, tempId: undefined };
+            }
+            if (m.id === assistantTemp.id) {
+              return {
+                ...m,
+                id: ids?.assistant || m.id,
+                tempId: undefined,
+                content: res.answer || '',
+                mode: res.mode ?? requestMode,
+                seeds: res.seeds ?? [],
+                subgraphNodes: res.subgraph_nodes ?? [],
+                chunks: res.chunks ?? [],
+                communities: res.communities ?? [],
+                candidateCount: res.candidate_count ?? null,
+                rewrittenQuery: res.rewritten_query ?? null,
+                pending: false,
+              };
+            }
+            return m;
+          }),
         );
       } catch (err: unknown) {
         if ((err as { name?: string })?.name === 'AbortError') {
           setMessages((prev) =>
-            prev.filter((m) => m.id !== userMessageId && m.id !== assistantMessageId),
+            prev.filter((m) => m.id !== userTemp.id && m.id !== assistantTemp.id),
           );
         } else {
           const msg = err instanceof Error ? err.message : 'Query failed';
           setError(msg);
           setMessages((prev) =>
             prev.map((m) =>
-              m.id === assistantMessageId && m.role === 'assistant'
+              m.id === assistantTemp.id && m.role === 'assistant'
                 ? {
                     ...m,
                     content: `**Request failed:** ${msg}`,
@@ -352,13 +463,11 @@ export default function QueryTab({ status, isBlocked }: QueryTabProps) {
           );
         }
       } finally {
-        if (abortRef.current === controller) {
-          abortRef.current = null;
-        }
+        if (abortRef.current === controller) abortRef.current = null;
         setLoading(false);
       }
     },
-    [],
+    [activeConversationId, onConversationCreated, onConversationTouched],
   );
 
   const handleSubmit = (e: FormEvent) => {
@@ -373,27 +482,8 @@ export default function QueryTab({ status, isBlocked }: QueryTabProps) {
     }
     const content = draft.trim();
     if (!content || loading) return;
-
-    const userMessage: UserMessage = { id: makeId(), role: 'user', content, mode };
-    const assistantMessage: AssistantMessage = {
-      id: makeId(),
-      role: 'assistant',
-      content: '',
-      mode: null,
-      seeds: [],
-      subgraphNodes: [],
-      chunks: [],
-      communities: [],
-      candidateCount: null,
-      rewrittenQuery: null,
-      pending: true,
-    };
-    const next = [...messages, userMessage, assistantMessage];
-    setMessages(next);
     setDraft('');
-
-    const historyForRequest = buildHistoryFromMessages([...messages, userMessage]);
-    runQueryFor(userMessage.id, assistantMessage.id, historyForRequest, content, mode);
+    void sendQuery(content, mode);
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -405,21 +495,6 @@ export default function QueryTab({ status, isBlocked }: QueryTabProps) {
 
   const stopRequest = () => {
     abortRef.current?.abort();
-  };
-
-  const startNewChat = () => {
-    if (loading) {
-      stopRequest();
-    }
-    if (
-      messages.length > 0 &&
-      !window.confirm('Start a new chat? The current conversation will be cleared.')
-    ) {
-      return;
-    }
-    setMessages([]);
-    setOpenEvidence({});
-    setError('');
   };
 
   const exportMarkdown = () => {
@@ -449,48 +524,51 @@ export default function QueryTab({ status, isBlocked }: QueryTabProps) {
     requestAnimationFrame(() => textareaRef.current?.focus());
   };
 
-  const regenerateLast = () => {
-    if (loading) return;
-    const lastAssistantIdx = [...messages].reverse().findIndex((m) => m.role === 'assistant');
-    if (lastAssistantIdx < 0) return;
-    const realIdx = messages.length - 1 - lastAssistantIdx;
-    const assistantMsg = messages[realIdx];
-    let userMsg: UserMessage | null = null;
-    for (let i = realIdx - 1; i >= 0; i--) {
-      if (messages[i].role === 'user') {
-        userMsg = messages[i] as UserMessage;
+  const regenerateLast = async () => {
+    if (loading || !activeConversationId) return;
+    let lastAssistant: AssistantMessage | null = null;
+    let lastUser: UserMessage | null = null;
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const m = messages[i];
+      if (!lastAssistant && m.role === 'assistant' && !m.pending) {
+        lastAssistant = m;
+        continue;
+      }
+      if (lastAssistant && m.role === 'user') {
+        lastUser = m;
         break;
       }
     }
-    if (!userMsg || assistantMsg.role !== 'assistant') return;
+    if (!lastUser || !lastAssistant) return;
 
-    const historyForRequest = buildHistoryFromMessages(messages.slice(0, realIdx));
-    setMessages((prev) =>
-      prev.map((m) =>
-        m.id === assistantMsg.id && m.role === 'assistant'
-          ? {
-              ...m,
-              content: '',
-              mode: null,
-              seeds: [],
-              subgraphNodes: [],
-              chunks: [],
-              communities: [],
-              candidateCount: null,
-              rewrittenQuery: null,
-              pending: true,
-              errored: false,
-            }
-          : m,
-      ),
-    );
-    runQueryFor(userMsg.id, assistantMsg.id, historyForRequest, userMsg.content, userMsg.mode);
+    try {
+      if (!lastAssistant.tempId) {
+        await deleteMessage(activeConversationId, lastAssistant.id);
+      }
+      setMessages((prev) => prev.filter((m) => m.id !== lastAssistant!.id));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to drop previous answer');
+      return;
+    }
+
+    await sendQuery(lastUser.content, lastUser.mode);
   };
 
-  const deleteFromMessage = (id: string) => {
+  const deleteFromMessage = async (id: string) => {
+    if (!activeConversationId) return;
     const idx = messages.findIndex((m) => m.id === id);
     if (idx < 0) return;
-    setMessages((prev) => prev.slice(0, idx));
+    const target = messages.slice(idx);
+    try {
+      for (const m of target) {
+        if (m.tempId || !activeConversationId) continue;
+        await deleteMessage(activeConversationId, m.id);
+      }
+      setMessages((prev) => prev.slice(0, idx));
+      onConversationTouched();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Delete failed');
+    }
   };
 
   const historyChars = useMemo(
@@ -504,7 +582,9 @@ export default function QueryTab({ status, isBlocked }: QueryTabProps) {
         <div className="chat-header-left">
           <span className="chat-title-text">Knowledge-Graph Chat</span>
           <span className="chat-meta-inline">
-            {messages.length === 0
+            {loadingMessages
+              ? 'Loading…'
+              : messages.length === 0
               ? 'No messages yet'
               : `${messages.length} message${messages.length === 1 ? '' : 's'} · ~${historyChars.toLocaleString()} chars`}
           </span>
@@ -518,15 +598,6 @@ export default function QueryTab({ status, isBlocked }: QueryTabProps) {
             title="Export the conversation as Markdown"
           >
             ⬇ Export
-          </button>
-          <button
-            className="btn btn-small"
-            type="button"
-            onClick={startNewChat}
-            disabled={isBlocked && !loading}
-            title="Start a new chat (clears history)"
-          >
-            ✦ New chat
           </button>
         </div>
       </header>
@@ -550,7 +621,7 @@ export default function QueryTab({ status, isBlocked }: QueryTabProps) {
       </div>
 
       <div className="chat-thread" ref={threadRef}>
-        {messages.length === 0 && !loading && (
+        {messages.length === 0 && !loading && !loadingMessages && (
           <div className="chat-empty">
             <p className="chat-empty-title">Ask the knowledge graph anything.</p>
             <p className="chat-empty-hint">
@@ -743,7 +814,7 @@ export default function QueryTab({ status, isBlocked }: QueryTabProps) {
                       type="button"
                       className="chat-action-btn"
                       title="Regenerate this answer"
-                      onClick={regenerateLast}
+                      onClick={() => void regenerateLast()}
                       disabled={loading || isBlocked || !isReady}
                     >
                       ↻ Regenerate
@@ -753,7 +824,7 @@ export default function QueryTab({ status, isBlocked }: QueryTabProps) {
                     type="button"
                     className="chat-action-btn danger"
                     title="Delete this and all later messages"
-                    onClick={() => deleteFromMessage(m.id)}
+                    onClick={() => void deleteFromMessage(m.id)}
                     disabled={loading}
                   >
                     ✕ Delete
