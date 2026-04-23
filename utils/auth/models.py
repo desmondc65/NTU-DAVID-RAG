@@ -66,6 +66,30 @@ class User(Base):
     )
 
 
+class AuthEvent(Base):
+    """Audit log: login/logout/password-change/session-revoke etc."""
+    __tablename__ = "auth_events"
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    # Nullable for events that don't map to a real user (e.g. login_fail
+    # against an email that never existed).
+    user_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    event_type: Mapped[str] = mapped_column(String(40), nullable=False)
+    ip: Mapped[Optional[str]] = mapped_column(INET, nullable=True)
+    user_agent: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    metadata_: Mapped[Optional[dict]] = mapped_column("metadata", JSONB, nullable=True)
+    created_at: Mapped[datetime] = _now_col()
+
+    __table_args__ = (
+        Index("ix_auth_events_user_created", "user_id", "created_at"),
+        Index("ix_auth_events_type_created", "event_type", "created_at"),
+    )
+
+
 class AuthSession(Base):
     __tablename__ = "sessions"
 

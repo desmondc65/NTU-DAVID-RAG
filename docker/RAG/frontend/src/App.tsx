@@ -3,6 +3,7 @@ import ManagePapers from './components/ManagePapers';
 import ChatPage from './components/ChatPage';
 import { AuthProvider, useAuth } from './auth/AuthContext';
 import LoginPage from './auth/LoginPage';
+import AccountDialog from './auth/AccountDialog';
 
 type Tab = 'manage' | 'query';
 
@@ -10,6 +11,7 @@ function AppShell() {
   const { user, loading, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>('manage');
   const [isIngesting, setIsIngesting] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
 
   if (loading) {
     return <div className="auth-loading">Loading…</div>;
@@ -36,9 +38,14 @@ function AppShell() {
           🔍 RAG Query
         </button>
         <div className="tabs-spacer" />
-        <span className="auth-badge" title={user.email}>
+        <button
+          type="button"
+          className="auth-badge auth-badge-btn"
+          title={`Account — ${user.email}`}
+          onClick={() => setAccountOpen(true)}
+        >
           {user.display_name || user.email}
-        </span>
+        </button>
         <button
           className="tab-btn auth-logout"
           onClick={() => { void logout(); }}
@@ -55,6 +62,8 @@ function AppShell() {
           <ChatPage isBlocked={isIngesting} />
         </section>
       </main>
+
+      <AccountDialog open={accountOpen} onClose={() => setAccountOpen(false)} />
     </div>
   );
 }

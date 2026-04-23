@@ -112,8 +112,8 @@ class SessionRepo:
     def revoke(self, session: AuthSession) -> None:
         session.revoked_at = datetime.now(tz=timezone.utc)
 
-    def revoke_all_for_user(self, user_id: uuid.UUID) -> None:
-        self.db.execute(
+    def revoke_all_for_user(self, user_id: uuid.UUID) -> int:
+        result = self.db.execute(
             update(AuthSession)
             .where(
                 AuthSession.user_id == user_id,
@@ -121,6 +121,51 @@ class SessionRepo:
             )
             .values(revoked_at=datetime.now(tz=timezone.utc))
         )
+        return int(result.rowcount or 0)
+
+    def revoke_others_for_user(
+        self,
+        user_id: uuid.UUID,
+        keep_session_id: uuid.UUID,
+    ) -> int:
+        result = self.db.execute(
+            update(AuthSession)
+            .where(
+                AuthSession.user_id == user_id,
+                AuthSession.id != keep_session_id,
+                AuthSession.revoked_at.is_(None),
+            )
+            .values(revoked_at=datetime.now(tz=timezone.utc))
+        )
+        return int(result.rowcount or 0)
+
+    def list_active_for_user(self, user_id: uuid.UUID) -> list[AuthSession]:
+        from sqlalchemy import and_
+        now = datetime.now(tz=timezone.utc)
+        rows = self.db.execute(
+            select(AuthSession)
+            .where(
+                and_(
+                    AuthSession.user_id == user_id,
+                    AuthSession.revoked_at.is_(None),
+                    AuthSession.expires_at > now,
+                )
+            )
+            .order_by(AuthSession.last_seen_at.desc())
+        ).scalars()
+        return list(rows)
+
+    def get_by_id_for_user(
+        self,
+        session_id: uuid.UUID,
+        user_id: uuid.UUID,
+    ) -> Optional[AuthSession]:
+        return self.db.execute(
+            select(AuthSession).where(
+                AuthSession.id == session_id,
+                AuthSession.user_id == user_id,
+            )
+        ).scalar_one_or_none()
 
 
 def _derive_uuid_bytes(raw_id: str) -> bytes:

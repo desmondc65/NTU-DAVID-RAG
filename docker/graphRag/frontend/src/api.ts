@@ -125,6 +125,46 @@ export async function authLogout(): Promise<void> {
   await apiFetch<void>(`${AUTH_BASE}/logout`, { method: 'POST' });
 }
 
+export async function authChangePassword(
+  oldPassword: string,
+  newPassword: string,
+): Promise<{ other_sessions_revoked: number }> {
+  return apiFetch<{ other_sessions_revoked: number }>(
+    `${AUTH_BASE}/password/change`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ old_password: oldPassword, new_password: newPassword }),
+    },
+  );
+}
+
+export type AuthSessionRow = {
+  id: string;
+  created_at: string | null;
+  last_seen_at: string | null;
+  expires_at: string | null;
+  ip: string | null;
+  user_agent: string | null;
+  current: boolean;
+};
+
+export async function authListSessions(): Promise<AuthSessionRow[]> {
+  return apiFetch<AuthSessionRow[]>(`${AUTH_BASE}/sessions`);
+}
+
+export async function authRevokeSession(id: string): Promise<void> {
+  await apiFetch<unknown>(`${AUTH_BASE}/sessions/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+  });
+}
+
+export async function authRevokeOtherSessions(): Promise<{ revoked: number }> {
+  return apiFetch<{ revoked: number }>(`${AUTH_BASE}/sessions/revoke-others`, {
+    method: 'POST',
+  });
+}
+
 /* ── Status ─────────────────────────────────────────────────────────── */
 export async function fetchStatus(): Promise<GraphStatus> {
   return apiFetch<GraphStatus>(`${API_BASE}/status`);

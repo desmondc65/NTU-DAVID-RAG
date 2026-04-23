@@ -6,6 +6,7 @@ import { fetchStatus } from './api';
 import type { GraphStatus } from './types';
 import { AuthProvider, useAuth } from './auth/AuthContext';
 import LoginPage from './auth/LoginPage';
+import AccountDialog from './auth/AccountDialog';
 
 type Tab = 'manage' | 'graph' | 'query';
 
@@ -14,6 +15,7 @@ function AppShell() {
   const [activeTab, setActiveTab] = useState<Tab>('manage');
   const [isProcessing, setIsProcessing] = useState(false);
   const [status, setStatus] = useState<GraphStatus | null>(null);
+  const [accountOpen, setAccountOpen] = useState(false);
 
   const refreshStatus = useCallback(async () => {
     try {
@@ -57,9 +59,14 @@ function AppShell() {
           🔍 Query
         </button>
         <div className="tabs-spacer" />
-        <span className="auth-badge" title={user.email}>
+        <button
+          type="button"
+          className="auth-badge auth-badge-btn"
+          title={`Account — ${user.email}`}
+          onClick={() => setAccountOpen(true)}
+        >
           {user.display_name || user.email}
-        </span>
+        </button>
         <button
           className="tab-btn auth-logout"
           onClick={() => { void logout(); }}
@@ -87,6 +94,8 @@ function AppShell() {
           <ChatPage status={status} isBlocked={isProcessing} />
         </section>
       </main>
+
+      <AccountDialog open={accountOpen} onClose={() => setAccountOpen(false)} />
     </div>
   );
 }
