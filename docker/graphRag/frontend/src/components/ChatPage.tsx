@@ -11,6 +11,7 @@ type Props = {
 export default function ChatPage({ status, isBlocked }: Props) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [sidebarRefresh, setSidebarRefresh] = useState(0);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const handleCreated = useCallback((id: string) => {
     setActiveId(id);
@@ -22,12 +23,24 @@ export default function ChatPage({ status, isBlocked }: Props) {
   }, []);
 
   return (
-    <div className="chat-page">
-      <ConversationSidebar
-        activeId={activeId}
-        onSelect={setActiveId}
-        refreshToken={sidebarRefresh}
-      />
+    <div className={`chat-page ${sidebarOpen ? '' : 'sidebar-collapsed'}`}>
+      {sidebarOpen ? (
+        <ConversationSidebar
+          activeId={activeId}
+          onSelect={setActiveId}
+          refreshToken={sidebarRefresh}
+          onCollapse={() => setSidebarOpen(false)}
+        />
+      ) : (
+        <button
+          type="button"
+          className="sidebar-expand-btn"
+          title="Show chat history"
+          onClick={() => setSidebarOpen(true)}
+        >
+          ☰
+        </button>
+      )}
       <QueryTab
         status={status}
         isBlocked={isBlocked}

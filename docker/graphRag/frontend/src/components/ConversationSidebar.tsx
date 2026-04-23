@@ -14,6 +14,7 @@ type Props = {
       existing one gets a new message, so the sidebar can refetch. */
   refreshToken: number;
   onAfterRefresh?: (list: ConversationSummary[]) => void;
+  onCollapse?: () => void;
 };
 
 function relTime(iso: string | null): string {
@@ -37,6 +38,7 @@ export default function ConversationSidebar({
   onSelect,
   refreshToken,
   onAfterRefresh,
+  onCollapse,
 }: Props) {
   const [items, setItems] = useState<ConversationSummary[]>([]);
   const [loading, setLoading] = useState(false);
@@ -111,6 +113,16 @@ export default function ConversationSidebar({
         <button type="button" className="conv-new-btn" onClick={handleNew}>
           ＋ New chat
         </button>
+        {onCollapse && (
+          <button
+            type="button"
+            className="conv-collapse-btn"
+            title="Hide history"
+            onClick={onCollapse}
+          >
+            ⟨
+          </button>
+        )}
       </div>
       {error && <p className="conv-error">{error}</p>}
       {loading && items.length === 0 && <p className="conv-empty">Loading…</p>}
