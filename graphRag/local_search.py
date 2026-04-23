@@ -272,10 +272,11 @@ class LocalSearch:
             "You are an expert research assistant for academic economics. "
             "You are given a RELEVANT SUBGRAPH of the corpus knowledge graph "
             "and the SOURCE CHUNKS attached to its entities and relationships. "
-            "Answer the user's question using this evidence only. Cite chunks "
-            "as [C1], [C2] when you rely on specific passages. When "
-            "summarising the graph structure itself, reference entities by "
-            "name. If the evidence is insufficient, say so."
+            "Answer the user's question using this evidence only, in a natural, "
+            "flowing prose style. Do NOT include citation tags such as [C1], "
+            "[C2], or any bracketed reference markers in your answer. When you "
+            "need to attribute a claim, refer to the paper or author by name "
+            "inline. If the evidence is insufficient, say so."
         )
         user_prompt = (
             f"<subgraph>\n{subgraph_text}\n</subgraph>\n\n"

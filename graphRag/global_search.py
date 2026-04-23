@@ -39,9 +39,11 @@ _MAP_SYSTEM_PROMPT = (
 _REDUCE_SYSTEM_PROMPT = (
     "You synthesise a final answer from independent partial contributions, "
     "each derived from a different community of an academic economics "
-    "knowledge graph. Reflect every relevant contribution faithfully, "
-    "make explicit comparisons where appropriate, and cite communities by "
-    "their [Cm-N] tag when you draw on them."
+    "knowledge graph. Reflect every relevant contribution faithfully and "
+    "make explicit comparisons where appropriate. Write in a natural, "
+    "flowing prose style. Do NOT include citation tags such as [Cm-N] or "
+    "any bracketed reference markers in your answer; attribute claims to "
+    "papers or authors by name inline when needed."
 )
 
 
@@ -190,7 +192,9 @@ class GlobalSearch:
             "</community_contributions>\n\n"
             "Write the final answer using these contributions. Make explicit "
             "cross-paper comparisons (similarities, differences, common "
-            "models/methods). Cite communities as [Cm-N] when relevant."
+            "models/methods). Answer naturally in prose and do NOT include "
+            "citation tags like [Cm-N]; attribute claims to papers or authors "
+            "by name inline when needed."
         )
 
         answer = self.llm.generate_response(
