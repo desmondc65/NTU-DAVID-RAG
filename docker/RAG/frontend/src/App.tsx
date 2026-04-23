@@ -10,11 +10,6 @@ export default function App() {
 
   return (
     <div className="app">
-      <header className="app-header">
-        <span className="app-logo">Econ-RAG</span>
-        <span className="app-subtitle">Research Assistant</span>
-      </header>
-
       <nav className="tabs">
         <button
           id="tab-manage"
