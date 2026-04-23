@@ -19,6 +19,24 @@
 # do not share this stack.
 services:
 
+  auth-db:
+    image: postgres:16-alpine
+    container_name: auth-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${AUTH_DB_NAME:-appdb}
+      POSTGRES_USER: ${AUTH_DB_USER:-appuser}
+      POSTGRES_PASSWORD: ${AUTH_DB_PASSWORD:?AUTH_DB_PASSWORD is required}
+    volumes:
+      - ../auth_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks:
+      - shared-net
+
   embedding-server:
     build:
       context: ./embedding_server
@@ -69,6 +87,8 @@ services:
     depends_on:
       embedding-server:
         condition: service_healthy
+      auth-db:
+        condition: service_healthy
     env_file:
       - ./RAG/.env
     environment:
@@ -82,6 +102,13 @@ services:
       RAG_RERANKER_DEVICE: "cpu"
       NVIDIA_DRIVER_CAPABILITIES: "compute,utility"
       CUDA_VISIBLE_DEVICES: "${EMBEDDING_GPU:-1}"
+      # Auth — rag-web owns Alembic migrations for the whole stack.
+      AUTH_DB_URL: "postgresql+psycopg://${AUTH_DB_USER:-appuser}:${AUTH_DB_PASSWORD}@auth-db:5432/${AUTH_DB_NAME:-appdb}"
+      SESSION_SECRET: "${SESSION_SECRET}"
+      SESSION_COOKIE_SECURE: "${SESSION_COOKIE_SECURE:-false}"
+      ALLOW_REGISTRATION: "${ALLOW_REGISTRATION:-true}"
+      APP_SCOPE: "rag"
+      PYTHONDONTWRITEBYTECODE: "1"
     volumes:
       - ../utils:/app/utils:ro
       - ../db:/app/db
@@ -91,7 +118,8 @@ services:
       # Share the HF cache so MinerU's layout models are fetched once.
       - ../hf_cache:/root/.cache/huggingface
     command: >
-      /bin/sh -c "gunicorn --bind 0.0.0.0:5000 --timeout 900 --workers 1 --threads 4 app:app 2>&1 | tee -a /app/log.txt"
+      /bin/sh -c "alembic -c utils/auth/alembic.ini upgrade head &&
+                  gunicorn --bind 0.0.0.0:5000 --timeout 900 --workers 1 --threads 4 app:app 2>&1 | tee -a /app/log.txt"
     privileged: true
     deploy:
       # Share the same GPU the embedding server uses — MinerU runs only
@@ -119,6 +147,8 @@ services:
     depends_on:
       embedding-server:
         condition: service_healthy
+      auth-db:
+        condition: service_healthy
     env_file:
       - ./graphRag/.env
     environment:
@@ -128,6 +158,13 @@ services:
       RAG_EMBEDDING_DEVICE: "cpu"
       NVIDIA_DRIVER_CAPABILITIES: "compute,utility"
       CUDA_VISIBLE_DEVICES: "${EMBEDDING_GPU:-1}"
+      # Auth — shared DB with rag-web. No migration here (rag-web owns it).
+      AUTH_DB_URL: "postgresql+psycopg://${AUTH_DB_USER:-appuser}:${AUTH_DB_PASSWORD}@auth-db:5432/${AUTH_DB_NAME:-appdb}"
+      SESSION_SECRET: "${SESSION_SECRET}"
+      SESSION_COOKIE_SECURE: "${SESSION_COOKIE_SECURE:-false}"
+      ALLOW_REGISTRATION: "${ALLOW_REGISTRATION:-true}"
+      APP_SCOPE: "graphrag"
+      PYTHONDONTWRITEBYTECODE: "1"
     volumes:
       - ../utils:/app/utils:ro
       - ../graphRag:/app/graphRag:ro

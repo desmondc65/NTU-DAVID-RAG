@@ -22,6 +22,11 @@ export interface ChatTurn {
 export interface QueryResponse {
   answer: string;
   sources: SourceItem[];
+  conversation_id?: string;
+  message_ids?: {
+    user: string;
+    assistant: string;
+  };
 }
 
 export interface UploadResponse {
