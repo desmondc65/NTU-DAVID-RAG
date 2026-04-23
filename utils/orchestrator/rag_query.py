@@ -477,8 +477,8 @@ def _estimate_tokens(text: str) -> int:
 
 def _format_conversation_history(
     history: Optional[List[Dict[str, str]]],
-    max_turns: int = 20,
-    max_chars_per_turn: int = 1200,
+    max_turns: int = 30,
+    max_chars_per_turn: int = 2000,
 ) -> str:
     """Format a bounded chat history block for prompt conditioning."""
     if not history:
@@ -927,6 +927,12 @@ class RAGQueryEngine:
             "- Use markdown headers (##, ###) to organize multi-part answers.\n"
             "- Inline math: $a_t = b_t$  |  Display math: $$a_t = b_t$$\n"
             "- Do not use \\\\(...\\\\) or \\\\[...\\\\] delimiters.\n"
+            "- Pick ONE representation per value. Either prose ('gamma equals 2.0') "
+            "OR math ('$\\gamma = 2.0$') — never write the value twice in two notations "
+            "back-to-back. Do not output the LaTeX form on one line and the Unicode "
+            "form on the next; pick one and move on.\n"
+            "- For tables, write each row on a single line — do not insert blank "
+            "lines or duplicate cell values inside a row.\n"
         )
 
         # 5. User prompt — context → history → question

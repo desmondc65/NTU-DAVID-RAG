@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NTU DAVID RAG — Unified Dashboard</title>
+  <style>
+    :root {
+      --bg: #0f1115;
+      --panel: #171a21;
+      --border: #2a2f3a;
+      --text: #e6e8ee;
+      --muted: #8b93a7;
+      --accent: #5b8def;
+      --accent-hover: #7aa1f5;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      padding: 10px 18px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      gap: 18px;
+    }
+    .brand {
+      font-weight: 600;
+      font-size: 15px;
+      letter-spacing: 0.2px;
+      color: var(--text);
+    }
+    .brand .sub {
+      color: var(--muted);
+      font-weight: 400;
+      margin-left: 6px;
+      font-size: 13px;
+    }
+    nav {
+      display: flex;
+      gap: 6px;
+      margin-left: 16px;
+    }
+    nav button {
+      appearance: none;
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid transparent;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    nav button:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.03);
+    }
+    nav button.active {
+      color: var(--text);
+      background: rgba(91, 141, 239, 0.12);
+      border-color: rgba(91, 141, 239, 0.4);
+    }
+    .spacer { flex: 1; }
+    .links {
+      display: flex;
+      gap: 12px;
+      font-size: 12px;
+    }
+    .links a {
+      color: var(--muted);
+      text-decoration: none;
+    }
+    .links a:hover { color: var(--accent-hover); }
+
+    main {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+    .frame {
+      position: absolute;
+      inset: 0;
+      border: 0;
+      width: 100%;
+      height: 100%;
+      display: none;
+      background: var(--bg);
+    }
+    .frame.active { display: block; }
+
+    /* Landing view (shown before an app is loaded the first time) */
+    .landing {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+    .landing.hidden { display: none; }
+    .card {
+      width: 320px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 22px 22px 20px 22px;
+      cursor: pointer;
+      transition: border-color 0.15s, transform 0.1s;
+    }
+    .card:hover {
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+    .card h2 {
+      margin: 0 0 6px 0;
+      font-size: 16px;
+    }
+    .card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .card .tag {
+      display: inline-block;
+      font-size: 11px;
+      color: var(--accent);
+      margin-bottom: 10px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <span class="brand">NTU DAVID RAG <span class="sub">unified dashboard</span></span>
+    <nav>
+      <button id="tab-home"  data-view="home"  class="active">Home</button>
+      <button id="tab-rag"   data-view="rag">RAG (vector)</button>
+      <button id="tab-graph" data-view="graph">GraphRAG</button>
+    </nav>
+    <span class="spacer"></span>
+    <span class="links">
+      <a href="/rag/"   target="_blank" rel="noopener">Open RAG ↗</a>
+      <a href="/graph/" target="_blank" rel="noopener">Open GraphRAG ↗</a>
+    </span>
+  </header>
+
+  <main>
+    <section class="landing" id="landing">
+      <div class="card" data-view="rag">
+        <span class="tag">Vector</span>
+        <h2>RAG</h2>
+        <p>Hybrid BM25 + dense retrieval with cross-encoder reranking.
+           Upload papers, query across their manuscripts and Fortran code.</p>
+      </div>
+      <div class="card" data-view="graph">
+        <span class="tag">Graph</span>
+        <h2>GraphRAG</h2>
+        <p>Knowledge-graph augmented retrieval with community summaries.
+           Best for cross-paper comparative questions.</p>
+      </div>
+    </section>
+    <iframe id="frame-rag"   class="frame" title="RAG"      loading="lazy"></iframe>
+    <iframe id="frame-graph" class="frame" title="GraphRAG" loading="lazy"></iframe>
+  </main>
+
+  <script>
+    (function () {
+      const tabs = {
+        home:  document.getElementById('tab-home'),
+        rag:   document.getElementById('tab-rag'),
+        graph: document.getElementById('tab-graph'),
+      };
+      const landing = document.getElementById('landing');
+      const frames = {
+        rag:   document.getElementById('frame-rag'),
+        graph: document.getElementById('frame-graph'),
+      };
+      const urls = {
+        rag:   '/rag/',
+        graph: '/graph/',
+      };
+      const loaded = { rag: false, graph: false };
+
+      function show(view) {
+        // Tab button states
+        Object.entries(tabs).forEach(([k, btn]) => {
+          btn.classList.toggle('active', k === view);
+        });
+        // Landing vs frames
+        if (view === 'home') {
+          landing.classList.remove('hidden');
+          frames.rag.classList.remove('active');
+          frames.graph.classList.remove('active');
+        } else {
+          landing.classList.add('hidden');
+          if (!loaded[view]) {
+            frames[view].src = urls[view];
+            loaded[view] = true;
+          }
+          frames.rag.classList.toggle('active', view === 'rag');
+          frames.graph.classList.toggle('active', view === 'graph');
+        }
+        if (window.location.hash !== '#' + view) {
+          history.replaceState(null, '', '#' + view);
+        }
+      }
+
+      // Wire tab buttons
+      Object.values(tabs).forEach((btn) => {
+        btn.addEventListener('click', () => show(btn.dataset.view));
+      });
+      // Wire landing cards
+      document.querySelectorAll('.card').forEach((card) => {
+        card.addEventListener('click', () => show(card.dataset.view));
+      });
+      // Restore view from hash on load
+      const initial = (window.location.hash || '').replace('#', '');
+      show(['rag', 'graph', 'home'].includes(initial) ? initial : 'home');
+    })();
+  </script>
+</body>
+</html>

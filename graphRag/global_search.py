@@ -39,9 +39,18 @@ _MAP_SYSTEM_PROMPT = (
 _REDUCE_SYSTEM_PROMPT = (
     "You synthesise a final answer from independent partial contributions, "
     "each derived from a different community of an academic economics "
-    "knowledge graph. Reflect every relevant contribution faithfully, "
-    "make explicit comparisons where appropriate, and cite communities by "
-    "their [Cm-N] tag when you draw on them."
+    "knowledge graph. Reflect every relevant contribution faithfully and "
+    "make explicit comparisons where appropriate. Write in a natural, "
+    "flowing prose style. Do NOT include citation tags such as [Cm-N] or "
+    "any bracketed reference markers in your answer; attribute claims to "
+    "papers or authors by name inline when needed.\n\n"
+    "Math formatting: pick ONE representation per value. Either prose "
+    "('gamma equals 2.0') OR LaTeX ('$\\gamma = 2.0$') — NEVER write the "
+    "value twice in two notations back-to-back, and never put the LaTeX "
+    "form on one line and the Unicode form on the next. Use $...$ for "
+    "inline math and $$...$$ for display math; do not use \\(...\\) or "
+    "\\[...\\]. For tables, keep each row on a single line and do not "
+    "duplicate cell values."
 )
 
 
@@ -160,6 +169,7 @@ class GlobalSearch:
         candidate_top_k: int = 12,
         keep_top_k: int = 8,
         max_generation_tokens: int = 30_000,
+        conversation_history: Optional[List[Dict[str, str]]] = None,
     ) -> Dict[str, Any]:
         if not self.summaries:
             return {
@@ -167,12 +177,20 @@ class GlobalSearch:
                 "communities": [],
             }
 
-        candidates = _rank_communities(query, self.summaries, self.embedder, candidate_top_k)
+        # Resolve follow-up references using prior turns BEFORE we rank
+        # community summaries, so retrieval matches the user's true intent.
+        from .local_search import _rewrite_query_with_history, format_conversation_history
+
+        retrieval_query = _rewrite_query_with_history(query, conversation_history, self.llm)
+        if retrieval_query != query:
+            logger.info("Global rewrote follow-up: %r -> %r", query, retrieval_query)
+
+        candidates = _rank_communities(retrieval_query, self.summaries, self.embedder, candidate_top_k)
         logger.info("Global search: %d candidate communities", len(candidates))
 
         contributions: List[Dict[str, Any]] = []
         for c in candidates:
-            mapped = _map_step(query, c, self.llm)
+            mapped = _map_step(retrieval_query, c, self.llm)
             contributions.append({
                 **c,
                 **mapped,
@@ -182,16 +200,28 @@ class GlobalSearch:
         survivors = [c for c in contributions if c.get("score", 0) > 0][:keep_top_k]
 
         contributions_block = _format_contributions(survivors, max_items=keep_top_k)
+        history_block = format_conversation_history(conversation_history)
 
-        user_prompt = (
-            f"<question>\n{query}\n</question>\n\n"
+        prompt_parts = [f"<question>\n{query}\n</question>"]
+        if history_block:
+            prompt_parts.append(
+                f"<conversation_history>\n{history_block}\n</conversation_history>"
+            )
+        prompt_parts.append(
             "<community_contributions>\n"
             f"{contributions_block}\n"
-            "</community_contributions>\n\n"
-            "Write the final answer using these contributions. Make explicit "
-            "cross-paper comparisons (similarities, differences, common "
-            "models/methods). Cite communities as [Cm-N] when relevant."
+            "</community_contributions>"
         )
+        prompt_parts.append(
+            "Write the final answer to the latest question using these "
+            "contributions. The conversation_history (if present) is context "
+            "for resolving follow-ups; do not repeat earlier answers. Make "
+            "explicit cross-paper comparisons (similarities, differences, "
+            "common models/methods). Answer naturally in prose and do NOT "
+            "include citation tags like [Cm-N]; attribute claims to papers or "
+            "authors by name inline when needed."
+        )
+        user_prompt = "\n\n".join(prompt_parts)
 
         answer = self.llm.generate_response(
             user_prompt=user_prompt,
@@ -215,4 +245,5 @@ class GlobalSearch:
                 for c in survivors
             ],
             "candidate_count": len(candidates),
+            "rewritten_query": retrieval_query if retrieval_query != query else None,
         }

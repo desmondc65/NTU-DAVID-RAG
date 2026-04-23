@@ -281,6 +281,7 @@ class GraphRAGEngine:
         self,
         user_query: str,
         mode: str = "auto",
+        conversation_history: Optional[List[Dict[str, str]]] = None,
         **kwargs: Any,
     ) -> Dict[str, Any]:
         """
@@ -291,6 +292,9 @@ class GraphRAGEngine:
         user_query : str
         mode : one of "auto", "local", "global"
             ``auto`` uses a regex heuristic over the query text.
+        conversation_history : optional list of ``{"role", "content"}`` turns
+            from the same chat session. Used to resolve follow-up references
+            and condition the answer.
         kwargs : forwarded to the chosen search backend (``n_hop``,
             ``max_chunks``, ``candidate_top_k`` etc.).
         """
@@ -300,9 +304,17 @@ class GraphRAGEngine:
         logger.info("GraphRAG query mode: %s", chosen)
 
         if chosen == "global":
-            result = self._ensure_global().search(user_query, **kwargs)
+            result = self._ensure_global().search(
+                user_query,
+                conversation_history=conversation_history,
+                **kwargs,
+            )
         else:
-            result = self._ensure_local().search(user_query, **kwargs)
+            result = self._ensure_local().search(
+                user_query,
+                conversation_history=conversation_history,
+                **kwargs,
+            )
         result["mode"] = chosen
         return result
 

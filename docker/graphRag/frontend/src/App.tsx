@@ -26,11 +26,6 @@ export default function App() {
 
   return (
     <div className="app">
-      <header className="app-header">
-        <span className="app-logo">Econ-GraphRAG</span>
-        <span className="app-subtitle">Knowledge Graph Assistant</span>
-      </header>
-
       <nav className="tabs">
         <button
           className={`tab-btn ${activeTab === 'manage' ? 'active' : ''}`}

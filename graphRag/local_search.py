@@ -37,6 +37,67 @@ _SEED_SYSTEM_PROMPT = (
 )
 
 
+def format_conversation_history(
+    history: Optional[List[Dict[str, str]]],
+    max_turns: int = 30,
+    max_chars_per_turn: int = 1500,
+) -> str:
+    """Format prior chat turns as a plain-text block for prompt conditioning."""
+    if not history:
+        return ""
+    lines: List[str] = []
+    for turn in history[-max_turns:]:
+        if not isinstance(turn, dict):
+            continue
+        role = str(turn.get("role", "")).strip().lower()
+        content = str(turn.get("content", "")).strip()
+        if role not in {"user", "assistant"} or not content:
+            continue
+        speaker = "User" if role == "user" else "Assistant"
+        lines.append(f"{speaker}: {content[:max_chars_per_turn]}")
+    return "\n".join(lines)
+
+
+def _rewrite_query_with_history(
+    query: str,
+    history: Optional[List[Dict[str, str]]],
+    llm: LocalLLMClient,
+) -> str:
+    """Resolve pronouns / follow-ups against prior turns into a standalone query.
+
+    Falls back to the original query on any failure — the search path must
+    never be blocked by an LLM glitch in the rewrite step.
+    """
+    block = format_conversation_history(history, max_turns=12, max_chars_per_turn=600)
+    if not block:
+        return query
+    prompt = (
+        "Rewrite the user's latest question as a self-contained question that "
+        "can be understood without the prior conversation. Resolve pronouns "
+        "(it, they, this) and implicit references (\"the model\") using the "
+        "prior turns. If the question is already self-contained, return it "
+        "unchanged. Return ONLY a JSON object: {\"query\": string}.\n\n"
+        f"<conversation>\n{block}\n</conversation>\n\n"
+        f"<latest_question>{query}</latest_question>"
+    )
+    try:
+        raw = llm.generate_response(
+            user_prompt=prompt,
+            system_prompt="You are a careful query-rewriter. Return ONLY valid JSON.",
+            response_mime_type="application/json",
+            max_tokens=256,
+            temperature=0.0,
+        )
+    except Exception as exc:
+        logger.warning("Query rewrite failed; using original. %s", exc)
+        return query
+    if isinstance(raw, dict):
+        rewritten = str(raw.get("query") or "").strip()
+        if rewritten:
+            return rewritten
+    return query
+
+
 def _extract_seed_entities(query: str, llm: LocalLLMClient) -> List[str]:
     prompt = (
         f"Question: \"{query}\"\n\n"
@@ -246,8 +307,16 @@ class LocalSearch:
         n_hop: int = 1,
         max_chunks: int = 20,
         max_generation_tokens: int = 30_000,
+        conversation_history: Optional[List[Dict[str, str]]] = None,
     ) -> Dict[str, Any]:
-        raw_seeds = _extract_seed_entities(query, self.llm)
+        # Rewrite follow-ups against prior turns so seed extraction sees the
+        # full intent. We keep the ORIGINAL query in the answer prompt so the
+        # LLM still sees what the user literally asked.
+        retrieval_query = _rewrite_query_with_history(query, conversation_history, self.llm)
+        if retrieval_query != query:
+            logger.info("Rewrote follow-up query: %r -> %r", query, retrieval_query)
+
+        raw_seeds = _extract_seed_entities(retrieval_query, self.llm)
         seed_nodes = self._resolve_seeds(raw_seeds)
         logger.info("Local seeds: %s -> %s", raw_seeds, seed_nodes)
 
@@ -257,6 +326,7 @@ class LocalSearch:
                 "seeds": raw_seeds,
                 "subgraph_nodes": [],
                 "chunks": [],
+                "rewritten_query": retrieval_query if retrieval_query != query else None,
             }
 
         subgraph_nodes = _grow_subgraph(self.g, seed_nodes, n_hop=n_hop)
@@ -268,20 +338,37 @@ class LocalSearch:
         chunk_records = _fetch_chunk_texts(self.store, chunk_ids, limit=max_chunks)
         chunk_block = _format_chunks(chunk_records)
 
+        history_block = format_conversation_history(conversation_history)
+
         system_prompt = (
             "You are an expert research assistant for academic economics. "
             "You are given a RELEVANT SUBGRAPH of the corpus knowledge graph "
             "and the SOURCE CHUNKS attached to its entities and relationships. "
-            "Answer the user's question using this evidence only. Cite chunks "
-            "as [C1], [C2] when you rely on specific passages. When "
-            "summarising the graph structure itself, reference entities by "
-            "name. If the evidence is insufficient, say so."
+            "Answer the user's latest question using this evidence only, in a "
+            "natural, flowing prose style. The CONVERSATION_HISTORY section "
+            "(if present) is for context — resolve follow-ups against it but "
+            "do not repeat earlier answers. Do NOT include citation tags such "
+            "as [C1], [C2], or any bracketed reference markers in your answer. "
+            "When you need to attribute a claim, refer to the paper or author "
+            "by name inline. If the evidence is insufficient, say so.\n\n"
+            "Math formatting: pick ONE representation per value. Either prose "
+            "('gamma equals 2.0') OR LaTeX ('$\\gamma = 2.0$') — NEVER write "
+            "the value twice in two notations back-to-back, and never put the "
+            "LaTeX form on one line and the Unicode form on the next. Use "
+            "$...$ for inline math and $$...$$ for display math; do not use "
+            "\\(...\\) or \\[...\\]. For tables, keep each row on a single "
+            "line and do not duplicate cell values."
         )
-        user_prompt = (
-            f"<subgraph>\n{subgraph_text}\n</subgraph>\n\n"
-            f"<chunks>\n{chunk_block}\n</chunks>\n\n"
-            f"<question>\n{query}\n</question>"
-        )
+        prompt_parts = [
+            f"<subgraph>\n{subgraph_text}\n</subgraph>",
+            f"<chunks>\n{chunk_block}\n</chunks>",
+        ]
+        if history_block:
+            prompt_parts.append(
+                f"<conversation_history>\n{history_block}\n</conversation_history>"
+            )
+        prompt_parts.append(f"<question>\n{query}\n</question>")
+        user_prompt = "\n\n".join(prompt_parts)
 
         answer = self.llm.generate_response(
             user_prompt=user_prompt,
@@ -296,4 +383,5 @@ class LocalSearch:
             "seeds": raw_seeds,
             "subgraph_nodes": [self.g.nodes[n].get("name", n) for n in subgraph_nodes],
             "chunks": chunk_records,
+            "rewritten_query": retrieval_query if retrieval_query != query else None,
         }

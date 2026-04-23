@@ -181,6 +181,7 @@ def query():
         {
             "query": "...",
             "mode": "auto" | "local" | "global",
+            "history": [{"role": "user"|"assistant", "content": "..."}, ...],
             "n_hop": 1,
             "max_chunks": 20,
             "candidate_top_k": 12,
@@ -196,6 +197,18 @@ def query():
     if mode not in ("auto", "local", "global"):
         return jsonify({"error": "mode must be auto, local, or global"}), 400
 
+    raw_history = data.get("history", [])
+    history: List[Dict[str, str]] = []
+    if isinstance(raw_history, list):
+        for turn in raw_history[-30:]:
+            if not isinstance(turn, dict):
+                continue
+            role = str(turn.get("role", "")).strip().lower()
+            content = str(turn.get("content", "")).strip()
+            if role not in {"user", "assistant"} or not content:
+                continue
+            history.append({"role": role, "content": content[:6000]})
+
     kwargs: Dict[str, Any] = {}
     for k in ("n_hop", "max_chunks", "candidate_top_k", "keep_top_k",
               "max_generation_tokens"):
@@ -208,13 +221,20 @@ def query():
     try:
         with _engine_lock:
             engine = _get_engine()
-            result = engine.query(user_query=user_query, mode=mode, **kwargs)
+            result = engine.query(
+                user_query=user_query,
+                mode=mode,
+                conversation_history=history or None,
+                **kwargs,
+            )
 
         # Normalise / trim for JSON payload
         payload: Dict[str, Any] = {
             "answer": result.get("answer", ""),
             "mode": result.get("mode"),
         }
+        if result.get("rewritten_query"):
+            payload["rewritten_query"] = result["rewritten_query"]
         if "seeds" in result:
             payload["seeds"] = result["seeds"]
         if "subgraph_nodes" in result:

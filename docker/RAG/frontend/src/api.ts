@@ -1,7 +1,10 @@
 /** API helper functions. */
 import type { ChatTurn, Paper, QueryResponse, UploadResponse } from './types';
 
-const API_BASE = '/api';
+// Vite's BASE_URL reflects the build-time `base` setting (defaults to '/').
+// When the app is hosted under a prefix by the unified proxy (e.g. '/rag/'),
+// API calls must use that prefix so nginx routes them to this backend.
+const API_BASE = `${(import.meta.env.BASE_URL || '/').replace(/\/$/, '')}/api`;
 
 export async function fetchPapers(): Promise<Paper[]> {
   const res = await fetch(`${API_BASE}/papers`);
@@ -41,11 +44,13 @@ export async function queryRAG(
   query: string,
   topK: number = 10,
   history: ChatTurn[] = [],
+  signal?: AbortSignal,
 ): Promise<QueryResponse> {
   const res = await fetch(`${API_BASE}/query`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ query, top_k: topK, history }),
+    signal,
   });
 
   const data = await res.json();

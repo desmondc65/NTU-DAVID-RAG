@@ -10,7 +10,10 @@ import type {
   UploadResponse,
 } from './types';
 
-const API_BASE = '/api';
+// Vite's BASE_URL reflects the build-time `base` setting (defaults to '/').
+// When the app is hosted under a prefix by the unified proxy (e.g. '/graph/'),
+// API calls must use that prefix so nginx routes them to this backend.
+const API_BASE = `${(import.meta.env.BASE_URL || '/').replace(/\/$/, '')}/api`;
 
 async function handle<T>(res: Response): Promise<T> {
   const data = await res.json().catch(() => ({}));
@@ -70,11 +73,15 @@ export async function fetchCommunities(): Promise<Community[]> {
 }
 
 /* ── Query ─────────────────────────────────────────────────────────── */
-export async function runQuery(req: QueryRequest): Promise<QueryResponse> {
+export async function runQuery(
+  req: QueryRequest,
+  signal?: AbortSignal,
+): Promise<QueryResponse> {
   const res = await fetch(`${API_BASE}/query`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(req),
+    signal,
   });
   return handle<QueryResponse>(res);
 }
