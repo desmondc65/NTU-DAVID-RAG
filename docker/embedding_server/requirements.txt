@@ -1,0 +1,7 @@
+flask>=3.0
+gunicorn>=21.2
+python-dotenv>=1.0
+
+# Model runtime — torch comes from the CUDA wheel index in the Dockerfile.
+sentence-transformers>=2.2
+numpy>=1.24
