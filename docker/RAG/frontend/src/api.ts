@@ -44,11 +44,13 @@ export async function queryRAG(
   query: string,
   topK: number = 10,
   history: ChatTurn[] = [],
+  signal?: AbortSignal,
 ): Promise<QueryResponse> {
   const res = await fetch(`${API_BASE}/query`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ query, top_k: topK, history }),
+    signal,
   });
 
   const data = await res.json();

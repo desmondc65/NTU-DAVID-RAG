@@ -313,7 +313,7 @@ def rag_query():
     raw_history = data.get("history", [])
     history = []
     if isinstance(raw_history, list):
-        for turn in raw_history[-20:]:
+        for turn in raw_history[-30:]:
             if not isinstance(turn, dict):
                 continue
             role = str(turn.get("role", "")).strip().lower()
@@ -322,7 +322,7 @@ def rag_query():
                 continue
             history.append({
                 "role": role,
-                "content": content[:4000],
+                "content": content[:6000],
             })
 
     try:

@@ -63,9 +63,15 @@ export interface Community {
 
 export type QueryMode = 'auto' | 'local' | 'global';
 
+export interface ChatTurn {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 export interface QueryRequest {
   query: string;
   mode?: QueryMode;
+  history?: ChatTurn[];
   n_hop?: number;
   max_chunks?: number;
   candidate_top_k?: number;
@@ -91,6 +97,7 @@ export interface CommunityContribution {
 export interface QueryResponse {
   answer: string;
   mode: QueryMode;
+  rewritten_query?: string | null;
   /** Local mode */
   seeds?: string[];
   subgraph_nodes?: string[];

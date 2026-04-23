@@ -73,11 +73,15 @@ export async function fetchCommunities(): Promise<Community[]> {
 }
 
 /* ── Query ─────────────────────────────────────────────────────────── */
-export async function runQuery(req: QueryRequest): Promise<QueryResponse> {
+export async function runQuery(
+  req: QueryRequest,
+  signal?: AbortSignal,
+): Promise<QueryResponse> {
   const res = await fetch(`${API_BASE}/query`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(req),
+    signal,
   });
   return handle<QueryResponse>(res);
 }
