@@ -1,0 +1,103 @@
+% Vector RAG — architecture & workflow for docker/RAG
+% Compile with: pdflatex vector_rag.tex
+\documentclass[tikz,border=12pt]{standalone}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,shapes.geometric,calc,fit,backgrounds}
+
+\begin{document}
+
+% ---------- Style palette ---------------------------------------------------
+\tikzset{
+  font=\sffamily\small,
+  every node/.style={align=center},
+  client/.style ={rectangle, rounded corners=3pt, draw=black!70,
+                  fill=blue!10,  minimum width=30mm, minimum height=9mm},
+  service/.style={rectangle, rounded corners=3pt, draw=black!70,
+                  fill=orange!20, minimum width=34mm, minimum height=9mm},
+  store/.style  ={cylinder, shape border rotate=90, aspect=0.22,
+                  draw=black!70, fill=green!15,
+                  minimum width=26mm, minimum height=11mm},
+  gpu/.style    ={rectangle, rounded corners=3pt, draw=black!70,
+                  fill=red!15, minimum width=36mm, minimum height=9mm},
+  proc/.style   ={rectangle, rounded corners=2pt, draw=black!60,
+                  fill=gray!8, minimum width=36mm, minimum height=8mm},
+  group/.style  ={rectangle, rounded corners=4pt, draw=black!40,
+                  dashed, inner sep=4mm},
+  flow/.style   ={-{Stealth[length=2mm]}, thick, draw=black!70},
+  dataflow/.style={-{Stealth[length=2mm]}, thick, draw=blue!60!black},
+  gpuflow/.style ={-{Stealth[length=2mm]}, thick, draw=red!60!black, dashed},
+  label/.style  ={font=\scriptsize\itshape, fill=white,
+                  inner sep=1pt, text=black!70},
+}
+
+\begin{tikzpicture}[node distance=7mm]
+
+% ===========================================================================
+%  TOP PANEL — ARCHITECTURE
+% ===========================================================================
+\node[font=\sffamily\bfseries\large] (archT) at (0,0)
+  {Vector RAG --- Container Architecture};
+
+\node[client,  below=8mm of archT]                    (browser) {Browser\\\scriptsize React UI};
+\node[service, below=11mm of browser]                 (proxy)   {nginx proxy\\\scriptsize port 3006};
+
+\node[service, below left =14mm and 22mm of proxy]    (ragweb)  {rag-web (Flask)\\\scriptsize app.py};
+\node[gpu,     below right=14mm and 22mm of proxy]    (embsrv)  {embedding-server\\\scriptsize gte-Qwen2-7B + bge-reranker};
+
+\node[store, below=12mm of ragweb, xshift=-22mm]      (qdrant)  {Qdrant\\\scriptsize rag\_embeddings};
+\node[store, below=12mm of ragweb, xshift=22mm]       (files)   {./data\\\scriptsize PDF + digests};
+
+\begin{pgfonlayer}{background}
+  \node[group, fit=(proxy)(ragweb)(embsrv)(qdrant)(files),
+        label={[anchor=north east,font=\scriptsize\itshape,text=black!55]
+               north east:docker-compose network (shared-net)}] (dockerGroup) {};
+\end{pgfonlayer}
+
+\draw[flow] (browser) -- (proxy) node[label, midway, right] {HTTPS};
+\draw[flow] (proxy.south)   -- (ragweb.north) node[label, pos=0.55, above left=-0.5mm] {/rag/*};
+\draw[flow] (ragweb.south) -- (qdrant.north)  node[label, midway, left]  {vectors};
+\draw[flow] (ragweb.south) -- (files.north)   node[label, midway, right] {paper files};
+\draw[gpuflow] (ragweb.east) -- (embsrv.west)
+       node[label, midway, above] {HTTP / embed + rerank};
+
+% ===========================================================================
+%  BOTTOM PANEL — QUERY WORKFLOW
+% ===========================================================================
+\node[font=\sffamily\bfseries\large] (wfT) at (0,-13)
+  {Vector RAG --- Query Workflow};
+
+\node[client, below=7mm of wfT]                       (qIn)   {User query\\\scriptsize ``What does X mean?''};
+\node[proc,   below=6mm of qIn]                       (emb)   {1. Embed query\\\scriptsize $\to$ embedding-server};
+
+% Fork into two retrieval paths
+\node[proc,  below left =9mm and 14mm of emb]         (bm25)  {2a. BM25 search\\\scriptsize lexical top-$k$};
+\node[proc,  below right=9mm and 14mm of emb]         (dense) {2b. Dense search\\\scriptsize Qdrant top-$k$};
+
+% Supporting stores — placed far enough not to touch the step boxes
+\node[store, left =12mm of bm25]                      (bm)    {BM25 index\\\scriptsize postings};
+\node[store, right=12mm of dense]                     (qd2)   {Qdrant\\\scriptsize chunk vectors};
+
+% Merge back
+\node[proc,  below=20mm of emb]                       (rrf)   {3. Reciprocal\\Rank Fusion};
+\node[proc,  below=6mm of rrf]                        (rerank){4. Rerank\\\scriptsize bge cross-encoder};
+\node[proc,  below=6mm of rerank]                     (ctx)   {5. Build prompt\\\scriptsize context + history};
+\node[service,below=6mm of ctx]                       (llm)   {6. LocalLLMClient\\\scriptsize chat completion};
+\node[client,below=6mm of llm]                        (ans)   {Answer + sources\\\scriptsize JSON to UI};
+
+% Edges — workflow
+\draw[flow] (qIn)   -- (emb);
+\draw[flow] (emb.south) -- ($(emb.south)+(0,-0.25)$) -| (bm25.north);
+\draw[flow] (emb.south) -- ($(emb.south)+(0,-0.25)$) -| (dense.north);
+\draw[flow] (bm25.south)  |- (rrf.west);
+\draw[flow] (dense.south) |- (rrf.east);
+\draw[flow] (rrf)    -- (rerank);
+\draw[flow] (rerank) -- (ctx);
+\draw[flow] (ctx)    -- (llm);
+\draw[flow] (llm)    -- (ans);
+
+% Data feeds
+\draw[dataflow] (bm)  -- (bm25);
+\draw[dataflow] (qd2) -- (dense);
+
+\end{tikzpicture}
+\end{document}
