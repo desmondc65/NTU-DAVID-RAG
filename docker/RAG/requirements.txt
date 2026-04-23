@@ -22,3 +22,9 @@ pdf2image
 # Used by EmbeddingModel / Reranker when RAG_EMBEDDING_SERVER_URL
 # / RAG_RERANKER_SERVER_URL is set (unified-stack remote mode).
 requests>=2.31
+
+# Auth (utils/auth/) — shared across both Flask apps.
+sqlalchemy>=2.0
+psycopg[binary]>=3.1
+alembic>=1.13
+argon2-cffi>=23.1

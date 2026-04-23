@@ -48,6 +48,15 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__, static_folder="frontend/dist", static_url_path="")
 CORS(app)
 
+# Auth — shared module provides /api/auth/* + login_required + csrf_protect.
+from utils.auth import auth_bp, chat_bp, csrf_protect, init_auth, login_required
+from utils.auth.chat_repos import ConversationRepo, MessageRepo
+from utils.auth.db import get_session as get_auth_session
+from utils.auth.decorators import current_user
+init_auth(app)
+app.register_blueprint(auth_bp)
+app.register_blueprint(chat_bp)
+
 # ── lazy-loaded heavy modules ─────────────────────────────────────────────
 _rag_engine = None
 _qdrant_access_lock = Lock()
@@ -106,12 +115,15 @@ def serve_static(path):
 # ── API: Papers ───────────────────────────────────────────────────────────
 
 @app.route("/api/papers", methods=["GET"])
+@login_required
 def list_papers():
     """Return the paper registry."""
     return jsonify(_get_registry())
 
 
 @app.route("/api/papers", methods=["POST"])
+@login_required
+@csrf_protect
 def upload_paper():
     """
     Upload a PDF + Fortran file pair.
@@ -179,6 +191,8 @@ def upload_paper():
 
 
 @app.route("/api/papers/<path:paper_title>", methods=["DELETE"])
+@login_required
+@csrf_protect
 def delete_paper(paper_title: str):
     """
     Remove a paper from the registry and delete its vectors from Qdrant.
@@ -229,6 +243,8 @@ def delete_paper(paper_title: str):
 # ── API: Retry metadata extraction ────────────────────────────────────────
 
 @app.route("/api/papers/retry_metadata", methods=["POST"])
+@login_required
+@csrf_protect
 def retry_metadata():
     """
     Re-run LLM title/author extraction for a paper already in the database.
@@ -299,31 +315,56 @@ def retry_metadata():
 # ── API: Query ────────────────────────────────────────────────────────────
 
 @app.route("/api/query", methods=["POST"])
+@login_required
+@csrf_protect
 def rag_query():
-    """
-    Run a RAG query.
-    Expects JSON body: {"query": "...", "top_k": 5, "history": [...]}
+    """Run a RAG query within a server-side conversation.
+
+    Request JSON:
+        {"query": "...", "top_k": 5, "conversation_id": "<uuid-or-null>"}
+
+    - ``history`` is no longer read from the request; it is loaded from the
+      DB for ``(user_id, conversation_id)``. This closes a forgery hole.
+    - If ``conversation_id`` is omitted, a new conversation is created and
+      its id is returned in the response.
     """
     data = request.get_json(silent=True) or {}
-    query = data.get("query", "").strip()
+    query = str(data.get("query") or "").strip()
     if not query:
         return jsonify({"error": "Empty query"}), 400
 
     top_k = data.get("top_k", 10)
-    raw_history = data.get("history", [])
-    history = []
-    if isinstance(raw_history, list):
-        for turn in raw_history[-30:]:
-            if not isinstance(turn, dict):
-                continue
-            role = str(turn.get("role", "")).strip().lower()
-            content = str(turn.get("content", "")).strip()
-            if role not in {"user", "assistant"} or not content:
-                continue
-            history.append({
-                "role": role,
-                "content": content[:6000],
-            })
+
+    user = current_user()
+    assert user is not None  # @login_required guarantees
+
+    from utils.auth.chat_repos import parse_uuid
+    db = get_auth_session()
+    conv_repo = ConversationRepo(db)
+    msg_repo = MessageRepo(db)
+
+    # Resolve / create the conversation under the current user + app scope.
+    raw_conv_id = data.get("conversation_id")
+    conv = None
+    if raw_conv_id:
+        cid = parse_uuid(raw_conv_id)
+        if cid is None:
+            return jsonify({"error": "invalid conversation_id"}), 400
+        conv = conv_repo.get(cid, user.id, "rag")
+        if conv is None:
+            return jsonify({"error": "conversation not found"}), 404
+    if conv is None:
+        # Seed the title with a short snippet of the first user query.
+        conv = conv_repo.create(user_id=user.id, app="rag", title=query[:80])
+        db.flush()
+
+    # History comes from the DB — never from the client.
+    history = msg_repo.recent_turns(
+        conversation_id=conv.id,
+        user_id=user.id,
+        limit_turns=30,
+        per_turn_char_cap=6000,
+    )
 
     try:
         with _qdrant_access_lock:
@@ -352,12 +393,43 @@ def rag_query():
                 "score": s.get("rerank_score", s.get("score", 0)),
             })
 
+        answer_text = result.get("answer", "")
+
+        # Persist both turns atomically with the request's DB session.
+        user_msg = msg_repo.append(
+            conversation_id=conv.id,
+            user_id=user.id,
+            role="user",
+            content=query,
+            metadata={"top_k": int(top_k) if isinstance(top_k, int) else None},
+        )
+        assistant_msg = msg_repo.append(
+            conversation_id=conv.id,
+            user_id=user.id,
+            role="assistant",
+            content=answer_text,
+            sources=sources or None,
+            metadata={"top_k": int(top_k) if isinstance(top_k, int) else None},
+            parent_message_id=user_msg.id,
+        )
+        conv_repo.touch_last_message_at(conv)
+        # SQLAlchemy session is flushed+committed by the teardown hook on
+        # normal returns; explicit commit here makes failure modes simpler
+        # and lets us return IDs that are guaranteed persisted.
+        db.commit()
+
         return jsonify({
-            "answer": result.get("answer", ""),
+            "answer": answer_text,
             "sources": sources,
+            "conversation_id": str(conv.id),
+            "message_ids": {
+                "user": str(user_msg.id),
+                "assistant": str(assistant_msg.id),
+            },
         })
 
     except Exception as e:
+        db.rollback()
         logger.error("Query failed: %s", traceback.format_exc())
         return jsonify({"error": str(e)}), 500
 
@@ -365,6 +437,7 @@ def rag_query():
 # ── API: Status ───────────────────────────────────────────────────────────
 
 @app.route("/api/status", methods=["GET"])
+@login_required
 def status():
     """Health check with basic stats."""
     papers = _get_registry()

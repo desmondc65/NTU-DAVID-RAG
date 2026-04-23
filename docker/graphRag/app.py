@@ -55,6 +55,15 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__, static_folder="frontend/dist", static_url_path="")
 CORS(app)
 
+# Auth — shared module provides /api/auth/* + login_required + csrf_protect.
+from utils.auth import auth_bp, chat_bp, csrf_protect, init_auth, login_required
+from utils.auth.chat_repos import ConversationRepo, MessageRepo, parse_uuid
+from utils.auth.db import get_session as get_auth_session
+from utils.auth.decorators import current_user
+init_auth(app)
+app.register_blueprint(auth_bp)
+app.register_blueprint(chat_bp)
+
 
 # ── Frontend routes ───────────────────────────────────────────────────────
 
@@ -113,6 +122,7 @@ def _reload_engine() -> None:
 # ── API: Status ───────────────────────────────────────────────────────────
 
 @app.route("/api/status", methods=["GET"])
+@login_required
 def status():
     try:
         with _engine_lock:
@@ -131,6 +141,8 @@ def status():
 # ── API: Build ────────────────────────────────────────────────────────────
 
 @app.route("/api/build", methods=["POST"])
+@login_required
+@csrf_protect
 def build_graph():
     """
     (Re)build the knowledge graph.
@@ -173,20 +185,24 @@ def build_graph():
 # ── API: Query ────────────────────────────────────────────────────────────
 
 @app.route("/api/query", methods=["POST"])
+@login_required
+@csrf_protect
 def query():
-    """
-    Run a GraphRAG query.
+    """Run a GraphRAG query within a server-side conversation.
 
     Body (JSON):
         {
             "query": "...",
             "mode": "auto" | "local" | "global",
-            "history": [{"role": "user"|"assistant", "content": "..."}, ...],
+            "conversation_id": "<uuid-or-null>",
             "n_hop": 1,
             "max_chunks": 20,
             "candidate_top_k": 12,
             "keep_top_k": 8
         }
+
+    ``history`` is no longer read from the request body; the server loads the
+    last N turns for ``(user_id, conversation_id)`` itself.
     """
     data = request.get_json(silent=True) or {}
     user_query = str(data.get("query") or "").strip()
@@ -197,18 +213,6 @@ def query():
     if mode not in ("auto", "local", "global"):
         return jsonify({"error": "mode must be auto, local, or global"}), 400
 
-    raw_history = data.get("history", [])
-    history: List[Dict[str, str]] = []
-    if isinstance(raw_history, list):
-        for turn in raw_history[-30:]:
-            if not isinstance(turn, dict):
-                continue
-            role = str(turn.get("role", "")).strip().lower()
-            content = str(turn.get("content", "")).strip()
-            if role not in {"user", "assistant"} or not content:
-                continue
-            history.append({"role": role, "content": content[:6000]})
-
     kwargs: Dict[str, Any] = {}
     for k in ("n_hop", "max_chunks", "candidate_top_k", "keep_top_k",
               "max_generation_tokens"):
@@ -217,6 +221,33 @@ def query():
                 kwargs[k] = int(data[k])
             except (TypeError, ValueError):
                 return jsonify({"error": f"{k} must be int"}), 400
+
+    user = current_user()
+    assert user is not None
+
+    db = get_auth_session()
+    conv_repo = ConversationRepo(db)
+    msg_repo = MessageRepo(db)
+
+    raw_conv_id = data.get("conversation_id")
+    conv = None
+    if raw_conv_id:
+        cid = parse_uuid(raw_conv_id)
+        if cid is None:
+            return jsonify({"error": "invalid conversation_id"}), 400
+        conv = conv_repo.get(cid, user.id, "graphrag")
+        if conv is None:
+            return jsonify({"error": "conversation not found"}), 404
+    if conv is None:
+        conv = conv_repo.create(user_id=user.id, app="graphrag", title=user_query[:80])
+        db.flush()
+
+    history = msg_repo.recent_turns(
+        conversation_id=conv.id,
+        user_id=user.id,
+        limit_turns=30,
+        per_turn_char_cap=6000,
+    )
 
     try:
         with _engine_lock:
@@ -252,10 +283,46 @@ def query():
             payload["communities"] = result["communities"]
         if "candidate_count" in result:
             payload["candidate_count"] = result["candidate_count"]
+
+        # Persist turns. Chunks go into the ``sources`` column; everything
+        # else GraphRAG returns (mode, rewritten query, seeds, communities,
+        # …) rides on the assistant message's metadata so a page reload
+        # restores the same display.
+        assistant_meta = {
+            k: v for k, v in payload.items() if k not in {"answer", "chunks"}
+        }
+        assistant_meta["top_kwargs"] = kwargs or None
+
+        user_msg = msg_repo.append(
+            conversation_id=conv.id,
+            user_id=user.id,
+            role="user",
+            content=user_query,
+            metadata={"mode": mode, "top_kwargs": kwargs or None},
+        )
+        assistant_msg = msg_repo.append(
+            conversation_id=conv.id,
+            user_id=user.id,
+            role="assistant",
+            content=payload["answer"],
+            sources=payload.get("chunks"),
+            metadata=assistant_meta,
+            parent_message_id=user_msg.id,
+        )
+        conv_repo.touch_last_message_at(conv)
+        db.commit()
+
+        payload["conversation_id"] = str(conv.id)
+        payload["message_ids"] = {
+            "user": str(user_msg.id),
+            "assistant": str(assistant_msg.id),
+        }
         return jsonify(payload)
     except FileNotFoundError as e:
+        db.rollback()
         return jsonify({"error": str(e), "hint": "call /api/build first"}), 409
     except Exception as e:
+        db.rollback()
         logger.error("Query failed: %s", traceback.format_exc())
         return jsonify({"error": str(e)}), 500
 
@@ -263,12 +330,15 @@ def query():
 # ── API: Papers (GraphRAG's own database) ────────────────────────────────
 
 @app.route("/api/papers", methods=["GET"])
+@login_required
 def list_papers():
     """Return the GraphRAG paper registry (separate from the vector RAG)."""
     return jsonify(_load_registry())
 
 
 @app.route("/api/papers", methods=["POST"])
+@login_required
+@csrf_protect
 def upload_paper():
     """
     Upload a (PDF, Fortran) pair into GraphRAG's database.
@@ -333,6 +403,8 @@ def upload_paper():
 
 
 @app.route("/api/papers/<path:paper_title>", methods=["DELETE"])
+@login_required
+@csrf_protect
 def delete_paper(paper_title: str):
     """Delete a paper's chunks (and profile) from GraphRAG's DB + registry.
 
@@ -387,6 +459,7 @@ def delete_paper(paper_title: str):
 # ── API: Graph / Communities ──────────────────────────────────────────────
 
 @app.route("/api/graph", methods=["GET"])
+@login_required
 def dump_graph():
     graph_json = DB_PATH / "graph_rag" / "graph.json"
     if not graph_json.exists():
@@ -396,6 +469,7 @@ def dump_graph():
 
 
 @app.route("/api/communities", methods=["GET"])
+@login_required
 def dump_communities():
     comm_json = DB_PATH / "graph_rag" / "communities.json"
     if not comm_json.exists():
