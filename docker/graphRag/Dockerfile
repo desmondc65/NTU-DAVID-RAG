@@ -3,6 +3,11 @@
 # ── Stage 1: Build frontend ───────────────────────────────────────────────
 FROM node:20-slim AS frontend-build
 
+# VITE_BASE_PATH lets the unified proxy host this app under a prefix
+# (e.g. '/graph/'). Default '/' keeps the single-container compose working.
+ARG VITE_BASE_PATH=/
+ENV VITE_BASE_PATH=${VITE_BASE_PATH}
+
 WORKDIR /frontend
 COPY frontend/package.json frontend/package-lock.json* ./
 RUN npm install
