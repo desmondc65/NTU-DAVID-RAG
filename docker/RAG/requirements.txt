@@ -18,3 +18,7 @@ mineru[all]
 # Other
 pydantic>=2.0
 pdf2image
+
+# Used by EmbeddingModel / Reranker when RAG_EMBEDDING_SERVER_URL
+# / RAG_RERANKER_SERVER_URL is set (unified-stack remote mode).
+requests>=2.31
