@@ -145,9 +145,6 @@ python -m tests.test_llm_clients
 
 Stage-2 and Stage-3 tests require a GPU and an existing vector store under `data/<paper>/vector_store/`.
 
-<<<<<<< HEAD
-## Quality evaluation
-=======
 ### Unified RAG + GraphRAG Stack (Recommended)
 
 The top-level [docker/docker-compose.yml](docker/docker-compose.yml) brings up **both** the vector RAG and the GraphRAG services behind a single nginx proxy, sharing one GPU-resident embedding/reranker container. You get one URL with a landing page and `/rag/` + `/graph/` tabs.
@@ -205,7 +202,6 @@ docker compose up --build
 Then open `http://<host>:3006/` and pick **RAG** or **GraphRAG** from the landing page. The embedding server has a long startup grace (~10 min on a cold HF cache) while the 7B weights download.
 
 ### Local LLM Service (Qwen3-Next-80B Q8_0 on GPU 0 + 1)
->>>>>>> 0580be9a93fcfff4490f32cbd168955689c296c6
 
 [RAG_quality_test/](RAG_quality_test/) contains two complementary evaluators, each available for both the vector RAG and the GraphRAG:
 
@@ -226,9 +222,6 @@ python RAG_quality_test/rag_ragas_eval.py
 
 See [RAG_quality_test/README.md](RAG_quality_test/README.md) for the full evaluator notes and CLI options.
 
-<<<<<<< HEAD
-## Solving the global-query problem
-=======
 ## Project Structure
 
 ```
@@ -709,7 +702,6 @@ for r in results:
 Answer generation is now shipped end-to-end through the Dockerized RAG and GraphRAG services (see **Unified RAG + GraphRAG Stack** below). Both services use the retrieval pipeline above, feed the top passages into an LLM (local or API), and return a streamed, Markdown-rendered answer in a chat-style web UI.
 
 ### Solving the Global Query Problem
->>>>>>> 0580be9a93fcfff4490f32cbd168955689c296c6
 
 Chunk-level retrieval is strong on *local* questions ("what is the Euler equation used in this paper?") but fails on *global*, cross-document ones ("which papers share the same mathematical model?", "how do these papers differ in their computational methods?"). A query like this needs paper-level identity, not a bag of passages — top-k dense + BM25 results from a single paper's chunks can drown out the smaller evidence from other papers, and chunk text rarely contains the canonical model/method terms needed to compare papers.
 
