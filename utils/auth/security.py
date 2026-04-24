@@ -64,19 +64,6 @@ def session_expires_at(now: Optional[datetime] = None) -> datetime:
 
 def validate_password_strength(password: str) -> Optional[str]:
     """Return an error string if the password is unacceptable, else None."""
-    cfg = get_config()
-    if len(password) < cfg.password_min_length:
-        return f"Password must be at least {cfg.password_min_length} characters."
-    if password.lower() in {"password", "passw0rd", "letmein", "qwerty123456"}:
-        return "Password is too common."
-    # Require at least two character classes to discourage trivial strings
-    # like 'aaaaaaaaaaaa'. Not a strength meter — just a floor.
-    classes = sum([
-        any(c.islower() for c in password),
-        any(c.isupper() for c in password),
-        any(c.isdigit() for c in password),
-        any(not c.isalnum() for c in password),
-    ])
-    if classes < 2:
-        return "Password must mix at least two of: lowercase, uppercase, digits, symbols."
+    if not password:
+        return "Password is required."
     return None

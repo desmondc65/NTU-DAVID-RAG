@@ -174,7 +174,6 @@ export default function AccountDialog({ open, onClose }: Props) {
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 required
-                minLength={12}
                 disabled={pwSubmitting}
               />
             </label>
@@ -186,12 +185,10 @@ export default function AccountDialog({ open, onClose }: Props) {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
-                minLength={12}
                 disabled={pwSubmitting}
               />
             </label>
             <p className="auth-hint">
-              At least 12 characters, mixing two of: lowercase, uppercase, digits, symbols.
               All other active sessions are signed out.
             </p>
             {pwError && <p className="auth-error" role="alert">{pwError}</p>}

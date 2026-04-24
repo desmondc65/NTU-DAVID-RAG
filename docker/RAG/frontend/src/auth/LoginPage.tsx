@@ -73,16 +73,9 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              minLength={mode === 'signup' ? 12 : undefined}
               disabled={submitting}
             />
           </label>
-
-          {mode === 'signup' && (
-            <p className="auth-hint">
-              At least 12 characters, mixing two of: lowercase, uppercase, digits, symbols.
-            </p>
-          )}
 
           {error && <p className="auth-error" role="alert">{error}</p>}
 
