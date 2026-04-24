@@ -41,10 +41,10 @@ export default function LoginPage() {
 
         <form onSubmit={onSubmit} className="auth-form">
           <label className="auth-field">
-            <span>Email</span>
+            <span>User ID</span>
             <input
-              type="email"
-              autoComplete="email"
+              type="text"
+              autoComplete="username"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required

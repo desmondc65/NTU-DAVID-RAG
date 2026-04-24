@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-import re
 from typing import Any
 
 from flask import Blueprint, jsonify, make_response, request
@@ -33,8 +32,7 @@ logger = logging.getLogger(__name__)
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/api/auth")
 
-_EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
-_MAX_EMAIL_LEN = 254
+_MAX_USER_ID_LEN = 254
 _MAX_DISPLAY_NAME_LEN = 80
 
 
@@ -55,12 +53,14 @@ def _request_ip() -> str | None:
 
 
 def _validate_email(raw: Any) -> tuple[str | None, str | None]:
+    # Field is called "email" on the wire for back-compat, but any non-empty
+    # string is accepted as a user identifier.
     if not isinstance(raw, str):
-        return None, "email must be a string"
-    email = raw.strip().lower()
-    if not email or len(email) > _MAX_EMAIL_LEN or not _EMAIL_RE.match(email):
-        return None, "invalid email"
-    return email, None
+        return None, "user id must be a string"
+    user_id = raw.strip().lower()
+    if not user_id or len(user_id) > _MAX_USER_ID_LEN:
+        return None, "invalid user id"
+    return user_id, None
 
 
 @auth_bp.post("/register")
@@ -92,12 +92,12 @@ def register():
     db = get_session()
     users = UserRepo(db)
     if users.get_by_email(email) is not None:
-        return jsonify({"error": "email already registered"}), 409
+        return jsonify({"error": "user id already registered"}), 409
     try:
         user = users.create(email=email, password=password, display_name=display_name)
     except IntegrityError:
         db.rollback()
-        return jsonify({"error": "email already registered"}), 409
+        return jsonify({"error": "user id already registered"}), 409
 
     sessions = SessionRepo(db)
     session_row, raw_id = sessions.create(
@@ -130,7 +130,7 @@ def login():
     password = body.get("password")
     if err or not isinstance(password, str) or not password:
         # Generic message so we don't help enumerate accounts.
-        return jsonify({"error": "invalid email or password"}), 401
+        return jsonify({"error": "invalid user id or password"}), 401
 
     if not LOGIN_PER_EMAIL.hit(f"email:{email}"):
         return jsonify({"error": "too many attempts, try again later"}), 429
@@ -152,7 +152,7 @@ def login():
             metadata={"email": email, "reason": "unknown_or_inactive"},
         )
         db.commit()
-        return jsonify({"error": "invalid email or password"}), 401
+        return jsonify({"error": "invalid user id or password"}), 401
 
     ok, rehash = verify_password(user.password_hash, password)
     if not ok:
@@ -165,7 +165,7 @@ def login():
             metadata={"email": email, "reason": "bad_password"},
         )
         db.commit()
-        return jsonify({"error": "invalid email or password"}), 401
+        return jsonify({"error": "invalid user id or password"}), 401
     if rehash is not None:
         users.update_password_hash(user, rehash)
 
