@@ -11,9 +11,6 @@ qdrant-client>=1.7
 
 # RAG components
 rank-bm25>=0.2
-
-# GraphRAG components
-networkx>=3.0
 numpy>=1.24
 
 # PDF extraction (MinerU)

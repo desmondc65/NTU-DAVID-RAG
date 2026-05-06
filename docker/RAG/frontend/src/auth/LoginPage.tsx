@@ -36,7 +36,7 @@ export default function LoginPage() {
           {mode === 'login' ? 'Sign in' : 'Create account'}
         </h1>
         <p className="auth-sub">
-          Shared across Vector RAG and GraphRAG.
+          Sign in to continue.
         </p>
 
         <form onSubmit={onSubmit} className="auth-form">

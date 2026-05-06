@@ -7,18 +7,6 @@ import AccountDialog from './auth/AccountDialog';
 
 type Tab = 'manage' | 'query';
 
-function switchService(target: 'rag' | 'graph') {
-  try {
-    if (window.top && window.top !== window.self) {
-      (window.top as Window).location.hash = '#' + target;
-      return;
-    }
-  } catch {
-    /* cross-origin access blocked — fall through to full nav */
-  }
-  window.location.href = '/' + target + '/';
-}
-
 function AppShell() {
   const { user, loading, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>('query');
@@ -36,22 +24,6 @@ function AppShell() {
     <div className="app">
       <nav className="topbar">
         <span className="brand">NTU DAVID RAG</span>
-        <div className="service-switch">
-          <button
-            type="button"
-            className="service-btn active"
-            onClick={() => switchService('rag')}
-          >
-            RAG
-          </button>
-          <button
-            type="button"
-            className="service-btn"
-            onClick={() => switchService('graph')}
-          >
-            GraphRAG
-          </button>
-        </div>
         <span className="topbar-divider" />
         <div className="app-tabs">
           <button

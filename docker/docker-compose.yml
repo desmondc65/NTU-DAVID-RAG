@@ -1,22 +1,18 @@
-# Unified RAG + GraphRAG stack
+# Unified RAG stack
 # -----------------------------------------------------------------------------
 # One embedding-server container owns the GPU and hosts the gte-Qwen2-7B
-# embedder + bge-reranker-v2-m3 once. rag-web and graphrag-web are CPU-only
-# Flask backends that delegate all embedding / reranking over HTTP, so both
-# services can run simultaneously against the same GPU.
+# embedder + bge-reranker-v2-m3 once. rag-web is a CPU-only Flask backend
+# that delegates all embedding / reranking over HTTP.
 #
-# An nginx proxy exposes both under a single external port:
-#   http://<host>:${UNIFIED_PORT:-3006}/            → landing + tab shell
-#   http://<host>:${UNIFIED_PORT:-3006}/rag/        → vector RAG UI
-#   http://<host>:${UNIFIED_PORT:-3006}/graph/      → GraphRAG UI
+# An nginx proxy exposes the service under a single external port:
+#   http://<host>:${UNIFIED_PORT:-3006}/            → vector RAG UI
 #
-# Databases remain isolated exactly as before:
+# Database layout:
 #   rag-web       → ../db        +  ../data
-#   graphrag-web  → ../graph_db  +  ../graph_data
 #
-# The per-service compose files in RAG/ and graphRag/ are still usable for
-# running a single service in isolation; they load their own embedder and
-# do not share this stack.
+# The per-service compose file in RAG/ is still usable for running the
+# service in isolation; it loads its own embedder and does not share
+# this stack.
 services:
 
   auth-db:
@@ -136,71 +132,16 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
-  graphrag-web:
-    build:
-      context: ./graphRag
-      dockerfile: Dockerfile
-      args:
-        VITE_BASE_PATH: "/graph/"
-    container_name: graphrag-web
-    restart: unless-stopped
-    depends_on:
-      embedding-server:
-        condition: service_healthy
-      auth-db:
-        condition: service_healthy
-    env_file:
-      - ./graphRag/.env
-    environment:
-      RAG_EMBEDDING_SERVER_URL: "http://embedding-server:8080"
-      RAG_RERANKER_SERVER_URL: "http://embedding-server:8080"
-      RAG_DEVICE: "cpu"
-      RAG_EMBEDDING_DEVICE: "cpu"
-      NVIDIA_DRIVER_CAPABILITIES: "compute,utility"
-      CUDA_VISIBLE_DEVICES: "${EMBEDDING_GPU:-1}"
-      # Auth — shared DB with rag-web. No migration here (rag-web owns it).
-      AUTH_DB_URL: "postgresql+psycopg://${AUTH_DB_USER:-appuser}:${AUTH_DB_PASSWORD}@auth-db:5432/${AUTH_DB_NAME:-appdb}"
-      SESSION_SECRET: "${SESSION_SECRET}"
-      SESSION_COOKIE_SECURE: "${SESSION_COOKIE_SECURE:-false}"
-      ALLOW_REGISTRATION: "${ALLOW_REGISTRATION:-true}"
-      APP_SCOPE: "graphrag"
-      PYTHONDONTWRITEBYTECODE: "1"
-    volumes:
-      - ../utils:/app/utils:ro
-      - ../graphRag:/app/graphRag:ro
-      # GraphRAG keeps its OWN database — separate from docker/RAG.
-      - ../graph_db:/app/db
-      - ../graph_data:/app/data
-      - ../requirements.txt:/app/project_requirements.txt:ro
-      - ./graphRag/log.txt:/app/log.txt
-      - ../hf_cache:/root/.cache/huggingface
-    command: >
-      /bin/sh -c "gunicorn --bind 0.0.0.0:5000 --timeout 1200 --workers 1 --threads 4 app:app 2>&1 | tee -a /app/log.txt"
-    privileged: true
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              device_ids: ["${EMBEDDING_GPU:-1}"]
-              capabilities: [gpu]
-    networks:
-      - shared-net
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-
   proxy:
     image: nginx:1.27-alpine
     container_name: rag-proxy
     restart: unless-stopped
     depends_on:
       - rag-web
-      - graphrag-web
     ports:
       - "${UNIFIED_PORT:-3006}:80"
     volumes:
       - ./proxy/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./proxy/html:/usr/share/nginx/html:ro
     networks:
       - shared-net
 
