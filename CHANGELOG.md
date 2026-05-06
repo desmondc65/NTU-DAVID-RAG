@@ -20,9 +20,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 	tables, math (KaTeX), and source passages inline.
 - **URL-prefix hosting** — the frontend builds with a `VITE_BASE_PATH` so
 	it can be served under `/rag/`.
-- **Additional local-LLM runners** — compose files for `Gemma4 31B`
-	(Ollama) and `Qwen3-Next-80B Q8_0` (llama.cpp) under `docker/local_llm/`,
-	with environment templates and warm-up scripts.
+- **Local-LLM runner** — compose file for `Gemma4 31B` (Ollama) under
+	`docker/local_llm/`, wired to the `OPENAI_API_BASE` the web backend
+	expects.
 - **Paper-profile retrieval path in `utils/orchestrator/`** — profile-first
 	retrieval for global/comparative queries, a `query_router.classify_query()`
 	that picks between local and global flows, and `backfill_profiles.py` for
