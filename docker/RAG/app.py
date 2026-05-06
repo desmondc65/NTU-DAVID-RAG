@@ -34,13 +34,9 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 DB_PATH = Path(os.getenv("DB_PATH", str(PROJECT_ROOT / "db")))
 DATA_PATH = Path(os.getenv("DATA_PATH", str(PROJECT_ROOT / "data")))
-UPLOAD_DIR = DATA_PATH / "uploads"
-OUTPUT_DIR = DATA_PATH / "ingest_output"
-TMP_UPLOAD_DIR = DATA_PATH / "tmp_uploads"
 
-UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-TMP_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+DB_PATH.mkdir(parents=True, exist_ok=True)
+DATA_PATH.mkdir(parents=True, exist_ok=True)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -57,42 +53,74 @@ init_auth(app)
 app.register_blueprint(auth_bp)
 app.register_blueprint(chat_bp)
 
-# ── lazy-loaded heavy modules ─────────────────────────────────────────────
-_rag_engine = None
-_qdrant_access_lock = Lock()
+# ── per-user database isolation ───────────────────────────────────────────
+# Each authenticated user gets their own Qdrant store + paper registry under
+# DB_PATH/users/<user_id>/, and their own ingest output under
+# DATA_PATH/users/<user_id>/. This keeps vector data, paper metadata, and
+# extracted PDF artefacts scoped to a single user — no cross-user reads.
+_rag_engines: Dict[str, "object"] = {}
+_user_locks: Dict[str, Lock] = {}
+_locks_meta_lock = Lock()
 
 
-def _get_rag_engine():
-    """Lazily initialise the RAG query engine (loads models on first call)."""
-    global _rag_engine
-    if _rag_engine is None:
+def _user_db_path(user_id) -> Path:
+    """Return (and create) the per-user database directory."""
+    path = DB_PATH / "users" / str(user_id)
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+def _user_data_path(user_id) -> Path:
+    """Return (and create) the per-user data directory for ingest output."""
+    path = DATA_PATH / "users" / str(user_id)
+    (path / "tmp_uploads").mkdir(parents=True, exist_ok=True)
+    return path
+
+
+def _qdrant_lock(user_id) -> Lock:
+    """A lock per user. Different users hit independent Qdrant directories,
+    so global serialisation isn't needed — but a single user's reader and
+    writer engines can't coexist, hence the per-user lock."""
+    key = str(user_id)
+    with _locks_meta_lock:
+        lock = _user_locks.get(key)
+        if lock is None:
+            lock = Lock()
+            _user_locks[key] = lock
+        return lock
+
+
+def _get_rag_engine(user_id):
+    """Lazily initialise the RAG query engine for ``user_id``."""
+    key = str(user_id)
+    engine = _rag_engines.get(key)
+    if engine is None:
         from utils.orchestrator.rag_query import RAGQueryEngine
-        _rag_engine = RAGQueryEngine(db_path=DB_PATH)
-    return _rag_engine
+        engine = RAGQueryEngine(db_path=_user_db_path(user_id))
+        _rag_engines[key] = engine
+    return engine
 
 
-def _reload_rag_engine():
-    """Force reload of the RAG engine (after paper add/remove)."""
-    global _rag_engine
-    if _rag_engine is not None:
+def _reload_rag_engine(user_id):
+    """Drop the cached engine for ``user_id`` (call before opening a writer)."""
+    engine = _rag_engines.pop(str(user_id), None)
+    if engine is not None:
         try:
-            _rag_engine.close()
+            engine.close()
         except Exception:
             logger.warning("Failed to close existing RAG engine cleanly.", exc_info=True)
-    _rag_engine = None
 
 
-def _get_registry() -> List[Dict]:
-    registry_path = DB_PATH / "paper_registry.json"
+def _get_registry(user_id) -> List[Dict]:
+    registry_path = _user_db_path(user_id) / "paper_registry.json"
     if registry_path.exists():
         with open(registry_path, "r", encoding="utf-8") as f:
             return json.load(f)
     return []
 
 
-def _save_registry(registry: List[Dict]) -> None:
-    registry_path = DB_PATH / "paper_registry.json"
-    DB_PATH.mkdir(parents=True, exist_ok=True)
+def _save_registry(user_id, registry: List[Dict]) -> None:
+    registry_path = _user_db_path(user_id) / "paper_registry.json"
     with open(registry_path, "w", encoding="utf-8") as f:
         json.dump(registry, f, indent=4, ensure_ascii=False)
 
@@ -117,8 +145,9 @@ def serve_static(path):
 @app.route("/api/papers", methods=["GET"])
 @login_required
 def list_papers():
-    """Return the paper registry."""
-    return jsonify(_get_registry())
+    """Return the current user's paper registry."""
+    user = current_user()
+    return jsonify(_get_registry(user.id))
 
 
 @app.route("/api/papers", methods=["POST"])
@@ -140,11 +169,15 @@ def upload_paper():
     if not pdf_file.filename or not fortran_file.filename:
         return jsonify({"error": "Empty filename(s)"}), 400
 
+    user = current_user()
+    user_db = _user_db_path(user.id)
+    user_data = _user_data_path(user.id)
+
     pdf_name = secure_filename(pdf_file.filename)
     fortran_name = secure_filename(fortran_file.filename)
 
-    # Stage incoming uploads in a temporary directory first.
-    request_tmp_dir = TMP_UPLOAD_DIR / uuid.uuid4().hex
+    # Stage incoming uploads in a per-user temporary directory first.
+    request_tmp_dir = user_data / "tmp_uploads" / uuid.uuid4().hex
     request_tmp_dir.mkdir(parents=True, exist_ok=True)
 
     pdf_path = request_tmp_dir / pdf_name
@@ -156,24 +189,24 @@ def upload_paper():
         from utils.orchestrator.ingest_paper import ingest_paper_and_code
         from utils.orchestrator.store_to_db import store_ingested_data
 
-        logger.info("Starting ingestion for %s + %s", pdf_name, fortran_name)
+        logger.info("Starting ingestion for %s + %s (user=%s)", pdf_name, fortran_name, user.id)
 
         # Step 1: Ingest (PDF extraction + Fortran digest)
         ingest_result = ingest_paper_and_code(
             pdf_path=pdf_path,
             fortran_path=fortran_path,
-            output_dir=DATA_PATH,
-            db_path=str(DB_PATH),
+            output_dir=user_data,
+            db_path=str(user_db),
         )
 
-        with _qdrant_access_lock:
+        with _qdrant_lock(user.id):
             # Close any active reader engine before opening a writer client.
-            _reload_rag_engine()
+            _reload_rag_engine(user.id)
 
             # Step 2: Chunk, embed, store
             store_result = store_ingested_data(
                 ingest_result=ingest_result,
-                db_path=DB_PATH,
+                db_path=user_db,
             )
 
         return jsonify({
@@ -201,12 +234,14 @@ def delete_paper(paper_title: str):
         from utils.s2_embedding.qdrant_store import QdrantVectorStore
         from qdrant_client import models
 
-        with _qdrant_access_lock:
+        user = current_user()
+
+        with _qdrant_lock(user.id):
             # Close any active reader engine before opening a writer client.
-            _reload_rag_engine()
+            _reload_rag_engine(user.id)
 
             # 1. Remove from Qdrant
-            qdrant_dir = str(DB_PATH / "qdrant_data")
+            qdrant_dir = str(_user_db_path(user.id) / "qdrant_data")
             if Path(qdrant_dir).exists():
                 store = QdrantVectorStore(persist_dir=qdrant_dir)
                 try:
@@ -224,14 +259,14 @@ def delete_paper(paper_title: str):
                             )
                         ),
                     )
-                    logger.info("Deleted Qdrant points for '%s'", paper_title)
+                    logger.info("Deleted Qdrant points for '%s' (user=%s)", paper_title, user.id)
                 finally:
                     store.close()
 
             # 2. Remove from registry
-            registry = _get_registry()
+            registry = _get_registry(user.id)
             registry = [p for p in registry if p.get("paper_title") != paper_title]
-            _save_registry(registry)
+            _save_registry(user.id, registry)
 
         return jsonify({"status": "ok", "message": f"Deleted '{paper_title}'"})
 
@@ -280,12 +315,16 @@ def retry_metadata():
         logger.error("retry_metadata import failed: %s", traceback.format_exc())
         return jsonify({"error": f"Module import failed: {e}"}), 500
 
+    user = current_user()
+    user_db = _user_db_path(user.id)
+    user_data = _user_data_path(user.id)
+
     try:
         resolved = resolve_paper_dir(
-            db_path=DB_PATH,
+            db_path=user_db,
             paper_title=paper_title,
             paper_dir=paper_dir,
-            data_root=DATA_PATH,
+            data_root=user_data,
         )
     except FileNotFoundError as e:
         return jsonify({"error": str(e)}), 404
@@ -293,12 +332,12 @@ def retry_metadata():
         return jsonify({"error": str(e)}), 409
 
     try:
-        with _qdrant_access_lock:
+        with _qdrant_lock(user.id):
             # Release the active reader engine so retry_paper_metadata can
             # open its own writer client against the Qdrant on-disk store.
-            _reload_rag_engine()
+            _reload_rag_engine(user.id)
             summary = retry_paper_metadata(
-                db_path=DB_PATH,
+                db_path=user_db,
                 paper_dir=resolved,
             )
         return jsonify({"status": "ok", **summary})
@@ -367,8 +406,8 @@ def rag_query():
     )
 
     try:
-        with _qdrant_access_lock:
-            engine = _get_rag_engine()
+        with _qdrant_lock(user.id):
+            engine = _get_rag_engine(user.id)
             result = engine.query(user_query=query, top_k=top_k, conversation_history=history)
 
         # Serialise sources (strip non-JSON-safe fields)
@@ -439,12 +478,13 @@ def rag_query():
 @app.route("/api/status", methods=["GET"])
 @login_required
 def status():
-    """Health check with basic stats."""
-    papers = _get_registry()
+    """Health check with basic stats for the current user's database."""
+    user = current_user()
+    papers = _get_registry(user.id)
     return jsonify({
         "status": "ok",
         "papers_count": len(papers),
-        "db_path": str(DB_PATH),
+        "db_path": str(_user_db_path(user.id)),
     })
 
 
