@@ -56,8 +56,8 @@ def get_config() -> AuthConfig:
         session_secret = generated
 
     scope = os.environ.get("APP_SCOPE", "rag").strip().lower()
-    if scope not in {"rag", "graphrag"}:
-        raise RuntimeError(f"APP_SCOPE must be 'rag' or 'graphrag', got {scope!r}")
+    if scope != "rag":
+        raise RuntimeError(f"APP_SCOPE must be 'rag', got {scope!r}")
 
     return AuthConfig(
         db_url=db_url,

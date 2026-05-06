@@ -1,4 +1,4 @@
-"""Shared auth module for the unified RAG + GraphRAG stack.
+"""Shared auth module for the RAG stack.
 
 Typical wiring inside a Flask app:
 

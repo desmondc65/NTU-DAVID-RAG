@@ -221,7 +221,7 @@ def cmd_revoke_sessions(args: argparse.Namespace) -> None:
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="python -m utils.auth.cli",
-        description="Auth admin operations for the unified RAG/GraphRAG stack.",
+        description="Auth admin operations for the RAG stack.",
     )
     sub = p.add_subparsers(dest="command", required=True)
 

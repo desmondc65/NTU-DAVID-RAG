@@ -1,8 +1,7 @@
 """``/api/conversations/*`` routes — scoped per-user, per-app.
 
-Both Flask apps register this blueprint; the ``app`` scope comes from
-``APP_SCOPE`` via the shared config so rag-web serves conversations with
-``app='rag'`` and graphrag-web serves ``app='graphrag'``.
+The ``app`` scope comes from ``APP_SCOPE`` via the shared config; rag-web
+serves conversations with ``app='rag'``.
 """
 from __future__ import annotations
 
