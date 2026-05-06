@@ -1,15 +1,14 @@
 # NTU DAVID RAG
 
-**Project Status**: Active Development — all three planned phases are implemented end-to-end, and two retrieval paths (vector RAG and GraphRAG) run side-by-side over a shared embedding service.
+**Project Status**: Active Development — all three planned phases are implemented end-to-end on the vector RAG retrieval path.
 
 This project builds a retrieval-augmented generation system specialised for economics research papers and their accompanying Fortran codebases. It ingests PDFs and source code, stores structured artefacts plus embeddings, and answers both focused ("what is the Euler equation in this paper?") and comparative ("which papers share the same mathematical model?") questions.
 
 ![System Design](docs/initial_system_desgin.png)
 
-Architecture diagrams for the two retrieval stacks live under [docs/tikz/](docs/tikz/):
+Architecture diagram for the retrieval stack lives under [docs/tikz/](docs/tikz/):
 
 - [docs/tikz/vector_rag.pdf](docs/tikz/vector_rag.pdf) — hybrid BM25 + dense + reranker pipeline.
-- [docs/tikz/graph_rag.pdf](docs/tikz/graph_rag.pdf) — entity/relationship graph with community summaries.
 
 ## Repository layout
 
@@ -21,19 +20,17 @@ NTU-DAVID-RAG/
 │   ├── s3_RAG/              # BM25, dense, RRF fusion, cross-encoder rerank
 │   ├── orchestrator/        # Ingestion pipeline + profile-aware query engine
 │   └── llm_clients/         # Gemini, OpenAI, and local (OpenAI-compatible) clients
-├── graphRag/                # Knowledge-graph RAG (entities → graph → community summaries → local/global search)
 ├── docker/
-│   ├── docker-compose.yml   # Unified stack: embedding-server + rag-web + graphrag-web + proxy
+│   ├── docker-compose.yml   # Unified stack: embedding-server + rag-web + proxy
 │   ├── embedding_server/    # Shared HTTP embedder + reranker (owns the GPU)
 │   ├── RAG/                 # Flask API + React chat UI for the vector RAG
-│   ├── graphRag/            # Flask API + React chat UI for the GraphRAG
-│   ├── proxy/               # nginx that fronts both UIs under one port
+│   ├── proxy/               # nginx that fronts the UI under one port
 │   └── local_llm/           # llama.cpp / Ollama compose files for the answer LLM
 ├── RAG_quality_test/        # Report-style and Ragas-based evaluators
 ├── tests/                   # Pytest suites per stage
 ├── docs/                    # Diagrams and workflow notes
-├── db/ · graph_db/          # Qdrant + registry for vector RAG and GraphRAG respectively
-├── data/ · graph_data/      # Raw and processed paper/code artefacts per stack
+├── db/                      # Per-user Qdrant + registry, scoped under `users/<user_id>/`
+├── data/                    # Per-user paper/code artefacts, scoped under `users/<user_id>/`
 ├── CHANGELOG.md
 └── README.md
 ```
@@ -48,17 +45,16 @@ Each subpackage ships its own `readme.md` with module-level detail — the secti
 | **Embedding & storage** | [`utils/s2_embedding/`](utils/s2_embedding/) | `chunker.py`, `embedder.py`, `qdrant_store.py`, `run_embed.py` |
 | **Hybrid retrieval** | [`utils/s3_RAG/`](utils/s3_RAG/) | `bm25_retriever.py`, `dense_retriever.py`, `reranker.py`, `hybrid_rag.py` |
 | **Orchestration** | [`utils/orchestrator/`](utils/orchestrator/) | `ingest_paper.py`, `store_to_db.py`, `rag_query.py`, `paper_profiler.py`, `query_router.py` |
-| **Knowledge-graph RAG** | [`graphRag/`](graphRag/) | `entity_extractor.py`, `graph_builder.py`, `community_summarizer.py`, `local_search.py`, `global_search.py` |
 
 Default models (overridable per service):
 
 - **Embedder**: `Alibaba-NLP/gte-Qwen2-7B-instruct` (3584-dim, asymmetric query/passage prefixes applied server-side).
 - **Reranker**: `BAAI/bge-reranker-v2-m3` (cross-encoder, scores the top-50 fused candidates).
-- **Vector store**: Qdrant on-disk (per-stack: `db/` for vector RAG, `graph_db/` for GraphRAG).
+- **Vector store**: Qdrant on-disk, isolated per user — `db/users/<user_id>/`.
 
 ## Running the stack
 
-The canonical way to bring up both retrieval services is the unified Docker compose in [docker/docker-compose.yml](docker/docker-compose.yml). A single `embedding-server` container owns the GPU and loads the 7B embedder + reranker once; `rag-web` and `graphrag-web` are CPU-only Flask backends that call it over HTTP, so both frontends run simultaneously against the same GPU.
+The canonical way to bring up the retrieval service is the unified Docker compose in [docker/docker-compose.yml](docker/docker-compose.yml). A single `embedding-server` container owns the GPU and loads the 7B embedder + reranker once; `rag-web` is a CPU-only Flask backend that calls it over HTTP.
 
 ```bash
 cd docker
@@ -69,13 +65,12 @@ Endpoints exposed by the nginx proxy (default `UNIFIED_PORT=3006`):
 
 | Path | Served by |
 |------|-----------|
-| `/`        | Landing + tab shell |
+| `/`        | Redirects to `/rag/` |
 | `/rag/`    | Vector RAG chat UI |
-| `/graph/`  | GraphRAG chat UI |
 
-Databases stay isolated by design: `rag-web` owns `db/` + `data/`, `graphrag-web` owns `graph_db/` + `graph_data/`. Papers uploaded through one UI do not bleed into the other. Per-service compose files under `docker/RAG/` and `docker/graphRag/` remain usable for running a single backend with its own embedder — see their `readme.md`s for standalone mode.
+Every authenticated user gets their own Qdrant store, paper registry, and ingest output under `users/<user_id>/`, so two users running side-by-side never see each other's papers or vectors. The per-service compose file under `docker/RAG/` remains usable for running the backend standalone with its own embedder — see its `readme.md` for details.
 
-An answer LLM is still required. Start one from `docker/local_llm/` — the Gemma3 (Ollama) and Qwen3-Next-80B (llama.cpp) compose files are both wired to the `OPENAI_API_BASE` that the two web backends expect.
+An answer LLM is still required. Start one from `docker/local_llm/` — the Gemma3 (Ollama) and Qwen3-Next-80B (llama.cpp) compose files are both wired to the `OPENAI_API_BASE` that the web backend expects.
 
 ## Quick Start (Python environment)
 
@@ -145,27 +140,27 @@ python -m tests.test_llm_clients
 
 Stage-2 and Stage-3 tests require a GPU and an existing vector store under `data/<paper>/vector_store/`.
 
-### Unified RAG + GraphRAG Stack (Recommended)
+### Unified RAG Stack (Recommended)
 
-The top-level [docker/docker-compose.yml](docker/docker-compose.yml) brings up **both** the vector RAG and the GraphRAG services behind a single nginx proxy, sharing one GPU-resident embedding/reranker container. You get one URL with a landing page and `/rag/` + `/graph/` tabs.
+The top-level [docker/docker-compose.yml](docker/docker-compose.yml) brings up the vector RAG service behind an nginx proxy, sharing one GPU-resident embedding/reranker container.
 
-Architecture (see also the TikZ diagrams in [docs/tikz/](docs/tikz/) — [vector_rag.pdf](docs/tikz/vector_rag.pdf), [graph_rag.pdf](docs/tikz/graph_rag.pdf)):
+Architecture (see also the TikZ diagram [docs/tikz/vector_rag.pdf](docs/tikz/vector_rag.pdf)):
 
 ```
                     ┌───────────────────────────────┐
                     │  nginx proxy  (one port)      │
-                    │  /  /rag/  /graph/            │
-                    └──────┬──────────────┬─────────┘
-                           │              │
-                    ┌──────▼─────┐ ┌──────▼─────┐
-                    │  rag-web   │ │ graphrag-  │   CPU-only Flask backends,
-                    │  (Flask)   │ │   web      │   chat-style React frontends
-                    └──────┬─────┘ └──────┬─────┘
-                           │              │
-                    ┌──────▼──────────────▼─────────┐
+                    │  /  →  /rag/                  │
+                    └──────────────┬────────────────┘
+                                   │
+                            ┌──────▼─────┐
+                            │  rag-web   │   CPU-only Flask backend,
+                            │  (Flask)   │   chat-style React frontend
+                            └──────┬─────┘
+                                   │
+                    ┌──────────────▼────────────────┐
                     │  embedding-server (GPU)       │   gte-Qwen2-7B +
                     │  HTTP /embed, /rerank         │   bge-reranker-v2-m3,
-                    └───────────────────────────────┘   loaded once, shared
+                    └───────────────────────────────┘   loaded once
 ```
 
 Per-service internals (container layout + query pipeline):
@@ -176,18 +171,12 @@ Per-service internals (container layout + query pipeline):
   <em>Vector RAG: nginx → Flask → shared embedding server, with BM25 + dense + RRF + cross-encoder rerank feeding the LLM.</em>
 </p>
 
-<p align="center">
-  <img src="docs/tikz/graph_rag.png" alt="GraphRAG — container architecture, build workflow, and query workflow" width="640">
-  <br>
-  <em>GraphRAG: entity/relation extraction → community detection → summarization at build time; router picks a local (n-hop subgraph) or global (community summaries) path at query time.</em>
-</p>
-
 Key points:
 
-- **Shared GPU embedder.** `EmbeddingModel` and `Reranker` have a remote HTTP mode (enabled by `RAG_EMBEDDING_SERVER_URL` / `RAG_RERANKER_SERVER_URL`). Both backends delegate all encoding/scoring to a single container, so the 7B embedder loads once.
-- **Isolated databases.** `rag-web` uses `db/` + `data/`; `graphrag-web` uses `graph_db/` + `graph_data/`. The per-service compose files under [docker/RAG/](docker/RAG/) and [docker/graphRag/](docker/graphRag/) still work standalone.
-- **Chat-style UIs.** Both frontends are persistent chat shells: message bubbles, follow-up questions, stop / regenerate / delete, localStorage-backed history, Markdown export. GraphRAG additionally threads `conversation_history` through retrieval so follow-ups like "what about for China?" get rewritten against prior turns before searching.
-- **URL-prefix aware.** Frontends are built with `VITE_BASE_PATH` so assets and API calls resolve correctly when served under `/rag/` or `/graph/` behind the proxy.
+- **Shared GPU embedder.** `EmbeddingModel` and `Reranker` have a remote HTTP mode (enabled by `RAG_EMBEDDING_SERVER_URL` / `RAG_RERANKER_SERVER_URL`). The backend delegates all encoding/scoring to the embedding container, so the 7B embedder loads once.
+- **Isolated databases.** `rag-web` uses `db/` + `data/`, partitioned per authenticated user under `users/<user_id>/`, so users never share Qdrant collections, registries, or ingest output. The per-service compose file under [docker/RAG/](docker/RAG/) still works standalone.
+- **Chat-style UI.** The frontend is a persistent chat shell: message bubbles, follow-up questions, stop / regenerate / delete, localStorage-backed history, Markdown export.
+- **URL-prefix aware.** The frontend is built with `VITE_BASE_PATH` so assets and API calls resolve correctly when served under `/rag/` behind the proxy.
 
 Start it:
 
@@ -199,20 +188,17 @@ cp .env.example .env
 docker compose up --build
 ```
 
-Then open `http://<host>:3006/` and pick **RAG** or **GraphRAG** from the landing page. The embedding server has a long startup grace (~10 min on a cold HF cache) while the 7B weights download.
+Then open `http://<host>:3006/`. The embedding server has a long startup grace (~10 min on a cold HF cache) while the 7B weights download.
 
 ### Local LLM Service (Qwen3-Next-80B Q8_0 on GPU 0 + 1)
 
-[RAG_quality_test/](RAG_quality_test/) contains two complementary evaluators, each available for both the vector RAG and the GraphRAG:
+[RAG_quality_test/](RAG_quality_test/) contains two complementary evaluators for the vector RAG:
 
-- `rag_quality_test.py` / `graph_rag_quality_test.py` — report-style regression runners.
-- `rag_ragas_eval.py` / `graph_rag_ragas_eval.py` — reference-free Ragas metrics, with `local` / `openai` / `gemini` judges.
-
-Only one retrieval stack should be running when an evaluator is active. For the vector RAG:
+- `rag_quality_test.py` — report-style regression runner.
+- `rag_ragas_eval.py` — reference-free Ragas metrics, with `local` / `openai` / `gemini` judges.
 
 ```bash
-cd docker/graphRag && docker compose down
-cd ../local_llm && docker compose -f docker-compose.gemma4_31b_ollama.yml up -d
+cd docker/local_llm && docker compose -f docker-compose.gemma4_31b_ollama.yml up -d
 cd ../RAG && docker compose up -d --build rag-web
 
 source .venv/bin/activate
@@ -234,15 +220,14 @@ NTU-DAVID-RAG/
 │   │   └── manuscript_parsed_*/    # Parsed manuscript outputs
 │   ├── Consumption Smoothing.../   # Research project 2
 │   └── The Welfare Implications.../# Research project 3
-├── docker/                         # Dockerized stacks
-│   ├── docker-compose.yml          # Unified RAG + GraphRAG + shared embedding server
+├── docker/                         # Dockerized stack
+│   ├── docker-compose.yml          # Unified RAG + shared embedding server
 │   ├── embedding_server/           # GPU container: gte-Qwen2-7B + bge-reranker HTTP service
-│   ├── proxy/                      # nginx + landing page (/rag/, /graph/)
+│   ├── proxy/                      # nginx (/ → /rag/)
 │   ├── RAG/                        # Standalone vector-RAG service (Flask + React)
-│   ├── graphRag/                   # Standalone GraphRAG service (Flask + React)
 │   └── local_llm/                  # Local OpenAI-compatible LLM endpoints (llama.cpp / Ollama)
 ├── docs/
-│   └── tikz/                       # Architecture diagrams (vector_rag, graph_rag)
+│   └── tikz/                       # Architecture diagrams (vector_rag)
 ├── utils/
 │   ├── s2_embedding/               # Chunking + embedding pipeline (ChromaDB)
 │   ├── s3_RAG/                     # Hybrid BM25 + dense + reranker pipeline
@@ -699,15 +684,13 @@ for r in results:
 
 #### Generation ✅
 
-Answer generation is now shipped end-to-end through the Dockerized RAG and GraphRAG services (see **Unified RAG + GraphRAG Stack** below). Both services use the retrieval pipeline above, feed the top passages into an LLM (local or API), and return a streamed, Markdown-rendered answer in a chat-style web UI.
+Answer generation is shipped end-to-end through the Dockerized RAG service (see **Unified RAG Stack** above). It uses the retrieval pipeline above, feeds the top passages into an LLM (local or API), and returns a streamed, Markdown-rendered answer in a chat-style web UI.
 
 ### Solving the Global Query Problem
 
 Chunk-level retrieval is strong on *local* questions ("what is the Euler equation used in this paper?") but fails on *global*, cross-document ones ("which papers share the same mathematical model?", "how do these papers differ in their computational methods?"). A query like this needs paper-level identity, not a bag of passages — top-k dense + BM25 results from a single paper's chunks can drown out the smaller evidence from other papers, and chunk text rarely contains the canonical model/method terms needed to compare papers.
 
-The project tackles this in two independent ways, each under its own package.
-
-### Option A — profile-first retrieval in [`utils/orchestrator/`](utils/orchestrator/)
+The project tackles this through profile-first retrieval in [`utils/orchestrator/`](utils/orchestrator/).
 
 A second Qdrant collection, `paper_profiles`, stores one structured record per paper:
 
@@ -729,10 +712,6 @@ For databases created before the profile collection existed, `utils/orchestrator
 ```bash
 python -m utils.orchestrator.backfill_profiles --db-path ./db
 ```
-
-### Option B — knowledge graph in [`graphRag/`](graphRag/)
-
-The GraphRAG stack takes a different route: it extracts typed entities (model / concept / method / dataset / variable / theorem / author / paper) and relationships (uses / extends / compares / applies_to / causes / contains / measures / authored / mentions) from every chunk, merges them into a `networkx.DiGraph`, summarises graph communities, and serves both `local_search` (entity-anchored) and `global_search` (community-summary-anchored) modes. Because each node carries its source `chunk_ids` and `paper_titles`, answers remain traceable to evidence. See [graphRag/readme.md](graphRag/readme.md) for the pipeline detail.
 
 ## Change history
 
