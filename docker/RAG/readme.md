@@ -16,7 +16,7 @@ docker/RAG/
 └── log.txt             # Container stdout/stderr (bind-mounted)
 ```
 
-The container mounts the project's [utils/](../../utils/), [db/](../../db/), and [data/](../../data/) directories from the repo root, so the backend imports the live orchestrator code and writes to the shared vector store.
+The container mounts the project's [utils/](../../utils/), [db/](../../db/), and [data/](../../data/) directories from the repo root, so the backend imports the live orchestrator code and writes each authenticated user's vectors to `db/users/<user_id>/` (and ingest output to `data/users/<user_id>/`).
 
 ## Services
 
@@ -33,8 +33,8 @@ All backend services request GPU 1 via the NVIDIA runtime and expose `RAG_DEVICE
 | Variable              | Default                                   | Purpose                                |
 | --------------------- | ----------------------------------------- | -------------------------------------- |
 | `PROJECT_ROOT`        | `/app`                                    | Container root; `sys.path` is set here.|
-| `DB_PATH`             | `/app/db`                                 | Qdrant on-disk store + paper registry. |
-| `DATA_PATH`           | `/app/data`                               | Uploads, ingest output, tmp staging.   |
+| `DB_PATH`             | `/app/db`                                 | Root for per-user Qdrant stores at `<DB_PATH>/users/<user_id>/`. |
+| `DATA_PATH`           | `/app/data`                               | Root for per-user uploads / ingest output at `<DATA_PATH>/users/<user_id>/`. |
 | `PORT`                | `5000`                                    | Flask listen port inside the container.|
 | `RAG_PORT`            | `3006`                                    | Host port mapped to `PORT`.            |
 | `LOCAL_LLM_BASE_URL`  | `http://host.docker.internal:11434/v1`    | OpenAI-compatible LLM endpoint.        |
@@ -46,19 +46,12 @@ The LLM server is expected to run on the host (Ollama on `:11434`) or an adjacen
 
 ## Running
 
-> **Only one of `docker/RAG` or `docker/graphRag` can run at a time.** Both stacks pin `CUDA_VISIBLE_DEVICES=1` and reserve the same GPU, and they use separate databases ([db/](../../db/) vs. [graph_db/](../../graph_db/)). Bring one down before starting the other.
-
 Build and start the production service:
 
 ```bash
 cd docker/RAG
 docker compose up -d --build rag-web
 # UI + API at http://localhost:3006
-
-# To switch to GraphRAG instead:
-docker compose down
-cd ../graphRag && docker compose up -d --build graphrag-web
-# UI + API at http://localhost:3007
 ```
 
 Development (hot-reload backend + Vite dev server):
@@ -79,9 +72,7 @@ tail -f log.txt
 
 ## Querying with `curl`
 
-Both services expose `POST /api/query` but with different request bodies. Only one is reachable at a time (see the note above).
-
-**RAG** (port `3006`, default):
+The service exposes `POST /api/query` on port `3006` (default):
 
 ```bash
 cd /home3/davidlcs/Econ-Rag/NTU-DAVID-RAG/docker/RAG
@@ -95,26 +86,10 @@ curl -X POST http://localhost:3006/api/query \
   }'
 ```
 
-**GraphRAG** (port `3007`, default; see [../graphRag/](../graphRag/)):
+Health check:
 
 ```bash
-curl -X POST http://localhost:3007/api/query \
-  -H "Content-Type: application/json" \
-  -d '{
-    "query": "How is the labour supply elasticity estimated?",
-    "mode": "auto",
-    "n_hop": 1,
-    "max_chunks": 20,
-    "candidate_top_k": 12,
-    "keep_top_k": 8
-  }'
-```
-
-Health check (same path on either service):
-
-```bash
-curl http://localhost:3006/api/status   # RAG
-curl http://localhost:3007/api/status   # GraphRAG
+curl http://localhost:3006/api/status
 ```
 
 ## API

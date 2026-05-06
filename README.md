@@ -1,15 +1,14 @@
 # NTU DAVID RAG
 
-**Project Status**: Active Development — all three planned phases are implemented end-to-end, and two retrieval paths (vector RAG and GraphRAG) run side-by-side over a shared embedding service.
+**Project Status**: Active Development — all three planned phases are implemented end-to-end on the vector RAG retrieval path.
 
 This project builds a retrieval-augmented generation system specialised for economics research papers and their accompanying Fortran codebases. It ingests PDFs and source code, stores structured artefacts plus embeddings, and answers both focused ("what is the Euler equation in this paper?") and comparative ("which papers share the same mathematical model?") questions.
 
 ![System Design](docs/initial_system_desgin.png)
 
-Architecture diagrams for the two retrieval stacks live under [docs/tikz/](docs/tikz/):
+Architecture diagram for the retrieval stack lives under [docs/tikz/](docs/tikz/):
 
 - [docs/tikz/vector_rag.pdf](docs/tikz/vector_rag.pdf) — hybrid BM25 + dense + reranker pipeline.
-- [docs/tikz/graph_rag.pdf](docs/tikz/graph_rag.pdf) — entity/relationship graph with community summaries.
 
 ## Repository layout
 
@@ -21,19 +20,17 @@ NTU-DAVID-RAG/
 │   ├── s3_RAG/              # BM25, dense, RRF fusion, cross-encoder rerank
 │   ├── orchestrator/        # Ingestion pipeline + profile-aware query engine
 │   └── llm_clients/         # Gemini, OpenAI, and local (OpenAI-compatible) clients
-├── graphRag/                # Knowledge-graph RAG (entities → graph → community summaries → local/global search)
 ├── docker/
-│   ├── docker-compose.yml   # Unified stack: embedding-server + rag-web + graphrag-web + proxy
+│   ├── docker-compose.yml   # Unified stack: embedding-server + rag-web + proxy
 │   ├── embedding_server/    # Shared HTTP embedder + reranker (owns the GPU)
 │   ├── RAG/                 # Flask API + React chat UI for the vector RAG
-│   ├── graphRag/            # Flask API + React chat UI for the GraphRAG
-│   ├── proxy/               # nginx that fronts both UIs under one port
-│   └── local_llm/           # llama.cpp / Ollama compose files for the answer LLM
+│   ├── proxy/               # nginx that fronts the UI under one port
+│   └── local_llm/           # Ollama compose file for the answer LLM
 ├── RAG_quality_test/        # Report-style and Ragas-based evaluators
 ├── tests/                   # Pytest suites per stage
 ├── docs/                    # Diagrams and workflow notes
-├── db/ · graph_db/          # Qdrant + registry for vector RAG and GraphRAG respectively
-├── data/ · graph_data/      # Raw and processed paper/code artefacts per stack
+├── db/                      # Per-user Qdrant + registry, scoped under `users/<user_id>/`
+├── data/                    # Per-user paper/code artefacts, scoped under `users/<user_id>/`
 ├── CHANGELOG.md
 └── README.md
 ```
@@ -48,17 +45,16 @@ Each subpackage ships its own `readme.md` with module-level detail — the secti
 | **Embedding & storage** | [`utils/s2_embedding/`](utils/s2_embedding/) | `chunker.py`, `embedder.py`, `qdrant_store.py`, `run_embed.py` |
 | **Hybrid retrieval** | [`utils/s3_RAG/`](utils/s3_RAG/) | `bm25_retriever.py`, `dense_retriever.py`, `reranker.py`, `hybrid_rag.py` |
 | **Orchestration** | [`utils/orchestrator/`](utils/orchestrator/) | `ingest_paper.py`, `store_to_db.py`, `rag_query.py`, `paper_profiler.py`, `query_router.py` |
-| **Knowledge-graph RAG** | [`graphRag/`](graphRag/) | `entity_extractor.py`, `graph_builder.py`, `community_summarizer.py`, `local_search.py`, `global_search.py` |
 
 Default models (overridable per service):
 
 - **Embedder**: `Alibaba-NLP/gte-Qwen2-7B-instruct` (3584-dim, asymmetric query/passage prefixes applied server-side).
 - **Reranker**: `BAAI/bge-reranker-v2-m3` (cross-encoder, scores the top-50 fused candidates).
-- **Vector store**: Qdrant on-disk (per-stack: `db/` for vector RAG, `graph_db/` for GraphRAG).
+- **Vector store**: Qdrant on-disk, isolated per user — `db/users/<user_id>/`.
 
 ## Running the stack
 
-The canonical way to bring up both retrieval services is the unified Docker compose in [docker/docker-compose.yml](docker/docker-compose.yml). A single `embedding-server` container owns the GPU and loads the 7B embedder + reranker once; `rag-web` and `graphrag-web` are CPU-only Flask backends that call it over HTTP, so both frontends run simultaneously against the same GPU.
+The canonical way to bring up the retrieval service is the unified Docker compose in [docker/docker-compose.yml](docker/docker-compose.yml). A single `embedding-server` container owns the GPU and loads the 7B embedder + reranker once; `rag-web` is a CPU-only Flask backend that calls it over HTTP.
 
 ```bash
 cd docker
@@ -69,13 +65,12 @@ Endpoints exposed by the nginx proxy (default `UNIFIED_PORT=3006`):
 
 | Path | Served by |
 |------|-----------|
-| `/`        | Landing + tab shell |
+| `/`        | Redirects to `/rag/` |
 | `/rag/`    | Vector RAG chat UI |
-| `/graph/`  | GraphRAG chat UI |
 
-Databases stay isolated by design: `rag-web` owns `db/` + `data/`, `graphrag-web` owns `graph_db/` + `graph_data/`. Papers uploaded through one UI do not bleed into the other. Per-service compose files under `docker/RAG/` and `docker/graphRag/` remain usable for running a single backend with its own embedder — see their `readme.md`s for standalone mode.
+Every authenticated user gets their own Qdrant store, paper registry, and ingest output under `users/<user_id>/`, so two users running side-by-side never see each other's papers or vectors. The per-service compose file under `docker/RAG/` remains usable for running the backend standalone with its own embedder — see its `readme.md` for details.
 
-An answer LLM is still required. Start one from `docker/local_llm/` — the Gemma3 (Ollama) and Qwen3-Next-80B (llama.cpp) compose files are both wired to the `OPENAI_API_BASE` that the two web backends expect.
+An answer LLM is still required. Start one from `docker/local_llm/` — the Gemma4-31B (Ollama) compose file is wired to the `OPENAI_API_BASE` that the web backend expects.
 
 ## Quick Start (Python environment)
 
@@ -128,7 +123,7 @@ python -m tests.test_s1_fortran_preprocess
 python -m tests.test_s1_pdf_extract
 python -m tests.test_s1_llm
 
-# Stage 2 — chunking + embedder + Qdrant round-trip
+# Stage 2 — chunking + embedder + ChromaDB round-trip (legacy CLI)
 CUDA_VISIBLE_DEVICES=2 python -m tests.test_s2_embedding
 
 # Stage 3 — BM25 / dense / RRF / reranker full pipeline
@@ -145,27 +140,27 @@ python -m tests.test_llm_clients
 
 Stage-2 and Stage-3 tests require a GPU and an existing vector store under `data/<paper>/vector_store/`.
 
-### Unified RAG + GraphRAG Stack (Recommended)
+## Unified RAG Stack (Recommended)
 
-The top-level [docker/docker-compose.yml](docker/docker-compose.yml) brings up **both** the vector RAG and the GraphRAG services behind a single nginx proxy, sharing one GPU-resident embedding/reranker container. You get one URL with a landing page and `/rag/` + `/graph/` tabs.
+The top-level [docker/docker-compose.yml](docker/docker-compose.yml) brings up the vector RAG service behind an nginx proxy, sharing one GPU-resident embedding/reranker container.
 
-Architecture (see also the TikZ diagrams in [docs/tikz/](docs/tikz/) — [vector_rag.pdf](docs/tikz/vector_rag.pdf), [graph_rag.pdf](docs/tikz/graph_rag.pdf)):
+Architecture (see also the TikZ diagram [docs/tikz/vector_rag.pdf](docs/tikz/vector_rag.pdf)):
 
 ```
                     ┌───────────────────────────────┐
                     │  nginx proxy  (one port)      │
-                    │  /  /rag/  /graph/            │
-                    └──────┬──────────────┬─────────┘
-                           │              │
-                    ┌──────▼─────┐ ┌──────▼─────┐
-                    │  rag-web   │ │ graphrag-  │   CPU-only Flask backends,
-                    │  (Flask)   │ │   web      │   chat-style React frontends
-                    └──────┬─────┘ └──────┬─────┘
-                           │              │
-                    ┌──────▼──────────────▼─────────┐
+                    │  /  →  /rag/                  │
+                    └──────────────┬────────────────┘
+                                   │
+                            ┌──────▼─────┐
+                            │  rag-web   │   CPU-only Flask backend,
+                            │  (Flask)   │   chat-style React frontend
+                            └──────┬─────┘
+                                   │
+                    ┌──────────────▼────────────────┐
                     │  embedding-server (GPU)       │   gte-Qwen2-7B +
                     │  HTTP /embed, /rerank         │   bge-reranker-v2-m3,
-                    └───────────────────────────────┘   loaded once, shared
+                    └───────────────────────────────┘   loaded once
 ```
 
 Per-service internals (container layout + query pipeline):
@@ -176,18 +171,12 @@ Per-service internals (container layout + query pipeline):
   <em>Vector RAG: nginx → Flask → shared embedding server, with BM25 + dense + RRF + cross-encoder rerank feeding the LLM.</em>
 </p>
 
-<p align="center">
-  <img src="docs/tikz/graph_rag.png" alt="GraphRAG — container architecture, build workflow, and query workflow" width="640">
-  <br>
-  <em>GraphRAG: entity/relation extraction → community detection → summarization at build time; router picks a local (n-hop subgraph) or global (community summaries) path at query time.</em>
-</p>
-
 Key points:
 
-- **Shared GPU embedder.** `EmbeddingModel` and `Reranker` have a remote HTTP mode (enabled by `RAG_EMBEDDING_SERVER_URL` / `RAG_RERANKER_SERVER_URL`). Both backends delegate all encoding/scoring to a single container, so the 7B embedder loads once.
-- **Isolated databases.** `rag-web` uses `db/` + `data/`; `graphrag-web` uses `graph_db/` + `graph_data/`. The per-service compose files under [docker/RAG/](docker/RAG/) and [docker/graphRag/](docker/graphRag/) still work standalone.
-- **Chat-style UIs.** Both frontends are persistent chat shells: message bubbles, follow-up questions, stop / regenerate / delete, localStorage-backed history, Markdown export. GraphRAG additionally threads `conversation_history` through retrieval so follow-ups like "what about for China?" get rewritten against prior turns before searching.
-- **URL-prefix aware.** Frontends are built with `VITE_BASE_PATH` so assets and API calls resolve correctly when served under `/rag/` or `/graph/` behind the proxy.
+- **Shared GPU embedder.** `EmbeddingModel` and `Reranker` have a remote HTTP mode (enabled by `RAG_EMBEDDING_SERVER_URL` / `RAG_RERANKER_SERVER_URL`). The backend delegates all encoding/scoring to the embedding container, so the 7B embedder loads once.
+- **Isolated databases.** `rag-web` uses `db/` + `data/`, partitioned per authenticated user under `users/<user_id>/`, so users never share Qdrant collections, registries, or ingest output. The per-service compose file under [docker/RAG/](docker/RAG/) still works standalone.
+- **Chat-style UI.** The frontend is a persistent chat shell: message bubbles, follow-up questions, stop / regenerate / delete, localStorage-backed history, Markdown export.
+- **URL-prefix aware.** The frontend is built with `VITE_BASE_PATH` so assets and API calls resolve correctly when served under `/rag/` behind the proxy.
 
 Start it:
 
@@ -199,20 +188,17 @@ cp .env.example .env
 docker compose up --build
 ```
 
-Then open `http://<host>:3006/` and pick **RAG** or **GraphRAG** from the landing page. The embedding server has a long startup grace (~10 min on a cold HF cache) while the 7B weights download.
+Then open `http://<host>:3006/`. The embedding server has a long startup grace (~10 min on a cold HF cache) while the 7B weights download.
 
-### Local LLM Service (Qwen3-Next-80B Q8_0 on GPU 0 + 1)
+## Quality evaluation
 
-[RAG_quality_test/](RAG_quality_test/) contains two complementary evaluators, each available for both the vector RAG and the GraphRAG:
+[RAG_quality_test/](RAG_quality_test/) contains two complementary evaluators for the vector RAG:
 
-- `rag_quality_test.py` / `graph_rag_quality_test.py` — report-style regression runners.
-- `rag_ragas_eval.py` / `graph_rag_ragas_eval.py` — reference-free Ragas metrics, with `local` / `openai` / `gemini` judges.
-
-Only one retrieval stack should be running when an evaluator is active. For the vector RAG:
+- `rag_quality_test.py` — report-style regression runner.
+- `rag_ragas_eval.py` — reference-free Ragas metrics, with `local` / `openai` / `gemini` judges.
 
 ```bash
-cd docker/graphRag && docker compose down
-cd ../local_llm && docker compose -f docker-compose.gemma4_31b_ollama.yml up -d
+cd docker/local_llm && docker compose -f docker-compose.gemma4_31b_ollama.yml up -d
 cd ../RAG && docker compose up -d --build rag-web
 
 source .venv/bin/activate
@@ -234,268 +220,36 @@ NTU-DAVID-RAG/
 │   │   └── manuscript_parsed_*/    # Parsed manuscript outputs
 │   ├── Consumption Smoothing.../   # Research project 2
 │   └── The Welfare Implications.../# Research project 3
-├── docker/                         # Dockerized stacks
-│   ├── docker-compose.yml          # Unified RAG + GraphRAG + shared embedding server
+├── docker/                         # Dockerized stack
+│   ├── docker-compose.yml          # Unified RAG + shared embedding server
 │   ├── embedding_server/           # GPU container: gte-Qwen2-7B + bge-reranker HTTP service
-│   ├── proxy/                      # nginx + landing page (/rag/, /graph/)
+│   ├── proxy/                      # nginx (/ → /rag/)
 │   ├── RAG/                        # Standalone vector-RAG service (Flask + React)
-│   ├── graphRag/                   # Standalone GraphRAG service (Flask + React)
-│   └── local_llm/                  # Local OpenAI-compatible LLM endpoints (llama.cpp / Ollama)
+│   └── local_llm/                  # Local OpenAI-compatible LLM endpoint (Ollama)
 ├── docs/
-│   └── tikz/                       # Architecture diagrams (vector_rag, graph_rag)
+│   └── tikz/                       # Architecture diagrams (vector_rag)
 ├── utils/
-│   ├── s2_embedding/               # Chunking + embedding pipeline (ChromaDB)
+│   ├── s1_data_ingestion/          # Fortran digestion + MinerU PDF extraction
+│   ├── s2_embedding/               # Chunking + embedding (Qdrant; legacy ChromaDB CLI)
 │   ├── s3_RAG/                     # Hybrid BM25 + dense + reranker pipeline
-│   ├── orchestrator/               # Profile-first global-query router
-│   └── data_preprocess/
-│       ├── fortran_preprocess/     # Fortran code extraction & parsing
-│       ├── Dolphin/                # PDF parsing with Dolphin (layout-aware)
-│       ├── pdf_crawler/            # PDF parsing with Docling (structured)
-│       ├── vlm_formula_to_latex/   # VLM-based formula extraction
-│       ├── s2orc-doc2json/         # PDF/LaTeX to S2ORC JSON format
-│       └── Paper2Code/             # Auto-generate code from papers
+│   ├── orchestrator/               # Profile-first global-query router (production retrieval)
+│   ├── llm_clients/                # Gemini, OpenAI, and local (OpenAI-compatible) clients
+│   └── auth/                       # Shared Flask auth blueprint + Alembic migrations
 └── README.md
 ```
 
 ## Tools Documentation
 
-### [Phase 1] Data Preprocessing Tools Overview
+### [Phase 1] Data Ingestion (`utils/s1_data_ingestion/`)
 
-The `utils/data_preprocess/` directory contains specialized tools for extracting and parsing economic research materials:
+Two stage-1 modules feed every paper into the RAG pipeline:
 
-#### 1. **fortran_preprocess/** - Fortran Code Processing
+- [`fortran_code_digest.py`](utils/s1_data_ingestion/fortran_code_digest.py) — extracts Fortran source files from a mixed input directory and emits a JSON digest of routines, global variables, and dependency graph used downstream by the chunker.
+- [`pdf_extract.py`](utils/s1_data_ingestion/pdf_extract.py) — wraps [MinerU](https://github.com/opendatalab/MinerU) (layout-aware PDF parser) to produce a structured `Manuscript_content_list.json` with text, figures, tables, and bounding boxes.
 
-- **Purpose**: Extract and parse Fortran economic model code for RAG systems
-- **Key Tools & Usage**:
-  - `remove_non_fortran.py` - Extract Fortran files from mixed directories
-  - `fortran_parser.py` - Parse Fortran into structured JSON with dependency tracking
-  - **Conversion Scripts**:
-    - `retrieve_fortran_codes.sh`: Batch script to extract Fortran source files.
-    - `parse_fortrain.sh`: Batch script to parse extracted Fortran files into JSON.
-- **Output**: JSON files with global variables, subroutines, and dependencies
-- **GPU**: Not required
+MinerU is **not** in `requirements.txt` because of its heavy CUDA dependencies — install it separately into `utils/data_preprocess/MinerU/` per the upstream instructions before running ingestion.
 
-#### 2. **Dolphin/** - Advanced PDF Parsing
-
-- **Purpose**: Parse PDFs using Dolphin v2 model (layout-aware, handles digital & scanned docs)
-- **Best For**: Complex layouts, tables, figures, multi-column documents
-- **Conversion Script**: `parse_manuscript.sh`
-  - Reference this script to see how to run `demo_page.py` for specific PDF files.
-- **Output**: Structured JSON with document elements, layout information
-- **GPU**: Required (vision model inference)
-
-#### 3. **pdf_crawler/** - Basic PDF Parsing
-
-- **Purpose**: Extract structured content from PDFs using Docling
-- **Best For**: Standard academic papers with text and formulas
-- **Conversion Script**: `pdf_crawler.sh`
-  - A bash wrapper around `pdf_crawler.py` that processes specific input PDFs defined within the script.
-- **Features**: LaTeX formula extraction, table detection
-- **Output**: JSON with text, formulas, and metadata
-- **GPU**: Optional (faster with GPU, works on CPU)
-
-#### 4. **vlm_formula_to_latex/** - VLM Formula to LaTeX
-
-- **Purpose**: Uses Vision Language Models (VLMs) to accurately extract mathematical formulas as LaTeX, with quality verification.
-- **Pipeline**:
-  1. Convert PDF pages to PNG images
-  2. Crop formulas using Docling bounding boxes
-  3. Transcribe formulas to LaTeX using Gemini Vision API
-  4. Render LaTeX back to PNG for quality comparison
-  5. Generate interactive HTML comparison page
-- **Conversion Script**: `run_all.sh`
-  - Automates the complete pipeline from PDF to quality-verified LaTeX.
-
-  ```bash
-  # Run for all papers
-  ./utils/data_preprocess/vlm_formula_to_latex/run_all.sh
-
-  # Run for a specific paper
-  ./utils/data_preprocess/vlm_formula_to_latex/run_all.sh --target-folder "Paper Name"
-
-  # Skip already processed papers
-  ./utils/data_preprocess/vlm_formula_to_latex/run_all.sh --skip-existing
-  ```
-
-- **Output Structure**:
-
-  ```
-  data/[Paper Name]/vlm_formula_latex/
-  ├── formula_latex.json           # Transcribed formulas with metadata
-  ├── formula_latex.md             # Human-readable markdown view
-  ├── cost_info.log                # API cost tracking
-  ├── accumulated_cost.json        # Cost summary
-  ├── png/                         # Rendered LaTeX → PNG
-  │   └── page_*_formula_*.png
-  └── quality_comparison/          # Visual quality assessment
-      └── comparison.html          # Interactive comparison page
-  ```
-
-- **Quality Comparison**: The generated HTML file displays original vs transcribed formulas side-by-side with LaTeX code, allowing visual verification of transcription accuracy. The HTML is self-contained and can be shared with others.
-
-- **Requirements**:
-  - Python packages: `pdf2image`, `Pillow`, `google-generativeai`
-  - System: LaTeX distribution (texlive-latex-base, texlive-latex-extra)
-  - API: Gemini API key
-
-- **Cost**: ~$0.01–$0.05 per paper (varies by formula count)
-
-#### 5. **s2orc-doc2json/** - Scientific Paper Parsing
-
-- **Purpose**: Convert PDFs/LaTeX to S2ORC JSON format using Grobid
-- **Best For**: Academic papers requiring bibliographic data and citations
-- **Conversion Script**: `process_all_manuscripts.sh`
-  - Iterates through a defined list of papers and runs the Grobid-to-JSON conversion.
-- **Output**: S2ORC-formatted JSON with sections, citations, bibliography
-- **GPU**: Not required
-
-#### 6. **Paper2Code/** - Code Generation from Papers
-
-- **Purpose**: Multi-agent LLM system to generate code repositories from papers
-- **Best For**: Reproducing ML/computational methods from manuscripts
-- **Pipeline**: Planning → Analysis → Code Generation
-- **GPU**: Optional (uses LLM APIs by default, can use local models with GPU)
-
-##### Installation
-
-Paper2Code requires its own virtual environment to avoid dependency conflicts:
-
-```bash
-# Navigate to Paper2Code directory
-cd utils/data_preprocess/Paper2Code
-
-# Create virtual environment
-python3 -m venv .venv
-
-# Activate virtual environment
-source .venv/bin/activate
-
-# Upgrade pip
-pip install --upgrade pip
-
-# Install dependencies
-pip install -r requirements.txt
-```
-
-##### API Key Configuration
-
-Paper2Code supports both **Gemini API** (recommended for this project) and **OpenAI API**:
-
-**Using Gemini API (Recommended):**
-
-```bash
-# Export your Gemini API key to the shell environment
-export GEMINI_API_KEY="your-gemini-api-key-here"
-
-# Verify the key is set
-echo $GEMINI_API_KEY
-```
-
-**Using OpenAI API (Alternative):**
-
-```bash
-# Export your OpenAI API key to the shell environment
-export OPENAI_API_KEY="your-openai-api-key-here"
-
-# Verify the key is set
-echo $OPENAI_API_KEY
-```
-
-> **Note**: The API key must be exported in the same terminal session where you run the scripts. To make it persistent across sessions, add the export command to your `~/.bashrc` or `~/.zshrc` file.
-
-##### Execution
-
-**Option 1: Process Economics Papers (Automated)**
-
-The `run_econs.sh` script automatically processes all papers in the `data/` directory:
-
-```bash
-# Make sure you're in the Paper2Code directory with the virtual environment activated
-cd utils/data_preprocess/Paper2Code
-source .venv/bin/activate
-
-# Export your API key (if not already done)
-export GEMINI_API_KEY="your-gemini-api-key-here"
-
-# Run the economics paper processing script
-./scripts/run_econs.sh
-```
-
-This script will:
-
-1. Find all PDF files in `data/[paper]/source/` directories
-2. Convert PDFs to JSON format (or use existing s2orc JSON if available)
-3. Run the Paper2Code pipeline (planning → analysis → code generation)
-4. Save outputs to `data/[paper]/manuscript_paper2code/`
-
-**Option 2: Process a Single Paper (Manual)**
-
-For processing individual papers with more control:
-
-```bash
-# Using Gemini API with PDF-based JSON
-export GEMINI_API_KEY="your-gemini-api-key-here"
-cd scripts
-bash run.sh
-
-# Using OpenAI API with PDF-based JSON
-export OPENAI_API_KEY="your-openai-api-key-here"
-cd scripts
-bash run.sh
-
-# Using LaTeX source (if available)
-export GEMINI_API_KEY="your-gemini-api-key-here"
-cd scripts
-bash run_latex.sh
-```
-
-**Option 3: Using Open Source Models with vLLM**
-
-For local model inference (requires GPU):
-
-```bash
-# Using PDF-based JSON
-cd scripts
-bash run_llm.sh
-
-# Using LaTeX source
-cd scripts
-bash run_latex_llm.sh
-```
-
-##### Output Structure
-
-After processing, outputs are organized as follows:
-
-```
-data/[Paper Name]/manuscript_paper2code/
-├── [Paper]_cleaned.json          # Preprocessed paper JSON
-├── outputs/
-│   ├── planning_artifacts/       # Planning stage outputs
-│   ├── analyzing_artifacts/      # Analysis stage outputs
-│   └── coding_artifacts/         # Code generation outputs
-└── repository/                   # Final generated code repository
-    ├── config.yaml               # Extracted configuration
-    └── [generated code files]
-```
-
-##### Cost Estimates
-
-- **Gemini API (gemini-3-flash-preview)**: ~$0.30–$0.50 per paper
-  - Input: $0.50 per 1M tokens
-  - Output: $3.00 per 1M tokens
-- **OpenAI API (o3-mini)**: ~$0.50–$0.70 per paper
-
-##### Troubleshooting
-
-- **Missing s2orc-doc2json**: If you see an error about missing s2orc-doc2json, ensure it's installed in `utils/data_preprocess/s2orc-doc2json/`
-- **Grobid service not running**: Start the Grobid service for PDF processing:
-  ```bash
-  cd utils/data_preprocess/s2orc-doc2json/grobid-0.7.3
-  ./gradlew run
-  ```
-- **API key not found**: Ensure you've exported the API key in the current terminal session
-- **Virtual environment issues**: Always activate the Paper2Code virtual environment before running scripts
+Older standalone preprocessing trees (Dolphin, pdf_crawler, vlm_formula_to_latex, s2orc-doc2json, Paper2Code) were removed; see [CHANGELOG.md](CHANGELOG.md). The bits still in use are now invoked from `utils/s1_data_ingestion/` and from the orchestrator.
 
 ### [Phase 2] RAG Database & Embeddings
 
@@ -504,14 +258,14 @@ The `utils/s2_embedding/` directory contains the embedding pipeline that chunks,
 #### Architecture Overview
 
 ```
-JSON Data Files ──→ Chunker ──→ Embedding Model ──→ ChromaDB Vector Store
-                   (chunker.py)  (embedder.py)      (vector_store.py)
+JSON Data Files ──→ Chunker ──→ Embedding Model ──→ Qdrant Vector Store
+                   (chunker.py)  (embedder.py)      (qdrant_store.py)
 ```
 
 | Component | Choice | Rationale |
 |-----------|--------|-----------|
 | **Embedding Model** | `Alibaba-NLP/gte-Qwen2-7B-instruct` (default) | Top-tier MTEB retrieval scores on academic text + code; `BAAI/bge-large-en-v1.5` still selectable via `--model` |
-| **Vector Database** | ChromaDB (persistent) | Lightweight, local-first, zero-config, supports metadata filtering |
+| **Vector Database** | Qdrant (persistent on-disk, production) | Per-user isolation under `db/users/<user_id>/`; metadata filtering, payload indices, on-disk HNSW. A legacy ChromaDB wrapper (`vector_store.py`) is still in the tree for the standalone CLI in `run_embed.py` but is not used by the orchestrator. |
 | **Chunking** | Section-aware (text) + Line-based (code) | Preserves semantic coherence for papers; summary-prefixed for code |
 
 #### File Structure
@@ -521,9 +275,12 @@ utils/s2_embedding/
 ├── __init__.py          # Package init
 ├── chunker.py           # Chunking strategies for manuscript text and Fortran code
 ├── embedder.py          # Embedding model wrapper (gte-Qwen2-7B-instruct by default; supports remote HTTP mode)
-├── vector_store.py      # ChromaDB persistent vector store wrapper
-└── run_embed.py         # CLI orchestration script (chunk → embed → store → test)
+├── qdrant_store.py      # Qdrant on-disk vector store wrapper (production)
+├── vector_store.py      # Legacy ChromaDB persistent vector store wrapper
+└── run_embed.py         # Legacy CLI (chunk → embed → store via ChromaDB)
 ```
+
+Production ingest goes through [`utils/orchestrator/ingest_paper.py`](utils/orchestrator/ingest_paper.py) → [`store_to_db.py`](utils/orchestrator/store_to_db.py), which writes to Qdrant via `qdrant_store.py`. The standalone `run_embed.py` CLI still uses the legacy ChromaDB path and is kept for offline experimentation.
 
 #### Chunking Strategy
 
@@ -543,10 +300,10 @@ utils/s2_embedding/
 
 ```bash
 source .venv/bin/activate
-pip install -r requirements.txt  # includes sentence-transformers and chromadb
+pip install -r requirements.txt  # includes sentence-transformers and qdrant-client
 ```
 
-**Run the embedding pipeline**:
+**Run the embedding pipeline (legacy ChromaDB CLI — production goes through the orchestrator)**:
 
 ```bash
 # Using GPU #2 (adjust CUDA_VISIBLE_DEVICES as needed)
@@ -622,7 +379,7 @@ Query
 | Component | Model / Library | Purpose |
 |-----------|----------------|---------|
 | **Sparse Retrieval** | BM25 (`rank-bm25`) | Lexical matching for exact Fortran identifiers like `REAL*8`, `NGRIDA`, subroutine names |
-| **Dense Retrieval** | ChromaDB + `Alibaba-NLP/gte-Qwen2-7B-instruct` | Semantic similarity for concept-level queries |
+| **Dense Retrieval** | Qdrant + `Alibaba-NLP/gte-Qwen2-7B-instruct` (production via `orchestrator/rag_query.py`); a legacy ChromaDB-backed `DenseRetriever` is still in the tree for the standalone CLI | Semantic similarity for concept-level queries |
 | **Fusion** | Reciprocal Rank Fusion (RRF) | Merges + deduplicates results from both retrievers |
 | **Reranker** | `BAAI/bge-reranker-v2-m3` | Cross-encoder that rigorously scores each passage against the query |
 
@@ -650,11 +407,13 @@ The top 50 RRF-fused results are refined by `BAAI/bge-reranker-v2-m3`, a cross-e
 utils/s3_RAG/
 ├── __init__.py            # Package init
 ├── bm25_retriever.py      # BM25Okapi sparse retrieval with Fortran-aware tokenization
-├── dense_retriever.py     # ChromaDB + BGE dense vector retrieval
+├── dense_retriever.py     # Legacy ChromaDB-based dense retriever (standalone CLI only)
 ├── reranker.py            # BGE-Reranker-v2-m3 cross-encoder
-├── hybrid_rag.py          # Full pipeline: BM25 + Dense + RRF + Reranker
-└── run_rag.py             # Interactive CLI query interface
+├── hybrid_rag.py          # Legacy pipeline: BM25 + Dense (ChromaDB) + RRF + Reranker
+└── run_rag.py             # Legacy interactive CLI query interface
 ```
+
+Production retrieval lives in [`utils/orchestrator/rag_query.py`](utils/orchestrator/rag_query.py), which uses `qdrant_store.QdrantVectorStore` for dense retrieval, plus `bm25_retriever` and `reranker` from this package. `dense_retriever.py`, `hybrid_rag.py`, and `run_rag.py` are kept for the offline ChromaDB-backed CLI and are not part of the Docker stack.
 
 ##### Usage
 
@@ -699,15 +458,13 @@ for r in results:
 
 #### Generation ✅
 
-Answer generation is now shipped end-to-end through the Dockerized RAG and GraphRAG services (see **Unified RAG + GraphRAG Stack** below). Both services use the retrieval pipeline above, feed the top passages into an LLM (local or API), and return a streamed, Markdown-rendered answer in a chat-style web UI.
+Answer generation is shipped end-to-end through the Dockerized RAG service (see **Unified RAG Stack** above). It uses the retrieval pipeline above, feeds the top passages into an LLM (local or API), and returns a streamed, Markdown-rendered answer in a chat-style web UI.
 
 ### Solving the Global Query Problem
 
 Chunk-level retrieval is strong on *local* questions ("what is the Euler equation used in this paper?") but fails on *global*, cross-document ones ("which papers share the same mathematical model?", "how do these papers differ in their computational methods?"). A query like this needs paper-level identity, not a bag of passages — top-k dense + BM25 results from a single paper's chunks can drown out the smaller evidence from other papers, and chunk text rarely contains the canonical model/method terms needed to compare papers.
 
-The project tackles this in two independent ways, each under its own package.
-
-### Option A — profile-first retrieval in [`utils/orchestrator/`](utils/orchestrator/)
+The project tackles this through profile-first retrieval in [`utils/orchestrator/`](utils/orchestrator/).
 
 A second Qdrant collection, `paper_profiles`, stores one structured record per paper:
 
@@ -729,10 +486,6 @@ For databases created before the profile collection existed, `utils/orchestrator
 ```bash
 python -m utils.orchestrator.backfill_profiles --db-path ./db
 ```
-
-### Option B — knowledge graph in [`graphRag/`](graphRag/)
-
-The GraphRAG stack takes a different route: it extracts typed entities (model / concept / method / dataset / variable / theorem / author / paper) and relationships (uses / extends / compares / applies_to / causes / contains / measures / authored / mentions) from every chunk, merges them into a `networkx.DiGraph`, summarises graph communities, and serves both `local_search` (entity-anchored) and `global_search` (community-summary-anchored) modes. Because each node carries its source `chunk_ids` and `paper_titles`, answers remain traceable to evidence. See [graphRag/readme.md](graphRag/readme.md) for the pipeline detail.
 
 ## Change history
 

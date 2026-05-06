@@ -3,8 +3,8 @@ Shared embedding + reranker HTTP service.
 
 Loads the embedding model (default Alibaba-NLP/gte-Qwen2-7B-instruct) and
 the cross-encoder reranker (default BAAI/bge-reranker-v2-m3) once on
-startup, then serves both RAG and GraphRAG backends over HTTP so the
-7B embedder occupies only one GPU slot across the stack.
+startup, then serves the RAG backend over HTTP so the 7B embedder
+occupies only one GPU slot across the stack.
 
 Endpoints
 ---------
