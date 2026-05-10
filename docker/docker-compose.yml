@@ -41,6 +41,9 @@ services:
     restart: unless-stopped
     environment:
       NVIDIA_DRIVER_CAPABILITIES: "compute,utility"
+      # Single GPU: gte-Qwen2-7B's custom modeling code breaks under
+      # accelerate multi-GPU sharding (cross-device tensor errors in its
+      # custom RMSNorm), so pin to one GPU and rely on fp16 to fit.
       CUDA_VISIBLE_DEVICES: "${EMBEDDING_GPU:-1}"
       EMBEDDING_DEVICE: "cuda:0"
       RERANKER_DEVICE: "cuda:0"
