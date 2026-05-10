@@ -106,10 +106,26 @@ function collapseDuplicateNotations(text: string): string {
     cleaned.push(cur);
   }
   let joined = cleaned.join('\n');
-  joined = joined.replace(/(\$[^\n$]+\$)\s+(\S+)/g, (m, math, plain) => {
-    return canonicaliseValueForDedupe(math) === canonicaliseValueForDedupe(plain)
-      ? math
-      : m;
+  // LLMs frequently echo an inline math expression's value as plain
+  // text right after it (e.g. "$2.5\%$2.5%", "$\lambda$λ", or with a
+  // single space "$\lambda$ λ"). Without removing the echo, we end up
+  // with "2.5%2.5%" / "λλ" once the math span renders next to it.
+  //
+  // Strategy: walk every "$math$<after>" occurrence; if the chars right
+  // after the closing $ (after optional whitespace) start with the
+  // canonicalised math content, drop just that prefix. We only strip
+  // the prefix — anything past the duplicated chunk (punctuation, the
+  // next sentence) is preserved verbatim.
+  joined = joined.replace(/(\$[^\n$]+\$)([^\n$]*)/g, (m, math, after) => {
+    if (!after) return m;
+    const canon = canonicaliseValueForDedupe(math);
+    if (!canon) return m;
+    const leadingWsLen = after.length - after.replace(/^\s*/, '').length;
+    const tail = after.slice(leadingWsLen);
+    if (tail.toLowerCase().startsWith(canon)) {
+      return math + after.slice(0, leadingWsLen) + tail.slice(canon.length);
+    }
+    return m;
   });
   return joined;
 }
@@ -281,6 +297,11 @@ export default function QueryTab({
     el.style.height = `${Math.min(el.scrollHeight, 240)}px`;
   }, [draft]);
 
+  // KaTeX auto-render pass: rehype-katex via the markdown pipeline does
+  // not consistently render every $..$ in this stack (observed: removing
+  // this useEffect leaves the math raw and red), so we keep the DOM
+  // post-pass as the actual renderer. ignoredClasses skips spans that
+  // rehype-katex did manage to render so we don't double-process them.
   useEffect(() => {
     const el = threadRef.current;
     if (!el) return;
