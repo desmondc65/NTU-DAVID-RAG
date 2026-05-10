@@ -591,32 +591,87 @@ class RAGQueryEngine:
         )
         logger.info("BM25 indexed %d documents.", len(all_docs["ids"]))
 
-    # ── Multi-query expansion ───────────────────────────────────────────
+    # ── Query rewriting (single optimized query) ────────────────────────
 
-    def _expand_query(self, query: str) -> List[str]:
-        """Use the LLM to generate diverse sub-queries for broader retrieval."""
+    @staticmethod
+    def _should_skip_rewrite(query: str) -> bool:
+        """Skip rewriting for queries too short to need it.
+
+        Short keyword lookups ("Tauchen method", "rho parameter") retrieve
+        best on their literal terms; a rewrite just adds latency and risks
+        diluting the lexical match BM25 depends on.
+        """
+        stripped = query.strip()
+        if not stripped:
+            return True
+        # 1–3 tokens: treat as a keyword lookup.
+        return len(stripped.split()) <= 3
+
+    def _rewrite_query(self, query: str) -> str:
+        """Rewrite the user's input into a single search-optimized query.
+
+        Implements query rewriting + synonym augmentation (Strategy #4):
+        strip conversational filler, fix obvious typos, and inject the
+        domain jargon used in this corpus (formal economics terminology,
+        numerical-methods vocabulary, Fortran identifier conventions) so
+        the embedded vector and the BM25 lexical pass both hit terms that
+        actually occur in the indexed papers and code.
+
+        Returns the rewritten query, or "" to signal "use the original".
+        """
+        if self._should_skip_rewrite(query):
+            return ""
+
         try:
             result = self.llm.generate_response(
                 user_prompt=(
-                    f"Generate 3 diverse search queries to find relevant passages "
-                    f"in academic economics papers for this question:\n\n"
-                    f"\"{query}\"\n\n"
-                    f"Each query should target a different aspect or use different "
-                    f"vocabulary. Return a JSON object with key \"queries\" "
-                    f"containing an array of query strings."
+                    f"User question:\n\"{query}\"\n\n"
+                    "Rewrite it into ONE concise search query for an index of academic "
+                    "economics papers and their companion Fortran implementations.\n\n"
+                    "Apply these transformations:\n"
+                    "  - Strip conversational filler ('can you', 'I want to know', 'please', "
+                    "'tell me about').\n"
+                    "  - Fix obvious typos.\n"
+                    "  - Preserve EVERY specific term, name, equation, or parameter the user "
+                    "named — never drop specifics.\n"
+                    "  - Inject domain synonyms used by this corpus when relevant:\n"
+                    "      • economics: 'incomplete markets', 'precautionary savings', "
+                    "'Bewley/Huggett/Aiyagari', 'idiosyncratic shocks', 'borrowing constraint', "
+                    "'stationary distribution', 'wage process', 'permanent income'.\n"
+                    "      • numerical methods: 'value function iteration', 'endogenous grid "
+                    "method', 'Tauchen discretization', 'policy function', 'Euler equation', "
+                    "'fixed-point iteration'.\n"
+                    "      • Fortran-side: typical identifiers like 'agrid', 'zgrid', 'pi_z', "
+                    "'Aprime', 'mu', 'simulate', subroutine/module purpose phrasing.\n"
+                    "  - Output a single declarative search phrase (no question mark, no "
+                    "framing words like 'find' / 'search').\n"
+                    "  - Keep it under ~25 words.\n\n"
+                    "Return ONLY JSON: {\"query\": \"...\"}"
                 ),
                 system_prompt=(
-                    "You generate search queries for an academic RAG system. "
-                    "Return ONLY valid JSON, no other text."
+                    "You rewrite user questions into retrieval queries for an academic RAG "
+                    "system covering economics papers and Fortran code. "
+                    "Return ONLY valid JSON, no commentary."
                 ),
-                max_tokens=256,
-                temperature=0.4,
+                max_tokens=250,
+                temperature=0.2,
             )
-            queries = result.get("queries", []) if isinstance(result, dict) else []
-            return [q for q in queries if isinstance(q, str) and q.strip()][:3]
+
+            rewritten = ""
+            if isinstance(result, dict):
+                rewritten = result.get("query") or result.get("Query") or ""
+            elif isinstance(result, str):
+                rewritten = result
+
+            rewritten = str(rewritten).strip().strip('"').strip("'")
+            if not rewritten or rewritten.lower() == query.strip().lower():
+                return ""
+
+            logger.info("Query rewritten: %r → %r", query, rewritten)
+            return rewritten
         except Exception as exc:
-            logger.warning("Query expansion failed (%s) — using original query only.", exc)
-            return []
+            logger.warning("Query rewrite failed (%s) — using original query.", exc)
+            return ""
 
     # ── Neighbor chunk expansion ─────────────────────────────────────────
 
@@ -774,39 +829,45 @@ class RAGQueryEngine:
         dense_top_k: int = 50,
         final_top_k: int = 20,
         where_filter: Optional[Dict] = None,
-        expand_queries: bool = True,
+        rewrite_query: bool = True,
         ensure_diversity: bool = True,
     ) -> List[Dict]:
         """
         Hybrid retrieval: BM25 + Dense + RRF + Reranker.
 
+        A single LLM-rewritten query is used for both the BM25 and dense
+        passes; the cross-encoder reranker still scores against the user's
+        ORIGINAL question so the final ranking reflects what was actually
+        asked.
+
         Parameters
         ----------
-        expand_queries : bool
-            When True, uses LLM to generate sub-queries for broader coverage.
+        rewrite_query : bool
+            When True, rewrite the user's input through the LLM (strip
+            filler, fix typos, inject domain jargon) before searching.
         ensure_diversity : bool
             When True, enforces round-robin paper diversity in final results.
         """
-        # 1. Build query set (original + optional expansions)
-        queries = [query]
-        if expand_queries:
-            sub_queries = self._expand_query(query)
-            if sub_queries:
-                queries.extend(sub_queries)
-                logger.info("Expanded to %d queries: %s", len(queries), queries)
+        # 1. Rewrite the user's query into a single search-optimized form.
+        search_query = query
+        if rewrite_query:
+            rewritten = self._rewrite_query(query)
+            if rewritten:
+                search_query = rewritten
 
-        # 2. Retrieve from all queries
-        all_result_lists: List[List[Dict]] = []
-        for q in queries:
-            bm25_results = self.bm25.retrieve(query=q, top_k=sparse_top_k, where_filter=where_filter)
-            dense_results = self.dense.retrieve(query=q, top_k=dense_top_k, where_filter=where_filter)
-            all_result_lists.extend([bm25_results, dense_results])
+        # 2. BM25 + dense on the rewritten query.
+        bm25_results = self.bm25.retrieve(
+            query=search_query, top_k=sparse_top_k, where_filter=where_filter,
+        )
+        dense_results = self.dense.retrieve(
+            query=search_query, top_k=dense_top_k, where_filter=where_filter,
+        )
 
-        # 3. Fuse all result lists via RRF
-        fused = _reciprocal_rank_fusion(all_result_lists)
+        # 3. RRF-fuse the two ranked lists.
+        fused = _reciprocal_rank_fusion([bm25_results, dense_results])
         candidates = fused[:50]
 
-        # 4. Rerank against original query
+        # 4. Rerank against the ORIGINAL user query.
         rerank_top = max(final_top_k * 2, 30) if ensure_diversity else final_top_k
         reranked = self.reranker.rerank(query=query, results=candidates, top_k=rerank_top)
 
