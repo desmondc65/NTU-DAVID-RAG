@@ -673,6 +673,96 @@ class RAGQueryEngine:
             logger.warning("Query rewrite failed (%s) — using original query.", exc)
             return ""
 
+    # ── Conversation history compaction ─────────────────────────────────
+
+    def _compact_history(
+        self,
+        history: List[Dict[str, str]],
+        target_tokens: int,
+        keep_recent_turns: int = 4,
+    ) -> List[Dict[str, str]]:
+        """Compact older history into a single summary turn, keep recent verbatim.
+
+        Triggered by ``query()`` when system + retrieved context + history +
+        generation budget would exceed 80% of the model's context window.
+
+        The most recent ``keep_recent_turns`` messages stay verbatim — that's
+        where coreference for follow-up questions lives. Everything older is
+        summarized in one LLM call into a synthetic "assistant" turn the
+        existing history formatter can render unchanged.
+
+        Returns the original list when compaction is impossible (LLM call
+        fails, history too short to split, summary empty).
+        """
+        if not history or len(history) <= keep_recent_turns:
+            return history
+
+        older = history[:-keep_recent_turns]
+        recent = history[-keep_recent_turns:]
+
+        older_lines: List[str] = []
+        for turn in older:
+            if not isinstance(turn, dict):
+                continue
+            role = str(turn.get("role", "")).strip().lower()
+            content = str(turn.get("content", "")).strip()
+            if role not in {"user", "assistant"} or not content:
+                continue
+            speaker = "User" if role == "user" else "Assistant"
+            older_lines.append(f"{speaker}: {content[:2500]}")
+        if not older_lines:
+            return history
+        older_text = "\n\n".join(older_lines)
+
+        try:
+            summary = self.llm.generate_response(
+                user_prompt=(
+                    "Summarize the prior turns of this conversation between a user "
+                    "and an AI research assistant for economics papers and Fortran "
+                    "code. Preserve the details a follow-up question would depend on:\n"
+                    "  - Papers, authors, equations, parameters, subroutines named\n"
+                    "  - Conclusions the assistant established\n"
+                    "  - Open threads or stated user interests\n"
+                    "Drop pleasantries and restatements. Output plain prose, "
+                    "no headers, no bullet lists. Keep it under 250 words.\n\n"
+                    f"Conversation so far:\n{older_text}"
+                ),
+                system_prompt=(
+                    "You are a precise conversation summarizer. "
+                    "Return plain text only."
+                ),
+                response_mime_type="text/plain",
+                max_tokens=500,
+                temperature=0.2,
+            )
+        except Exception as exc:
+            logger.warning("History compaction LLM call failed (%s) — keeping original.", exc)
+            return history
+
+        summary_text = str(summary or "").strip()
+        if not summary_text:
+            return history
+
+        compacted: List[Dict[str, str]] = [
+            {
+                "role": "assistant",
+                "content": f"[Summary of earlier conversation] {summary_text}",
+            },
+            *recent,
+        ]
+        logger.info(
+            "Compacted history: %d older turns → 1 summary turn (+ %d recent verbatim), target ~%d tokens.",
+            len(older), len(recent), target_tokens,
+        )
+        # Best-effort: if even the summary + recent turns exceed the target,
+        # drop the oldest recent turns until we fit (keeps the newest turn
+        # since that has the strongest coreference signal).
+        def _toks(items: List[Dict[str, str]]) -> int:
+            return sum(_estimate_tokens(str(t.get("content", ""))) for t in items)
+        while len(compacted) > 2 and _toks(compacted) > target_tokens:
+            compacted.pop(1)
+        return compacted
+
     # ── Neighbor chunk expansion ─────────────────────────────────────────
 
     def _expand_with_neighbors(
@@ -954,7 +1044,6 @@ class RAGQueryEngine:
             max_context_tokens=max_context_tokens,
             profiles=profiles,
         )
-        history_block = _format_conversation_history(conversation_history)
 
         # 4. System prompt — identity and instructions only
         system_prompt = (
@@ -996,7 +1085,48 @@ class RAGQueryEngine:
             "lines or duplicate cell values inside a row.\n"
         )
 
-        # 5. User prompt — context → history → question
+        # 5. Compact history if the assembled prompt would exceed 80% of the
+        # model's context window. The threshold and the context-window lookup
+        # both live behind the LLM client, so swapping models (different
+        # tokenizer or window size) needs no code change here.
+        history_to_render = conversation_history or []
+        if history_to_render:
+            context_window = self.llm.get_context_window()
+            soft_budget = int(context_window * 0.8)
+            fixed_tokens = (
+                _estimate_tokens(system_prompt)
+                + _estimate_tokens(context)
+                + _estimate_tokens(user_query)
+                + int(max_generation_tokens)
+            )
+            history_tokens = sum(
+                _estimate_tokens(str(t.get("content", "")))
+                for t in history_to_render
+                if isinstance(t, dict)
+            )
+            if fixed_tokens + history_tokens > soft_budget:
+                budget_for_history = soft_budget - fixed_tokens
+                if budget_for_history <= 0:
+                    logger.warning(
+                        "Fixed prompt parts (~%d tokens) already exceed 80%% of context "
+                        "window (~%d / %d) — dropping conversation history.",
+                        fixed_tokens, soft_budget, context_window,
+                    )
+                    history_to_render = []
+                else:
+                    logger.info(
+                        "Prompt at ~%d tokens (history ~%d) vs 80%% budget %d / window %d "
+                        "— compacting history to fit ~%d tokens.",
+                        fixed_tokens + history_tokens, history_tokens,
+                        soft_budget, context_window, budget_for_history,
+                    )
+                    history_to_render = self._compact_history(
+                        history_to_render, target_tokens=budget_for_history,
+                    )
+
+        history_block = _format_conversation_history(history_to_render)
+
+        # 6. User prompt — context → history → question
         user_parts: List[str] = []
 
         # Context block
