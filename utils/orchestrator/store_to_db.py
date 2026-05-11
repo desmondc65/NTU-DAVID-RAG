@@ -507,12 +507,16 @@ def store_ingested_data(
     db_path.mkdir(parents=True, exist_ok=True)
 
     content_list_json = ingest_result["content_list_json"]
-    fortran_digest_json = ingest_result["fortran_digest_json"]
+    fortran_digest_json = ingest_result.get("fortran_digest_json") or ""
 
     # ── 1. Chunking ──────────────────────────────────────────────────────
     logger.info("═══ Step 1/4: Chunking ═══")
     ms_chunks = chunk_content_list(content_list_json)
-    ft_chunks = chunk_fortran_digest(fortran_digest_json)
+    if fortran_digest_json and Path(fortran_digest_json).exists():
+        ft_chunks = chunk_fortran_digest(fortran_digest_json)
+    else:
+        logger.info("No Fortran digest provided — skipping Fortran chunking.")
+        ft_chunks = []
     all_chunks = ms_chunks + ft_chunks
 
     if not all_chunks:
