@@ -79,6 +79,54 @@ class LocalLLMClient:
 			except Exception:
 				pass
 
+		# Context window cache — fetched lazily on first call.
+		self._context_window: Optional[int] = None
+
+	def get_context_window(self, default: int = 32768) -> int:
+		"""Return the model's context window in tokens.
+
+		Resolution order (cached after the first successful lookup):
+		  1. ``LLM_CONTEXT_WINDOW`` env var, if set to a positive int.
+		  2. Ollama's ``/api/show`` (the ``<arch>.context_length`` field of
+		     ``model_info``) when an Ollama endpoint was detected.
+		  3. ``default``.
+
+		Letting callers override the value via env var means swapping in a
+		different backend (vLLM, llama.cpp, hosted) just needs a config
+		change, not code surgery.
+		"""
+		if self._context_window is not None:
+			return self._context_window
+
+		env_val = os.getenv("LLM_CONTEXT_WINDOW")
+		if env_val:
+			try:
+				n = int(env_val)
+				if n > 0:
+					self._context_window = n
+					return n
+			except ValueError:
+				pass
+
+		if self._ollama_base:
+			try:
+				resp = requests.post(
+					f"{self._ollama_base}/api/show",
+					json={"name": self.model_name},
+					timeout=5,
+				)
+				if resp.ok:
+					info = resp.json().get("model_info", {}) or {}
+					for key, val in info.items():
+						if key.endswith(".context_length") and isinstance(val, int) and val > 0:
+							self._context_window = val
+							return val
+			except Exception:
+				pass
+
+		self._context_window = default
+		return default
+
 	def _ollama_vision(
 		self,
 		user_prompt: list,
