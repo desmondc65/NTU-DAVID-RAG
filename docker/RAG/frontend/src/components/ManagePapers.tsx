@@ -7,7 +7,7 @@ type UploadState = 'queued' | 'processing' | 'success' | 'error';
 interface UploadQueueItem {
   id: string;
   pdfName: string;
-  fortranName: string;
+  fortranName: string;  // "—" when no Fortran was attached
   status: UploadState;
   message: string;
 }
@@ -15,7 +15,7 @@ interface UploadQueueItem {
 interface UploadPair {
   id: string;
   pdf: File;
-  fortran: File;
+  fortran: File | null;
 }
 
 interface DraftPair {
@@ -107,7 +107,8 @@ export default function ManagePapers({ onProcessingChange }: ManagePapersProps) 
     const missing: string[] = [];
 
     draftPairs.forEach((pair, idx) => {
-      if (pair.pdf && pair.fortran) {
+      // A PDF is required; Fortran is optional companion code.
+      if (pair.pdf) {
         pairs.push({
           id: pair.id,
           pdf: pair.pdf,
@@ -116,7 +117,8 @@ export default function ManagePapers({ onProcessingChange }: ManagePapersProps) 
         return;
       }
 
-      if (pair.pdf || pair.fortran) {
+      if (pair.fortran) {
+        // Fortran selected without a PDF — can't ingest, flag it.
         missing.push(`Pair ${idx + 1}`);
       }
     });
@@ -128,13 +130,13 @@ export default function ManagePapers({ onProcessingChange }: ManagePapersProps) 
     if (processing) return;
     const hasAnySelection = draftPairs.some((pair) => pair.pdf || pair.fortran);
     if (!hasAnySelection) {
-      setStatus({ type: 'error', msg: 'Add at least one pair with a PDF and a Fortran file.' });
+      setStatus({ type: 'error', msg: 'Add at least one row with a PDF (Fortran optional).' });
       return;
     }
 
     const { pairs, missing } = buildUploadPairs();
     if (pairs.length === 0) {
-      setStatus({ type: 'error', msg: 'Could not match any PDF with a Fortran file.' });
+      setStatus({ type: 'error', msg: 'Each row needs a PDF — Fortran alone cannot be ingested.' });
       return;
     }
 
@@ -142,16 +144,16 @@ export default function ManagePapers({ onProcessingChange }: ManagePapersProps) 
       ...pairs.map((p) => ({
         id: p.id,
         pdfName: p.pdf.name,
-        fortranName: p.fortran.name,
+        fortranName: p.fortran ? p.fortran.name : '—',
         status: 'queued' as UploadState,
         message: 'Queued',
       })),
       ...missing.map((label) => ({
         id: `missing__${label}`,
         pdfName: label,
-        fortranName: 'Incomplete',
+        fortranName: 'Missing PDF',
         status: 'error' as UploadState,
-        message: 'Both PDF and Fortran are required in each pair row',
+        message: 'Fortran selected without a PDF — add a PDF or remove the row',
       })),
     ];
 
@@ -161,9 +163,10 @@ export default function ManagePapers({ onProcessingChange }: ManagePapersProps) 
     let successCount = 0;
     for (let i = 0; i < pairs.length; i += 1) {
       const pair = pairs[i];
+      const fortranLabel = pair.fortran ? ` + ${pair.fortran.name}` : '';
       setStatus({
         type: '',
-        msg: `Processing ${i + 1}/${pairs.length}: ${pair.pdf.name} + ${pair.fortran.name}`,
+        msg: `Processing ${i + 1}/${pairs.length}: ${pair.pdf.name}${fortranLabel}`,
       });
       setUploadQueue((prev) => prev.map((item) => (
         item.id === pair.id
@@ -203,8 +206,8 @@ export default function ManagePapers({ onProcessingChange }: ManagePapersProps) 
     }
   };
 
-  const completePairCount = draftPairs.filter((pair) => pair.pdf && pair.fortran).length;
-  const hasIncompletePair = draftPairs.some((pair) => (pair.pdf && !pair.fortran) || (!pair.pdf && pair.fortran));
+  const uploadablePairCount = draftPairs.filter((pair) => pair.pdf).length;
+  const hasOrphanFortran = draftPairs.some((pair) => pair.fortran && !pair.pdf);
 
   const handleDelete = async (title: string) => {
     if (!window.confirm(`Delete "${title}" and all its vectors?`)) return;
@@ -240,7 +243,7 @@ export default function ManagePapers({ onProcessingChange }: ManagePapersProps) 
         <h2 className="card-title">Upload Paper &amp; Code</h2>
 
         <p className="status-message" style={{ marginTop: 0, marginBottom: '0.75rem' }}>
-          Create one row per pair. Each row must have exactly one PDF and one Fortran file.
+          One row per paper. PDF is required; Fortran source is optional companion code.
         </p>
 
         <div className="pair-list">
@@ -289,7 +292,7 @@ export default function ManagePapers({ onProcessingChange }: ManagePapersProps) 
                 >
                   <div className="upload-zone-icon">💻</div>
                   <p className="upload-zone-text">
-                    <strong>Fortran Source</strong><br />
+                    <strong>Fortran Source</strong> <span style={{ opacity: 0.7 }}>(optional)</span><br />
                     Drop or click to select
                   </p>
                 </div>
@@ -344,21 +347,21 @@ export default function ManagePapers({ onProcessingChange }: ManagePapersProps) 
           </button>
         </div>
 
-        {hasIncompletePair && (
+        {hasOrphanFortran && (
           <p className="status-message error">
-            ✗ Complete every pair row before uploading.
+            ✗ One or more rows have a Fortran file but no PDF — add a PDF or remove the row.
           </p>
         )}
 
         <button
           id="btn-upload"
           className="btn btn-primary upload-primary-action"
-          disabled={completePairCount === 0 || hasIncompletePair || processing}
+          disabled={uploadablePairCount === 0 || hasOrphanFortran || processing}
           onClick={handleUpload}
         >
           {processing
             ? <><span className="spinner" /> Processing Queue…</>
-            : `⬆ Upload & Ingest (${completePairCount} pair${completePairCount !== 1 ? 's' : ''})`}
+            : `⬆ Upload & Ingest (${uploadablePairCount} paper${uploadablePairCount !== 1 ? 's' : ''})`}
         </button>
 
         {processing && (
