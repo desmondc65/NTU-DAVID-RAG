@@ -53,6 +53,7 @@ class LocalLLMClient:
 		model_name: str = "gemma4:31b",
 		base_url: Optional[str] = None,
 		api_key: Optional[str] = None,
+		timeout: Optional[float] = None,
 	):
 		"""
 		Initialize the LocalLLMClient.
@@ -61,12 +62,27 @@ class LocalLLMClient:
 			model_name (str): Model identifier served by the local endpoint.
 			base_url (str, optional): OpenAI-compatible endpoint base URL.
 			api_key (str, optional): API key used by the local endpoint.
+			timeout (float, optional): Per-request timeout in seconds. The
+				OpenAI SDK defaults to 600s, which is too short when a large
+				model digests an 80k-char Fortran chunk on a busy GPU. We
+				default to ``LOCAL_LLM_TIMEOUT_SECONDS`` (30 min) so long
+				ingestion calls don't get cut off mid-generation.
 		"""
 		self.model_name = model_name
 		self.base_url = base_url or os.getenv("LOCAL_LLM_BASE_URL", "http://localhost:11434/v1")
 		self.api_key = api_key or os.getenv("LOCAL_LLM_API_KEY", "ollama")
+		if timeout is None:
+			try:
+				timeout = float(os.getenv("LOCAL_LLM_TIMEOUT_SECONDS", "1800"))
+			except ValueError:
+				timeout = 1800.0
+		self.timeout = timeout
 
-		self.client = OpenAI(base_url=self.base_url, api_key=self.api_key)
+		self.client = OpenAI(
+			base_url=self.base_url,
+			api_key=self.api_key,
+			timeout=self.timeout,
+		)
 
 		# Detect Ollama endpoint (its OpenAI-compat layer drops images)
 		self._ollama_base = None
@@ -166,7 +182,7 @@ class LocalLLMClient:
 				"stream": False,
 				"options": {"temperature": temperature},
 			},
-			timeout=300,
+			timeout=self.timeout,
 		)
 		resp.raise_for_status()
 		return resp.json().get("message", {}).get("content", "")
