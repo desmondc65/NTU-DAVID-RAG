@@ -100,7 +100,16 @@ services:
       RAG_EMBEDDING_DEVICE: "cpu"
       RAG_RERANKER_DEVICE: "cpu"
       NVIDIA_DRIVER_CAPABILITIES: "compute,utility"
-      CUDA_VISIBLE_DEVICES: "${EMBEDDING_GPU:-1}"
+      # MinerU (PDF layout/OCR) runs here during ingestion. Kept separate
+      # from EMBEDDING_GPU so MinerU can be moved off the embedder's card
+      # when that card is full.
+      CUDA_VISIBLE_DEVICES: "${RAG_WEB_GPU:-${EMBEDDING_GPU:-1}}"
+      # Cap MinerU's auto-tuned batch size — its default reads the device's
+      # TOTAL vram and picks ratio=16 for any ≥32 GB card, which OOMs on a
+      # shared GPU. 8 keeps a comfortable ~5 GB working set.
+      MINERU_HYBRID_BATCH_RATIO: "${MINERU_HYBRID_BATCH_RATIO:-8}"
+      # Reduce fragmentation under tight memory.
+      PYTORCH_CUDA_ALLOC_CONF: "expandable_segments:True"
       # Auth — rag-web owns Alembic migrations for the whole stack.
       AUTH_DB_URL: "postgresql+psycopg://${AUTH_DB_USER:-appuser}:${AUTH_DB_PASSWORD}@auth-db:5432/${AUTH_DB_NAME:-appdb}"
       SESSION_SECRET: "${SESSION_SECRET}"
@@ -121,14 +130,14 @@ services:
                   gunicorn --bind 0.0.0.0:5000 --timeout 900 --workers 1 --threads 4 app:app 2>&1 | tee -a /app/log.txt"
     privileged: true
     deploy:
-      # Share the same GPU the embedding server uses — MinerU runs only
-      # during uploads and releases memory when done. The embedder's
-      # 15 GB + MinerU's ~3 GB comfortably fits a 30 GB card.
+      # MinerU runs only during uploads and releases memory when done.
+      # Defaults to the embedder's GPU but can be split via RAG_WEB_GPU
+      # when that card is already saturated.
       resources:
         reservations:
           devices:
             - driver: nvidia
-              device_ids: ["${EMBEDDING_GPU:-1}"]
+              device_ids: ["${RAG_WEB_GPU:-${EMBEDDING_GPU:-1}}"]
               capabilities: [gpu]
     networks:
       - shared-net
