@@ -218,11 +218,29 @@ def upload_paper():
                 db_path=user_db,
             )
 
+        # Build a human-friendly label for the success toast — prefer the
+        # actual paper title from metadata.json, fall back to the paper
+        # directory basename, then to the original PDF filename. Never
+        # expose the absolute container path to the UI.
+        paper_label = pdf_name
+        metadata_json = ingest_result.get("metadata_json", "")
+        paper_dir_value = ingest_result.get("paper_dir", "")
+        if metadata_json and Path(metadata_json).exists():
+            try:
+                with open(metadata_json, "r", encoding="utf-8") as f:
+                    title = (json.load(f) or {}).get("paper_title", "").strip()
+                if title:
+                    paper_label = title
+            except Exception:
+                pass
+        if paper_label == pdf_name and paper_dir_value:
+            paper_label = Path(paper_dir_value).name
+
         return jsonify({
             "status": "ok",
-            "message": f"Ingested {ingest_result.get('paper_dir', pdf_name)}",
+            "message": f"Ingested {paper_label}",
             "store_result": store_result,
-            "paper_dir": ingest_result.get("paper_dir", ""),
+            "paper_dir": paper_dir_value,
         })
 
     except Exception as e:
