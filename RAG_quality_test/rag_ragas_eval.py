@@ -51,13 +51,15 @@ from rag_quality_test import Question, parse_questions, run_query
 
 CURRENT_DIR = Path(__file__).resolve().parent
 
-DEFAULT_API = os.environ.get("RAG_API_BASE", "http://localhost:3006").rstrip("/")
+DEFAULT_API = os.environ.get("RAG_API_BASE", "http://localhost:3006/rag").rstrip("/")
 DEFAULT_QUESTIONS = CURRENT_DIR / "questions.md"
 DEFAULT_OUT_DIR = CURRENT_DIR / "results"
 DEFAULT_LLM_BASE_URL = os.environ.get("LOCAL_LLM_BASE_URL", "http://localhost:11434/v1").rstrip("/")
 DEFAULT_LLM_API_KEY = os.environ.get("LOCAL_LLM_API_KEY", "ollama")
 DEFAULT_LLM_MODEL = os.environ.get("LLM_MODEL_NAME", "gemma4:31b")
 DEFAULT_RAGAS_TOP_CONTEXTS = 3
+DEFAULT_LOGIN_EMAIL = os.environ.get("RAG_EVAL_EMAIL", "")
+DEFAULT_LOGIN_PASSWORD = os.environ.get("RAG_EVAL_PASSWORD", "")
 
 logger = logging.getLogger("rag_ragas_eval")
 
@@ -133,13 +135,60 @@ def _build_metrics() -> List[Any]:
     ]
 
 
-def _check_rag_service(api_base: str) -> Dict[str, Any]:
-    resp = requests.get(f"{api_base}/api/status", timeout=10)
+def _check_rag_service(api_base: str, session: requests.Session) -> Dict[str, Any]:
+    """Probe the RAG status endpoint using the (possibly authenticated) session."""
+    resp = session.get(f"{api_base}/api/status", timeout=10)
     resp.raise_for_status()
     payload = resp.json()
     if not isinstance(payload, dict):
         raise RuntimeError(f"Unexpected /api/status payload: {payload!r}")
     return payload
+
+
+def _auth_root(api_base: str) -> str:
+    """Return the host root for auth endpoints.
+
+    Auth is served at `/api/auth/*` on the proxy origin, regardless of any
+    `/rag/` prefix applied to the rag-web routes. We strip a trailing
+    `/rag` (or any single-segment app prefix) so login works whether the
+    user passes `http://host:3006` or `http://host:3006/rag`.
+    """
+    base = api_base.rstrip("/")
+    if base.endswith("/rag"):
+        return base[: -len("/rag")]
+    return base
+
+
+def _login(api_base: str, email: str, password: str) -> requests.Session:
+    """Log in against `/api/auth/login` and return a CSRF-armed session.
+
+    Raises ``RuntimeError`` on any auth failure so the caller can abort.
+    """
+    session = requests.Session()
+    root = _auth_root(api_base)
+    resp = session.post(
+        f"{root}/api/auth/login",
+        json={"email": email, "password": password},
+        timeout=15,
+    )
+    if resp.status_code != 200:
+        try:
+            err = resp.json().get("error", "")
+        except Exception:
+            err = resp.text[:200]
+        raise RuntimeError(f"Login failed (HTTP {resp.status_code}): {err}")
+
+    csrf = session.cookies.get("csrf_token", "")
+    if not csrf:
+        raise RuntimeError(
+            "Login succeeded but no csrf_token cookie was returned — "
+            "the API may be running without CSRF protection or behind a "
+            "proxy that strips Set-Cookie."
+        )
+    # Every state-changing request must echo the CSRF token in the
+    # X-CSRF-Token header (double-submit pattern).
+    session.headers.update({"X-CSRF-Token": csrf})
+    return session
 
 
 def _check_local_llm(base_url: str) -> Dict[str, Any]:
@@ -338,6 +387,10 @@ def main() -> int:
                         help="API key for the local evaluation LLM.")
     parser.add_argument("--llm-model", default=DEFAULT_LLM_MODEL,
                         help=f"Model name for the local evaluation LLM (default: {DEFAULT_LLM_MODEL}).")
+    parser.add_argument("--login-email", default=DEFAULT_LOGIN_EMAIL,
+                        help="Account email for the RAG API. Falls back to $RAG_EVAL_EMAIL.")
+    parser.add_argument("--login-password", default=DEFAULT_LOGIN_PASSWORD,
+                        help="Account password for the RAG API. Falls back to $RAG_EVAL_PASSWORD.")
     parser.add_argument("--verbose", action="store_true")
     args = parser.parse_args()
 
@@ -367,9 +420,24 @@ def main() -> int:
         return 2
     _log_progress(f"→ {len(questions)} question(s) selected")
 
+    if not args.login_email or not args.login_password:
+        logger.error(
+            "Login credentials required. Pass --login-email/--login-password or "
+            "set RAG_EVAL_EMAIL/RAG_EVAL_PASSWORD."
+        )
+        return 5
+
+    _log_progress(f"→ Logging in as {args.login_email} at {_auth_root(api_base)}/api/auth/login")
+    try:
+        api_session = _login(api_base, args.login_email, args.login_password)
+        _log_progress("✓ Login OK, CSRF token captured")
+    except Exception as exc:
+        logger.error("Login failed: %s", exc)
+        return 6
+
     _log_progress(f"→ Checking RAG service at {api_base}")
     try:
-        rag_status = _check_rag_service(api_base)
+        rag_status = _check_rag_service(api_base, api_session)
         _log_progress(f"✓ RAG service reachable: {rag_status}")
     except Exception as exc:
         logger.error("Cannot reach RAG service at %s: %s", api_base, exc)
@@ -398,7 +466,7 @@ def main() -> int:
         f"→ Running {len(questions)} question(s) against {api_base} with judge model {llm_model}"
     )
 
-    with requests.Session() as session:
+    with api_session as session:
         for idx, question in enumerate(questions, 1):
             _log_progress(
                 f"[{idx}/{len(questions)}] {question.category} — Q{question.number}: {question.text[:80]}"
