@@ -255,8 +255,8 @@ def _unique_dir(base_dir: Path) -> Path:
 
 def ingest_paper_and_code(
     pdf_path: Union[str, Path],
-    fortran_path: Union[str, Path],
-    output_dir: Union[str, Path],
+    fortran_path: Optional[Union[str, Path]] = None,
+    output_dir: Union[str, Path] = None,
     db_path: Optional[Union[str, Path]] = None,
     *,
     # MinerU options
@@ -269,14 +269,16 @@ def ingest_paper_and_code(
     api_key: Optional[str] = None,
 ) -> Dict[str, str]:
     """
-    End-to-end ingestion of a PDF paper and its companion Fortran code.
+    End-to-end ingestion of a PDF paper and (optionally) its companion Fortran code.
 
     Parameters
     ----------
     pdf_path : path
         Path to the input PDF file.
-    fortran_path : path
-        Path to the Fortran source file.
+    fortran_path : path, optional
+        Path to a Fortran source file. When omitted, the Fortran digest
+        stage is skipped and ``fortran_digest_json`` / ``source_fortran_path``
+        come back as empty strings.
     output_dir : path
         Root directory where all processed outputs will be stored.
     db_path : path, optional
@@ -294,11 +296,14 @@ def ingest_paper_and_code(
             "md_path":              "...",
             "content_list_json":    "...",
             "metadata_json":        "...",
-            "fortran_digest_json":  "...",
+            "fortran_digest_json":  "...",   # "" when no Fortran was given
         }
     """
+    if output_dir is None:
+        raise TypeError("ingest_paper_and_code: output_dir is required")
     pdf_path = Path(pdf_path)
-    fortran_path = Path(fortran_path)
+    fortran_path = Path(fortran_path) if fortran_path else None
+    has_fortran = fortran_path is not None
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -315,9 +320,11 @@ def ingest_paper_and_code(
     stage_extract_dir.mkdir(parents=True, exist_ok=True)
 
     staged_pdf = stage_source_dir / pdf_path.name
-    staged_fortran = stage_source_dir / fortran_path.name
     shutil.copy2(pdf_path, staged_pdf)
-    shutil.copy2(fortran_path, staged_fortran)
+    staged_fortran = None
+    if has_fortran:
+        staged_fortran = stage_source_dir / fortran_path.name
+        shutil.copy2(fortran_path, staged_fortran)
 
     try:
         # ── 1. PDF extraction ────────────────────────────────────────────
@@ -350,9 +357,11 @@ def ingest_paper_and_code(
         paper_extract_dir.mkdir(parents=True, exist_ok=True)
 
         final_pdf_path = paper_source_dir / staged_pdf.name
-        final_fortran_path = paper_source_dir / staged_fortran.name
         shutil.move(str(staged_pdf), str(final_pdf_path))
-        shutil.move(str(staged_fortran), str(final_fortran_path))
+        final_fortran_path = None
+        if has_fortran:
+            final_fortran_path = paper_source_dir / staged_fortran.name
+            shutil.move(str(staged_fortran), str(final_fortran_path))
 
         extracted_pdf_dir = stage_extract_dir / staged_pdf.stem
         final_extracted_pdf_dir = paper_extract_dir / staged_pdf.stem
@@ -367,7 +376,7 @@ def ingest_paper_and_code(
             metadata["db_path"] = str(db_path)
         metadata["paper_dir"] = str(paper_dir)
         metadata["source_pdf_path"] = str(final_pdf_path)
-        metadata["source_fortran_path"] = str(final_fortran_path)
+        metadata["source_fortran_path"] = str(final_fortran_path) if final_fortran_path else ""
         metadata["ingest_output_dir"] = str(paper_extract_dir)
         metadata["md_path"] = str(md_path)
         metadata["content_list_path"] = str(json_path)
@@ -414,41 +423,47 @@ def ingest_paper_and_code(
         describe_mineru_equations(json_path)
         describe_mineru_tables(json_path)
 
-        # ── 4. Fortran code digestion ────────────────────────────────────
-        logger.info("═══ Step 4/5: Digesting Fortran code ═══")
-        fortran_digest_path = paper_dir / f"{final_fortran_path.stem}_digest.json"
-        code_content = final_fortran_path.read_text(encoding="utf-8", errors="replace")
-        digest_fortran_code(
-            code_content=code_content,
-            output_json_path=str(fortran_digest_path),
-            model_name=model_name,
-            base_url=base_url,
-            api_key=api_key,
-        )
-        summarize_fortran_digest(
-            json_path=fortran_digest_path,
-            model_name=model_name,
-            base_url=base_url,
-            api_key=api_key,
-        )
+        # ── 4. Fortran code digestion (skipped when no Fortran supplied) ─
+        fortran_digest_path: Optional[Path] = None
+        if has_fortran:
+            logger.info("═══ Step 4/5: Digesting Fortran code ═══")
+            fortran_digest_path = paper_dir / f"{final_fortran_path.stem}_digest.json"
+            code_content = final_fortran_path.read_text(encoding="utf-8", errors="replace")
+            digest_fortran_code(
+                code_content=code_content,
+                output_json_path=str(fortran_digest_path),
+                model_name=model_name,
+                base_url=base_url,
+                api_key=api_key,
+            )
+            summarize_fortran_digest(
+                json_path=fortran_digest_path,
+                model_name=model_name,
+                base_url=base_url,
+                api_key=api_key,
+            )
+            metadata["fortran_digest_path"] = str(fortran_digest_path)
+        else:
+            logger.info("═══ Step 4/5: No Fortran file provided — skipping code digest ═══")
+            metadata["fortran_digest_path"] = ""
 
-        metadata["fortran_digest_path"] = str(fortran_digest_path)
         with open(metadata_json_path, "w", encoding="utf-8") as f:
             json.dump(metadata, f, indent=4, ensure_ascii=False)
 
         # ── 5. Inject metadata into output JSONs ─────────────────────────
         logger.info("═══ Step 5/5: Injecting metadata into output JSONs ═══")
         _inject_metadata_into_json(json_path, metadata)
-        _inject_metadata_into_json(fortran_digest_path, metadata)
+        if fortran_digest_path is not None:
+            _inject_metadata_into_json(fortran_digest_path, metadata)
 
         summary = {
             "paper_dir": str(paper_dir),
             "md_path": str(md_path),
             "content_list_json": str(json_path),
             "metadata_json": str(metadata_json_path),
-            "fortran_digest_json": str(fortran_digest_path),
+            "fortran_digest_json": str(fortran_digest_path) if fortran_digest_path else "",
             "source_pdf_path": str(final_pdf_path),
-            "source_fortran_path": str(final_fortran_path),
+            "source_fortran_path": str(final_fortran_path) if final_fortran_path else "",
         }
     finally:
         shutil.rmtree(stage_root, ignore_errors=True)

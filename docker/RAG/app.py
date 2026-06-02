@@ -155,43 +155,52 @@ def list_papers():
 @csrf_protect
 def upload_paper():
     """
-    Upload a PDF + Fortran file pair.
-    Expects multipart form with 'pdf' and 'fortran' file fields.
+    Upload a PDF, optionally paired with a Fortran source file.
+    Expects multipart form with 'pdf' (required) and 'fortran' (optional).
     """
     if "pdf" not in request.files:
         return jsonify({"error": "Missing PDF file"}), 400
-    if "fortran" not in request.files:
-        return jsonify({"error": "Missing Fortran file"}), 400
 
     pdf_file = request.files["pdf"]
-    fortran_file = request.files["fortran"]
+    fortran_file = request.files.get("fortran")
+    # Treat an empty filename like a missing field — browsers sometimes
+    # submit empty file inputs in FormData.
+    if fortran_file is not None and not fortran_file.filename:
+        fortran_file = None
 
-    if not pdf_file.filename or not fortran_file.filename:
-        return jsonify({"error": "Empty filename(s)"}), 400
+    if not pdf_file.filename:
+        return jsonify({"error": "Empty PDF filename"}), 400
 
     user = current_user()
     user_db = _user_db_path(user.id)
     user_data = _user_data_path(user.id)
 
     pdf_name = secure_filename(pdf_file.filename)
-    fortran_name = secure_filename(fortran_file.filename)
+    fortran_name = secure_filename(fortran_file.filename) if fortran_file else None
 
     # Stage incoming uploads in a per-user temporary directory first.
     request_tmp_dir = user_data / "tmp_uploads" / uuid.uuid4().hex
     request_tmp_dir.mkdir(parents=True, exist_ok=True)
 
     pdf_path = request_tmp_dir / pdf_name
-    fortran_path = request_tmp_dir / fortran_name
     pdf_file.save(str(pdf_path))
-    fortran_file.save(str(fortran_path))
+    fortran_path = None
+    if fortran_file is not None:
+        fortran_path = request_tmp_dir / fortran_name
+        fortran_file.save(str(fortran_path))
 
     try:
         from utils.orchestrator.ingest_paper import ingest_paper_and_code
         from utils.orchestrator.store_to_db import store_ingested_data
 
-        logger.info("Starting ingestion for %s + %s (user=%s)", pdf_name, fortran_name, user.id)
+        logger.info(
+            "Starting ingestion for %s%s (user=%s)",
+            pdf_name,
+            f" + {fortran_name}" if fortran_name else " (no Fortran)",
+            user.id,
+        )
 
-        # Step 1: Ingest (PDF extraction + Fortran digest)
+        # Step 1: Ingest (PDF extraction + optional Fortran digest)
         ingest_result = ingest_paper_and_code(
             pdf_path=pdf_path,
             fortran_path=fortran_path,
@@ -209,11 +218,29 @@ def upload_paper():
                 db_path=user_db,
             )
 
+        # Build a human-friendly label for the success toast — prefer the
+        # actual paper title from metadata.json, fall back to the paper
+        # directory basename, then to the original PDF filename. Never
+        # expose the absolute container path to the UI.
+        paper_label = pdf_name
+        metadata_json = ingest_result.get("metadata_json", "")
+        paper_dir_value = ingest_result.get("paper_dir", "")
+        if metadata_json and Path(metadata_json).exists():
+            try:
+                with open(metadata_json, "r", encoding="utf-8") as f:
+                    title = (json.load(f) or {}).get("paper_title", "").strip()
+                if title:
+                    paper_label = title
+            except Exception:
+                pass
+        if paper_label == pdf_name and paper_dir_value:
+            paper_label = Path(paper_dir_value).name
+
         return jsonify({
             "status": "ok",
-            "message": f"Ingested {ingest_result.get('paper_dir', pdf_name)}",
+            "message": f"Ingested {paper_label}",
             "store_result": store_result,
-            "paper_dir": ingest_result.get("paper_dir", ""),
+            "paper_dir": paper_dir_value,
         })
 
     except Exception as e:

@@ -57,6 +57,10 @@ EMBEDDING_MODEL_NAME = os.getenv("EMBEDDING_MODEL", _DEFAULT_EMBEDDING_MODEL)
 RERANKER_MODEL_NAME = os.getenv("RERANKER_MODEL", "BAAI/bge-reranker-v2-m3")
 EMBEDDING_DEVICE = os.getenv("EMBEDDING_DEVICE", "cuda:0")
 RERANKER_DEVICE = os.getenv("RERANKER_DEVICE", EMBEDDING_DEVICE)
+# When set (e.g. "auto"), the embedder is loaded with HF Accelerate's
+# device_map so its layers shard across every visible CUDA device. Lets
+# the 7B model fit when no single GPU has enough free memory on its own.
+EMBEDDING_DEVICE_MAP = os.getenv("EMBEDDING_DEVICE_MAP") or None
 DEFAULT_BATCH_SIZE = int(os.getenv("EMBEDDING_BATCH_SIZE", "8"))
 
 
@@ -74,12 +78,46 @@ _doc_pref = _doc_prefix(EMBEDDING_MODEL_NAME)
 def _load_models() -> None:
     """Load models into GPU memory. Called once at startup."""
     global _embedder, _reranker
+    import torch  # needed for the fp16 dtype handle below
+
     from sentence_transformers import SentenceTransformer, CrossEncoder
 
-    logger.info("Loading embedding model '%s' on %s …", EMBEDDING_MODEL_NAME, EMBEDDING_DEVICE)
-    _embedder = SentenceTransformer(
-        EMBEDDING_MODEL_NAME, device=EMBEDDING_DEVICE, trust_remote_code=True
-    )
+    if EMBEDDING_DEVICE_MAP:
+        # device_map drives placement; passing `device=` would trigger an
+        # extra .to() that conflicts with the dispatched layout. Note:
+        # gte-Qwen2-7B's custom modeling code (trust_remote_code) has
+        # been observed to break at inference under multi-GPU sharding
+        # ("tensors on cuda:0 and cuda:1") because its custom RMSNorm
+        # doesn't carry Accelerate's cross-device hooks. Prefer the
+        # single-GPU fp16 path below unless you've verified your model
+        # variant works.
+        logger.info(
+            "Loading embedding model '%s' with device_map='%s' (fp16) …",
+            EMBEDDING_MODEL_NAME,
+            EMBEDDING_DEVICE_MAP,
+        )
+        _embedder = SentenceTransformer(
+            EMBEDDING_MODEL_NAME,
+            model_kwargs={
+                "device_map": EMBEDDING_DEVICE_MAP,
+                "torch_dtype": torch.float16,
+            },
+            trust_remote_code=True,
+        )
+    else:
+        # fp16 on a single GPU: ~14 GB for the 7B model, comfortably
+        # below a 48 GB card even with neighbour jobs eating ~25 GB.
+        logger.info(
+            "Loading embedding model '%s' on %s (fp16) …",
+            EMBEDDING_MODEL_NAME,
+            EMBEDDING_DEVICE,
+        )
+        _embedder = SentenceTransformer(
+            EMBEDDING_MODEL_NAME,
+            device=EMBEDDING_DEVICE,
+            model_kwargs={"torch_dtype": torch.float16},
+            trust_remote_code=True,
+        )
     logger.info("Embedding model ready.")
 
     logger.info("Loading reranker '%s' on %s …", RERANKER_MODEL_NAME, RERANKER_DEVICE)
@@ -125,7 +163,8 @@ def info():
             "embedding_model": EMBEDDING_MODEL_NAME,
             "reranker_model": RERANKER_MODEL_NAME,
             "embedding_dim": dim,
-            "embedding_device": EMBEDDING_DEVICE,
+            "embedding_device": EMBEDDING_DEVICE_MAP or EMBEDDING_DEVICE,
+            "embedding_device_map": EMBEDDING_DEVICE_MAP,
             "reranker_device": RERANKER_DEVICE,
         }
     )

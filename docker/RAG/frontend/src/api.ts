@@ -169,11 +169,13 @@ export async function fetchPapers(): Promise<Paper[]> {
 
 export async function uploadPaper(
   pdfFile: File,
-  fortranFile: File,
+  fortranFile?: File | null,
 ): Promise<UploadResponse> {
   const form = new FormData();
   form.append('pdf', pdfFile);
-  form.append('fortran', fortranFile);
+  if (fortranFile) {
+    form.append('fortran', fortranFile);
+  }
   return apiFetch<UploadResponse>(`${API_BASE}/papers`, {
     method: 'POST',
     body: form,
