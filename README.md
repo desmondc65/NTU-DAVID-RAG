@@ -16,21 +16,28 @@ Architecture diagram for the retrieval stack lives under [docs/tikz/](docs/tikz/
 NTU-DAVID-RAG/
 ├── utils/
 │   ├── s1_data_ingestion/   # Fortran digestion + MinerU-based PDF extraction
-│   ├── s2_embedding/        # Chunking, embedder, Qdrant vector store, CLI
+│   ├── s2_embedding/        # Chunking, embedder, Qdrant store, per-model collections
 │   ├── s3_RAG/              # BM25, dense, RRF fusion, cross-encoder rerank
 │   ├── orchestrator/        # Ingestion pipeline + profile-aware query engine
-│   └── llm_clients/         # Gemini, OpenAI, and local (OpenAI-compatible) clients
+│   ├── llm_clients/         # Gemini, OpenAI, and local (OpenAI-compatible) clients
+│   └── auth/                # Flask auth blueprint (register/login/CSRF) + Alembic
 ├── docker/
-│   ├── docker-compose.yml   # Unified stack: embedding-server + rag-web + proxy
-│   ├── embedding_server/    # Shared HTTP embedder + reranker (owns the GPU)
-│   ├── RAG/                 # Flask API + React chat UI for the vector RAG
-│   ├── proxy/               # nginx that fronts the UI under one port
-│   └── local_llm/           # Ollama compose file for the answer LLM
+│   ├── docker-compose.yml          # Default stack: embedding-server + rag-web + auth-db + proxy
+│   ├── docker-compose.one-gpu.yml  # Single-GPU override (lighter models, in-stack LLM)
+│   ├── up.sh, up.one-gpu.sh         # Launchers for the two deployment modes
+│   ├── README.one-gpu.md            # Single-GPU mode guide
+│   ├── embedding_server/           # Shared HTTP embedder + reranker (owns the GPU)
+│   ├── RAG/                        # Flask API + React chat UI for the vector RAG
+│   ├── proxy/                      # nginx that fronts the UI under one port
+│   └── local_llm/                  # Ollama compose file for the answer LLM
 ├── RAG_quality_test/        # Report-style and Ragas-based evaluators
 ├── tests/                   # Pytest suites per stage
 ├── docs/                    # Diagrams and workflow notes
 ├── db/                      # Per-user Qdrant + registry, scoped under `users/<user_id>/`
 ├── data/                    # Per-user paper/code artefacts, scoped under `users/<user_id>/`
+├── report/                  # Technical report + setup manual (LaTeX → PDF)
+├── auth_db/                 # PostgreSQL data: users, sessions, conversations
+├── hf_cache/                # Cached model weights (embedder, reranker, MinerU)
 ├── CHANGELOG.md
 └── README.md
 ```
@@ -48,18 +55,42 @@ Each subpackage ships its own `readme.md` with module-level detail — the secti
 
 Default models (overridable per service):
 
-- **Embedder**: `Alibaba-NLP/gte-Qwen2-7B-instruct` (3584-dim, asymmetric query/passage prefixes applied server-side).
+- **Embedder**: `Alibaba-NLP/gte-Qwen2-7B-instruct` (3584-dim, asymmetric query/passage prefixes applied server-side; single-GPU mode swaps in the lighter `BAAI/bge-large-en-v1.5` or `google/embeddinggemma-300m`).
 - **Reranker**: `BAAI/bge-reranker-v2-m3` (cross-encoder, scores the top-50 fused candidates).
-- **Vector store**: Qdrant on-disk, isolated per user — `db/users/<user_id>/`.
+- **Answer LLM**: `gemma4:31b` via Ollama in the default stack; the single-GPU mode runs a smaller in-stack model (e.g. `gemma3:12b`).
+- **Vector store**: Qdrant on-disk, isolated per user — `db/users/<user_id>/`. Each embedding model gets its own collections (`rag_embeddings__<model>` / `paper_profiles__<model>`), so different-dimension embedders coexist and switching models never requires a DB wipe — see [`utils/s2_embedding/collections.py`](utils/s2_embedding/collections.py).
 
 ## Running the stack
 
-The canonical way to bring up the retrieval service is the unified Docker compose in [docker/docker-compose.yml](docker/docker-compose.yml). A single `embedding-server` container owns the GPU and loads the 7B embedder + reranker once; `rag-web` is a CPU-only Flask backend that calls it over HTTP.
+The stack is orchestrated with Docker Compose under [docker/](docker/). The default deployment runs five services: a GPU `embedding-server` (loads the embedder + reranker once), a CPU-only `rag-web` Flask backend that calls it over HTTP, an `auth-db` (PostgreSQL) for users/sessions, an `nginx` proxy that publishes everything on one port, and a separate Ollama service for the answer LLM. A single-GPU override can collapse the whole stack onto one card.
+
+> **Full step-by-step install guide** — prerequisites, GPU/Docker setup per OS, and both deployment modes — is in the setup manual: [report/setup_manual/manual.pdf](report/setup_manual/manual.pdf).
+
+**1. Clone and configure.** Clone the repository, then create `docker/.env` from the template and set the two required secrets:
+
+```bash
+git clone https://github.com/desmondc65/NTU-DAVID-RAG.git
+cd NTU-DAVID-RAG
+cp docker/.env.example docker/.env
+openssl rand -hex 24    # paste as AUTH_DB_PASSWORD in docker/.env
+openssl rand -hex 32    # paste as SESSION_SECRET  in docker/.env
+```
+
+**2a. Two-GPU (default).** The 7B embedder owns one card; the `gemma4:31b` answer LLM runs on another via the standalone Ollama compose, then start the stack:
+
+```bash
+cd docker/local_llm && docker compose -f docker-compose.gemma4_31b_ollama.yml up -d
+cd ..               && ./up.sh --build      # convenience launcher around `docker compose up`
+```
+
+**2b. Single-GPU.** The `docker-compose.one-gpu.yml` override runs the embedder, reranker, MinerU, and an in-stack LLM on one card with lighter models (`bge-large-en-v1.5` / `embeddinggemma-300m` + `gemma3:12b`):
 
 ```bash
 cd docker
-docker compose up --build
+GPU=0 ./up.one-gpu.sh --build               # GPU=<physical card index>; see docker/README.one-gpu.md
 ```
+
+Open `http://<host>:3006/` and register an account (the embedding server has a ~10 min startup grace on a cold cache while weights download).
 
 Endpoints exposed by the nginx proxy (default `UNIFIED_PORT=3006`):
 
@@ -70,7 +101,13 @@ Endpoints exposed by the nginx proxy (default `UNIFIED_PORT=3006`):
 
 Every authenticated user gets their own Qdrant store, paper registry, and ingest output under `users/<user_id>/`, so two users running side-by-side never see each other's papers or vectors. The per-service compose file under `docker/RAG/` remains usable for running the backend standalone with its own embedder — see its `readme.md` for details.
 
-An answer LLM is still required. Start one from `docker/local_llm/` — the Gemma4-31B (Ollama) compose file is wired to the `OPENAI_API_BASE` that the web backend expects.
+## Authentication & multi-user access
+
+`rag-web` is gated by a shared Flask auth blueprint ([`utils/auth/`](utils/auth/)) backed by the `auth-db` PostgreSQL service; `rag-web` applies its Alembic migrations automatically on startup.
+
+- **Accounts.** Register and log in via `/api/auth/*` (the chat UI wraps these). Passwords are hashed with Argon2id; sessions are signed server-side and CSRF-protected (an `X-CSRF-Token` header must echo the `csrf_token` cookie on mutating requests). Registration and login are rate-limited.
+- **Per-user isolation.** Each user's papers and vectors live under `db/users/<user_id>/` and `data/users/<user_id>/`.
+- **Relevant `.env` settings:** `AUTH_DB_NAME` / `AUTH_DB_USER` / `AUTH_DB_PASSWORD` (PostgreSQL), `SESSION_SECRET` (session + CSRF signing key), `ALLOW_REGISTRATION` (set `false` to disable open signup once accounts exist), and `SESSION_COOKIE_SECURE` (set `true` when behind HTTPS).
 
 ## Quick Start (Python environment)
 
@@ -195,7 +232,7 @@ Then open `http://<host>:3006/`. The embedding server has a long startup grace (
 [RAG_quality_test/](RAG_quality_test/) contains two complementary evaluators for the vector RAG:
 
 - `rag_quality_test.py` — report-style regression runner.
-- `rag_ragas_eval.py` — reference-free Ragas metrics, with `local` / `openai` / `gemini` judges.
+- `rag_ragas_eval.py` — reference-free Ragas metrics (faithfulness + context precision) scored by a local Ollama judge (e.g. `gemma4:31b`). It logs into the RAG API, runs the question set, and writes timestamped JSON/Markdown results.
 
 ```bash
 cd docker/local_llm && docker compose -f docker-compose.gemma4_31b_ollama.yml up -d
@@ -221,7 +258,9 @@ NTU-DAVID-RAG/
 │   ├── Consumption Smoothing.../   # Research project 2
 │   └── The Welfare Implications.../# Research project 3
 ├── docker/                         # Dockerized stack
-│   ├── docker-compose.yml          # Unified RAG + shared embedding server
+│   ├── docker-compose.yml          # Default stack: embedding-server + rag-web + auth-db + proxy
+│   ├── docker-compose.one-gpu.yml  # Single-GPU override (lighter models, in-stack LLM)
+│   ├── up.sh, up.one-gpu.sh         # Launchers for the two deployment modes
 │   ├── embedding_server/           # GPU container: gte-Qwen2-7B + bge-reranker HTTP service
 │   ├── proxy/                      # nginx (/ → /rag/)
 │   ├── RAG/                        # Standalone vector-RAG service (Flask + React)
@@ -235,6 +274,7 @@ NTU-DAVID-RAG/
 │   ├── orchestrator/               # Profile-first global-query router (production retrieval)
 │   ├── llm_clients/                # Gemini, OpenAI, and local (OpenAI-compatible) clients
 │   └── auth/                       # Shared Flask auth blueprint + Alembic migrations
+├── report/                         # Technical report + setup manual (LaTeX → PDF)
 └── README.md
 ```
 
@@ -267,6 +307,8 @@ JSON Data Files ──→ Chunker ──→ Embedding Model ──→ Qdrant Vec
 | **Embedding Model** | `Alibaba-NLP/gte-Qwen2-7B-instruct` (default) | Top-tier MTEB retrieval scores on academic text + code; `BAAI/bge-large-en-v1.5` still selectable via `--model` |
 | **Vector Database** | Qdrant (persistent on-disk, production) | Per-user isolation under `db/users/<user_id>/`; metadata filtering, payload indices, on-disk HNSW. A legacy ChromaDB wrapper (`vector_store.py`) is still in the tree for the standalone CLI in `run_embed.py` but is not used by the orchestrator. |
 | **Chunking** | Section-aware (text) + Line-based (code) | Preserves semantic coherence for papers; summary-prefixed for code |
+
+**Per-embedding-model collections.** Each embedder writes to its own Qdrant collections — `rag_embeddings__<model>` for chunks, `paper_profiles__<model>` for profiles — derived in [`utils/s2_embedding/collections.py`](utils/s2_embedding/collections.py). This lets vectors from different-dimension embedders coexist in one store, so changing `EMBEDDING_MODEL` (e.g. to the single-GPU `bge-large`/`embeddinggemma`) never requires wiping the database; the new model's collections start empty and fill on re-ingest. The historical default model keeps the legacy un-suffixed names (`rag_embeddings` / `paper_profiles`) for backward compatibility, and a dimension guard in `qdrant_store.py` fails loudly if a model is pointed at a mismatched collection.
 
 #### File Structure
 
@@ -486,6 +528,14 @@ For databases created before the profile collection existed, `utils/orchestrator
 ```bash
 python -m utils.orchestrator.backfill_profiles --db-path ./db
 ```
+
+## Documentation & reports
+
+- [report/main.pdf](report/main.pdf) — technical report: stack, end-to-end pipeline, deployment, and the RAGAS evaluation (including a two-GPU vs. single-GPU per-question comparison). Source `report/main.tex`; rebuild with `report/build.sh`.
+- [report/setup_manual/manual.pdf](report/setup_manual/manual.pdf) — step-by-step setup & deployment manual (prerequisites, GPU/Docker per OS, both run modes, troubleshooting). Source `report/setup_manual/manual.tex`.
+- [docker/README.one-gpu.md](docker/README.one-gpu.md) — single-GPU mode guide (model knobs, `HF_TOKEN`, VRAM).
+- [RAG_quality_test/README.md](RAG_quality_test/README.md) — evaluation harness notes and CLI options.
+- Each `utils/<stage>/readme.md` — module-level detail for that pipeline stage.
 
 ## Change history
 
