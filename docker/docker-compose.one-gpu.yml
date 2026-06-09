@@ -1,0 +1,130 @@
+# One-GPU override for the unified RAG stack.
+# -----------------------------------------------------------------------------
+# The default stack spreads work over multiple cards: the 7B embedder owns
+# one GPU and gemma4:31b (the standalone docker/local_llm stack) owns another.
+# This override collapses everything onto a SINGLE card by:
+#
+#   * swapping the embedder to google/embeddinggemma-300m  (~0.6 GB)
+#   * keeping bge-reranker-v2-m3                            (~2.2 GB)
+#   * bringing the LLM in-stack as gemma3:12b int4 (Ollama) (~8 GB)
+#   * pinning embedder + reranker + MinerU + LLM all to GPU ${GPU:-0}
+#
+# Usage (leaves the default 2-GPU setup untouched):
+#
+#   GPU=0 ./up.one-gpu.sh --build          # convenience wrapper, or:
+#   GPU=0 docker compose -f docker-compose.yml -f docker-compose.one-gpu.yml up --build
+#
+# Requirements / caveats — see README.one-gpu.md:
+#   * embeddinggemma is GATED on Hugging Face: set HF_TOKEN in docker/.env.
+#   * Vector dimension changes 3584 -> 768: existing Qdrant collections in
+#     ../db are INCOMPATIBLE. Wipe ../db and re-ingest before querying.
+#
+# Override knobs (put in docker/.env, or export before running):
+#   GPU                     physical card index for the whole stack (default 0)
+#   ONE_GPU_EMBEDDING_MODEL embedder id     (default google/embeddinggemma-300m)
+#   ONE_GPU_LLM_MODEL       Ollama LLM tag  (default gemma3:12b-it-qat)
+#   HF_TOKEN                Hugging Face read token for the gated embedder
+services:
+
+  embedding-server:
+    environment:
+      # privileged: true (inherited) exposes every host GPU, so selection is
+      # by physical index via CUDA_VISIBLE_DEVICES — same pattern as the base
+      # compose. Keep this aligned with the deploy reservation below.
+      CUDA_VISIBLE_DEVICES: "${GPU:-0}"
+      EMBEDDING_DEVICE: "cuda:0"
+      RERANKER_DEVICE: "cuda:0"
+      # Distinct var name (not EMBEDDING_MODEL) so the base .env's gte-Qwen2
+      # value can't leak in and silently defeat the swap.
+      EMBEDDING_MODEL: "${ONE_GPU_EMBEDDING_MODEL:-google/embeddinggemma-300m}"
+      RERANKER_MODEL: "${RERANKER_MODEL:-BAAI/bge-reranker-v2-m3}"
+      # embeddinggemma is a gated repo; the loader needs a token to fetch it.
+      HF_TOKEN: "${HF_TOKEN:-}"
+      HUGGING_FACE_HUB_TOKEN: "${HF_TOKEN:-}"
+    deploy:
+      resources:
+        reservations:
+          # !override replaces the base list instead of concatenating it —
+          # otherwise the base EMBEDDING_GPU reservation lingers and the
+          # service would also request that card (and fail if it doesn't
+          # exist on a true single-GPU host).
+          devices: !override
+            - driver: nvidia
+              device_ids: ["${GPU:-0}"]
+              capabilities: [gpu]
+
+  rag-web:
+    depends_on:
+      # Wait for the LLM to finish pulling + warming before serving, so the
+      # first ingestion/query doesn't race a half-ready model.
+      ollama:
+        condition: service_healthy
+    environment:
+      # MinerU shares the one card too.
+      CUDA_VISIBLE_DEVICES: "${GPU:-0}"
+      # Must match embedding-server's model so the backend reads/writes this
+      # embedder's own Qdrant collections (kept separate from the 3584-dim
+      # gte-Qwen collections — no wipe needed when switching).
+      EMBEDDING_MODEL: "${ONE_GPU_EMBEDDING_MODEL:-google/embeddinggemma-300m}"
+      # Route to the in-stack Ollama service instead of host.docker.internal.
+      # An `environment:` entry wins over the same key in ./RAG/.env.
+      LOCAL_LLM_BASE_URL: "http://ollama:11434/v1"
+      LLM_MODEL_NAME: "${ONE_GPU_LLM_MODEL:-gemma3:12b-it-qat}"
+    deploy:
+      resources:
+        reservations:
+          # Replace, don't concatenate — see embedding-server note above.
+          devices: !override
+            - driver: nvidia
+              device_ids: ["${GPU:-0}"]
+              capabilities: [gpu]
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: rag-ollama
+    restart: unless-stopped
+    privileged: true
+    environment:
+      NVIDIA_VISIBLE_DEVICES: "${GPU:-0}"
+      NVIDIA_DRIVER_CAPABILITIES: "compute,utility"
+      CUDA_VISIBLE_DEVICES: "${GPU:-0}"
+      # Keep the model resident in VRAM between requests.
+      OLLAMA_KEEP_ALIVE: "-1"
+      # Cap the context window. Gemma's native window is huge (256K), whose
+      # KV cache alone can exceed 30 GB and force CPU offload on a shared card.
+      # 32K is ample for RAG (retrieved chunks + per-unit ingestion prompts)
+      # and keeps the whole model resident on one GPU with room for MinerU.
+      OLLAMA_CONTEXT_LENGTH: "${ONE_GPU_CONTEXT_LENGTH:-32768}"
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        ollama serve &
+        until ollama ls >/dev/null 2>&1; do sleep 1; done
+        echo "Pulling ${ONE_GPU_LLM_MODEL:-gemma3:12b-it-qat} …"
+        ollama pull "${ONE_GPU_LLM_MODEL:-gemma3:12b-it-qat}"
+        echo "Warming up …"
+        ollama run "${ONE_GPU_LLM_MODEL:-gemma3:12b-it-qat}" "hi" >/dev/null 2>&1 || true
+        echo "LLM ready."
+        wait
+    healthcheck:
+      # Healthy once the tag is present locally (i.e. pull finished). The long
+      # start_period covers the first ~8 GB download on a cold volume.
+      test: ["CMD-SHELL", "ollama ls 2>/dev/null | grep -q '${ONE_GPU_LLM_MODEL:-gemma3:12b-it-qat}'"]
+      interval: 15s
+      timeout: 10s
+      retries: 80
+      start_period: 1200s
+    volumes:
+      - ollama_storage:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["${GPU:-0}"]
+              capabilities: [gpu]
+    networks:
+      - shared-net
+
+volumes:
+  ollama_storage:

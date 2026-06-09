@@ -3,7 +3,12 @@ gunicorn>=21.2
 python-dotenv>=1.0
 
 # Model runtime — torch comes from the CUDA wheel index in the Dockerfile.
-sentence-transformers>=2.2
+# EmbeddingGemma support landed in sentence-transformers 5.1 / transformers
+# 4.56, so floor both there. These versions still drive gte-Qwen2-7B fine
+# (its remote modeling code is kept working by the shims in
+# utils/s2_embedding/embedder.py).
+sentence-transformers>=5.1
+transformers>=4.56
 # Required for device_map="auto" multi-GPU sharding of the 7B embedder.
 # Usually pulled transitively by transformers, but pin explicitly so the
 # code path doesn't fail at import time on a stripped wheelset.
