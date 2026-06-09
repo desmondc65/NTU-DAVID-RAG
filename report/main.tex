@@ -164,6 +164,7 @@ in five stages:
 \end{enumerate}
 
 \subsection{Querying: answering from the knowledge base}
+\label{sec:query}
 \begin{enumerate}[leftmargin=1.5em,itemsep=2pt]
   \item \textbf{Routing.} A heuristic-plus-LLM router classifies the query as
         \emph{local} or \emph{global} and extracts focus concepts. Global queries
@@ -184,6 +185,137 @@ in five stages:
         title. Conversation history is compacted when the prompt would exceed the
         context budget.
 \end{enumerate}
+
+% =====================================================================
+\section{Formal Description of the Pipeline}
+% =====================================================================
+This section makes the retrieval and ranking steps of the query pipeline
+(Section~\ref{sec:query}) precise. Let the indexed corpus be a set of
+documents $\mathcal{D}=\{d_1,\dots,d_N\}$, where each $d_i$ is a chunk, an
+enriched figure/equation/table description, or a Fortran unit, and let $q$ denote
+the user query.
+
+\subsection{Chunking and token budgeting}
+Manuscript text is segmented into chunks of at most $L_{\max}=384$ tokens with an
+overlap of $L_{\mathrm{ov}}=64$ tokens, where token counts use the lightweight
+word-based estimator
+\begin{equation}
+  \widehat{\tau}(t) \;=\; \big\lfloor 1.33 \cdot |\mathrm{words}(t)| \big\rfloor ,
+\end{equation}
+i.e.\ roughly $1.33$ tokens per whitespace-delimited word. A chunk is flushed when
+appending the next block $b$ would violate $\widehat{\tau}(\text{chunk}) +
+\widehat{\tau}(b) > L_{\max}$; the trailing text whose estimated length fits within
+$L_{\mathrm{ov}}$ is carried into the next chunk. Overlap never crosses a section
+boundary, and the hierarchical section path is prepended to each chunk before
+embedding.
+
+\subsection{Asymmetric embedding}
+A single encoder $E(\cdot)$ (\code{gte-Qwen2-7B-instruct}, $\dim = 3584$) maps text
+to vectors, but queries and documents are encoded \emph{asymmetrically} through
+distinct instruction prefixes. With
+\[
+  \pi_q = \text{``Instruct: Given a web search query, retrieve relevant passages
+  that answer the query}\,\backslash\text{n Query: ''},\qquad \pi_d = \varnothing,
+\]
+the document and query embeddings are the $L_2$-normalized encoder outputs
+\begin{equation}
+  \mathbf{v}_{d} = \frac{E(\pi_d \!\oplus\! d)}{\lVert E(\pi_d \!\oplus\! d)\rVert_2},
+  \qquad
+  \mathbf{q} = \frac{E(\pi_q \!\oplus\! q)}{\lVert E(\pi_q \!\oplus\! q)\rVert_2},
+  \qquad \mathbf{v}_d,\mathbf{q}\in\mathbb{S}^{3583}.
+\end{equation}
+Because both vectors lie on the unit hypersphere, inner product, cosine
+similarity, and (the negative of) squared Euclidean distance induce the
+\emph{same} ranking.
+
+\subsection{Dense retrieval}
+Qdrant scores candidates by cosine similarity, which for unit vectors reduces to
+the dot product
+\begin{equation}
+  s_{\mathrm{dense}}(q,d) \;=\; \cos\!\big(\mathbf{q},\mathbf{v}_d\big)
+  \;=\; \mathbf{q}^{\!\top}\mathbf{v}_d .
+\end{equation}
+For backends that report a cosine \emph{distance} $\delta\in[0,2]$ the
+similarity is recovered as $s_{\mathrm{dense}} = 1-\delta$. The dense stage
+returns the top $k_{\mathrm{dense}}=50$ documents by $s_{\mathrm{dense}}$.
+
+\subsection{Sparse retrieval (BM25)}
+In parallel, lexical relevance is scored with Okapi BM25 over a tokenization that
+deliberately preserves code-style identifiers (lower-cased alphanumerics plus
+\code{\_} and \code{.}, with hyphenated compounds such as \code{bge-large} kept
+intact). For query terms $t\in q$,
+\begin{equation}
+  s_{\mathrm{bm25}}(q,d) \;=\; \sum_{t\in q}
+  \mathrm{IDF}(t)\cdot
+  \frac{f(t,d)\,(k_1+1)}{f(t,d) + k_1\Big(1-b+b\,\dfrac{|d|}{\overline{|d|}}\Big)},
+  \qquad
+  \mathrm{IDF}(t)=\ln\!\frac{N-n_t+0.5}{n_t+0.5}+1,
+\end{equation}
+where $f(t,d)$ is the frequency of $t$ in $d$, $n_t$ the number of documents
+containing $t$, $|d|$ the document length, $\overline{|d|}$ the mean length, and
+the library defaults $k_1=1.5$, $b=0.75$ are used. Documents with
+$s_{\mathrm{bm25}}\le 0$ are discarded; the stage returns the top
+$k_{\mathrm{sparse}}=50$.
+
+\subsection{Reciprocal-rank fusion}
+The dense and sparse result lists are merged by rank rather than by raw score,
+which sidesteps the incommensurability of $s_{\mathrm{dense}}\in[-1,1]$ and the
+unbounded $s_{\mathrm{bm25}}$. Let $r_\ell(d)\in\{1,2,\dots\}$ be the rank of $d$
+in list $\ell\in\{\mathrm{dense},\mathrm{sparse}\}$ (omitted lists contribute
+nothing). With $k=60$,
+\begin{equation}
+  s_{\mathrm{rrf}}(d) \;=\!\!\sum_{\ell\in\{\mathrm{dense},\,\mathrm{sparse}\}}
+  \frac{1}{\,k + r_\ell(d)\,}.
+\end{equation}
+The additive constant $k$ damps the influence of very high ranks so that a
+document need not top \emph{both} lists to score well; agreement across the two
+retrievers is rewarded. The top $50$ fused candidates,
+$\mathcal{C}=\operatorname{arg\,top}_{50}\, s_{\mathrm{rrf}}$, proceed to
+reranking.
+
+\subsection{Cross-encoder reranking}
+Fusion uses only ranks; the reranker restores fine-grained query--document
+interaction by jointly encoding the pair with \code{bge-reranker-v2-m3}:
+\begin{equation}
+  s_{\mathrm{rerank}}(q,d) \;=\; \mathrm{CE}\big(q \,\Vert\, d\big), \qquad d\in\mathcal{C}.
+\end{equation}
+Unlike the bi-encoder of the dense stage, $\mathrm{CE}$ attends over the query and
+the candidate together, so it can verify exact identifier and equation matches
+that a single pooled vector blurs. Candidates are sorted by $s_{\mathrm{rerank}}$.
+
+\subsection{Paper-diversity selection}
+To prevent a single document from monopolizing the context, the reranked list is
+reduced to the final $k_{\mathrm{final}}=20$ passages by round-robin selection
+across source papers. Partition the reranked candidates by paper title into
+groups $G_1,\dots,G_M$, each kept in reranked order; the selection takes the
+$j$-th best passage of every paper before any paper's $(j{+}1)$-th:
+\begin{equation}
+  \mathcal{R} \;=\; \big[\, G_p[j] \;:\; j=0,1,2,\dots,\;\; p=1,\dots,M \,\big]
+  \quad\text{truncated to } k_{\mathrm{final}},
+\end{equation}
+skipping exhausted groups. The selected chunks are then expanded with their
+immediate neighbors (sequence index $\pm 1$ within the same paper), each neighbor
+inheriting a slightly penalized score $s_{\mathrm{rerank}}-0.01$ so originals
+sort ahead of context-only additions.
+
+\subsection{Global (cross-document) routing}
+A query is first classified as \emph{local} or \emph{global}. A case-insensitive
+regex $H(q)\in\{\text{global},\varnothing\}$ fires on comparative phrasing
+(``which papers'', ``compare'', ``differ'', ``in common'', \dots); when it does
+not fire, an LLM classifier returns a scope and $2$--$5$ focus concepts. The
+heuristic takes precedence, and the scope defaults to local:
+\begin{equation}
+  \mathrm{scope}(q)=
+  \begin{cases}
+    \text{global}, & H(q)=\text{global},\\[2pt]
+    \mathrm{LLM}_{\mathrm{scope}}(q), & \text{otherwise.}
+  \end{cases}
+\end{equation}
+A global query first retrieves the top $6$ papers from the \code{paper\_profiles}
+collection using the concept-enriched query $q' = q \,\Vert\, \text{``Concepts:
+''}\Vert \mathrm{concepts}$, then runs the hybrid pipeline above
+\emph{within} each selected paper (drawing $4$ chunks per paper) before a final
+rerank, so cross-document answers stay grounded in per-paper evidence.
 
 % =====================================================================
 \section{Deployment Architecture}
