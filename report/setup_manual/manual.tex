@@ -1,0 +1,410 @@
+% =====================================================================
+%  NTU-DAVID-RAG — Setup & Deployment Manual
+%  Compile:  ./build.sh   (or: pdflatex manual.tex, run twice for ToC)
+% =====================================================================
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{caption}
+\usepackage{float}
+\usepackage{listings}
+\usepackage[colorlinks=true,linkcolor=teal!60!black,urlcolor=teal!60!black,
+            citecolor=teal!60!black]{hyperref}
+
+% ---- section styling (matches the technical report) ----
+\usepackage{titlesec}
+\definecolor{accent}{RGB}{0,128,128}
+\titleformat{\section}{\Large\bfseries\color{accent}}{\thesection}{0.6em}{}
+\titleformat{\subsection}{\large\bfseries\color{accent!80!black}}{\thesubsection}{0.6em}{}
+\captionsetup{font=small,labelfont={bf,color=accent}}
+
+% ---- shell / code blocks ----
+\definecolor{codebg}{RGB}{246,248,248}
+\definecolor{codeframe}{RGB}{210,222,222}
+\lstdefinestyle{sh}{
+  basicstyle=\ttfamily\footnotesize,
+  backgroundcolor=\color{codebg},
+  frame=single, framesep=5pt, rulecolor=\color{codeframe},
+  breaklines=true, breakatwhitespace=false, postbreak=\mbox{\textcolor{accent}{$\hookrightarrow$}\space},
+  columns=fullflexible, keepspaces=true, showstringspaces=false,
+  xleftmargin=4pt, xrightmargin=4pt, aboveskip=7pt, belowskip=7pt,
+  literate={~}{{\textasciitilde}}1
+}
+\lstset{style=sh}
+\newcommand{\code}[1]{\texttt{\small #1}}
+
+\title{\vspace{-1.2cm}\textbf{\color{accent}NTU-DAVID-RAG}\\[2pt]
+       \large Setup \& Deployment Manual\\[4pt]
+       \normalsize Single-GPU and Two-GPU Docker installations}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+\vspace{-0.8cm}
+
+\begin{abstract}
+\noindent
+This manual is a step-by-step guide to installing and running the
+NTU-DAVID-RAG service from a clean machine. It covers prerequisites and
+GPU/Docker setup for Linux, Windows, and macOS; cloning the repository;
+configuring secrets; and two deployment options --- a \textbf{two-GPU}
+default (the 7B embedder on one card, the answer LLM on another) and a
+\textbf{single-GPU} mode that fits the whole stack on one card. Every step
+lists the exact commands.
+\end{abstract}
+
+\tableofcontents
+\vspace{0.4cm}
+
+% =====================================================================
+\section{What you are installing}
+% =====================================================================
+NTU-DAVID-RAG is a containerized retrieval-augmented-generation service for
+economics papers and their Fortran model code. The stack is orchestrated with
+Docker Compose and exposes a single web dashboard behind an Nginx proxy. It has
+four moving parts:
+
+\begin{itemize}[leftmargin=1.4em,itemsep=2pt]
+  \item \textbf{embedding-server} --- a GPU container that loads the text
+        embedder and the cross-encoder reranker once and serves them over HTTP.
+  \item \textbf{rag-web} --- the Flask/Gunicorn application (ingestion,
+        retrieval, generation, auth). It is CPU-only except for MinerU (PDF
+        layout/OCR), which uses the GPU transiently during ingestion.
+  \item \textbf{answer LLM} --- an Ollama service (e.g.\ \code{gemma4:31b} or
+        \code{gemma3:12b}) that writes the grounded answers.
+  \item \textbf{auth-db} + \textbf{proxy} --- PostgreSQL for users/sessions and
+        an Nginx reverse proxy that publishes the dashboard on one port.
+\end{itemize}
+
+\noindent\textbf{Two ways to run it:}
+\begin{itemize}[leftmargin=1.4em,itemsep=2pt]
+  \item \textbf{Two-GPU (default).} The 7B embedder owns one GPU; the
+        \code{gemma4:31b} LLM runs as a separate Ollama stack on another GPU.
+        Highest quality. See Section~\ref{sec:twogpu}.
+  \item \textbf{Single-GPU.} An override collapses the embedder, reranker,
+        MinerU, and an in-stack LLM onto one card, swapping in lighter models.
+        See Section~\ref{sec:onegpu}.
+\end{itemize}
+
+% =====================================================================
+\section{System requirements}\label{sec:req}
+% =====================================================================
+
+\subsection{Hardware}
+A CUDA-capable NVIDIA GPU is required --- model inference does not run on CPU in
+any practical configuration. Table~\ref{tab:hw} lists the rough VRAM and disk
+budgets.
+
+\begin{table}[H]
+\centering\small
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{>{\raggedright\arraybackslash}p{3.0cm}
+                >{\raggedright\arraybackslash}p{6.2cm}
+                >{\raggedright\arraybackslash}p{4.4cm}}
+\toprule
+\textbf{Mode} & \textbf{GPU / VRAM} & \textbf{Disk} \\
+\midrule
+Two-GPU &
+  Card A $\ge 24$\,GB (embedder \code{gte-Qwen2-7B} fp16 ${\sim}15$\,GB $+$
+  reranker ${\sim}2$\,GB $+$ transient MinerU); \newline
+  Card B $\ge 24$\,GB (LLM \code{gemma4:31b} Q4 ${\sim}18$\,GB) &
+  ${\sim}60$\,GB (weights $+$ images) \\
+Single-GPU &
+  One card $\ge 24$\,GB with a 12B LLM (\code{gemma3:12b} ${\sim}9$\,GB $+$
+  small embedder $+$ reranker $+$ MinerU); \newline
+  $\ge 40$\,GB if you run \code{gemma4:31b} on the same card &
+  ${\sim}40$\,GB (weights $+$ images) \\
+\bottomrule
+\end{tabular}
+\caption{Approximate hardware budgets. RAM $\ge 16$\,GB and a fast SSD are
+recommended; the first start downloads several GB of model weights.}
+\label{tab:hw}
+\end{table}
+
+\subsection{Software}
+\begin{itemize}[leftmargin=1.4em,itemsep=2pt]
+  \item \textbf{Git}.
+  \item \textbf{Docker Engine} ($\ge 24$) with the \textbf{Compose v2} plugin
+        (the \code{docker compose} subcommand), or Docker Desktop.
+  \item \textbf{NVIDIA GPU driver} new enough for CUDA 12.x.
+  \item \textbf{NVIDIA Container Toolkit} --- lets containers see the GPU.
+\end{itemize}
+
+\subsection{GPU + Docker setup by operating system}
+
+\paragraph{Linux (Ubuntu/Debian) --- recommended.}
+Install Docker Engine, then the NVIDIA Container Toolkit:
+\begin{lstlisting}
+# 1) Docker Engine + Compose plugin
+curl -fsSL https://get.docker.com | sh
+sudo usermod -aG docker "$USER"   # log out/in afterwards
+
+# 2) NVIDIA Container Toolkit (official repo)
+curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey \
+  | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
+curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list \
+  | sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' \
+  | sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
+sudo apt-get update && sudo apt-get install -y nvidia-container-toolkit
+
+# 3) Wire the toolkit into Docker and restart
+sudo nvidia-ctk runtime configure --runtime=docker
+sudo systemctl restart docker
+\end{lstlisting}
+Verify the GPU is visible inside a container:
+\begin{lstlisting}
+docker run --rm --gpus all nvidia/cuda:12.4.1-base-ubuntu22.04 nvidia-smi
+\end{lstlisting}
+You should see your GPU(s). (The NVIDIA \emph{driver} itself is installed on the
+host the usual way for your distro, e.g.\ \code{sudo apt-get install nvidia-driver-550}.)
+
+\paragraph{Windows 10/11 --- via WSL2.}
+\begin{enumerate}[leftmargin=1.5em,itemsep=2pt]
+  \item Install WSL2: \code{wsl --install} in an admin PowerShell, then reboot.
+  \item Install the \textbf{NVIDIA Windows driver} that includes WSL2/CUDA
+        support (the standard Game-Ready/Studio driver does). Do \emph{not}
+        install a separate driver inside WSL.
+  \item Install \textbf{Docker Desktop} and enable
+        \emph{Settings $\rightarrow$ Resources $\rightarrow$ WSL integration}.
+  \item In a WSL2 (Ubuntu) shell, verify:
+        \code{docker run --rm --gpus all nvidia/cuda:12.4.1-base-ubuntu22.04 nvidia-smi}.
+\end{enumerate}
+Clone and run the project \emph{inside the WSL2 filesystem} (e.g.\ under
+\code{\textasciitilde/} in Ubuntu, not \code{/mnt/c/...}) for correct file
+permissions and speed.
+
+\paragraph{macOS --- not supported for the GPU stack.}
+Docker Desktop on macOS cannot pass through an NVIDIA GPU (there is no CUDA on
+Mac). The embedder, reranker, LLM, and MinerU therefore cannot run locally. Use
+a Linux host or a remote GPU server for the service; a Mac can act as a
+\emph{client} (open the dashboard in a browser, optionally over an SSH tunnel:
+\code{ssh -L 3006:localhost:3006 user@gpu-host}).
+
+% =====================================================================
+\section{Get the code}
+% =====================================================================
+\begin{lstlisting}
+git clone https://github.com/desmondc65/NTU-DAVID-RAG.git
+cd NTU-DAVID-RAG
+\end{lstlisting}
+All deployment files live under \code{docker/}.
+
+% =====================================================================
+\section{Configure secrets and ports}\label{sec:config}
+% =====================================================================
+The stack reads its configuration from \code{docker/.env}. Create it from the
+template and set the two required secrets:
+\begin{lstlisting}
+cd docker
+cp .env.example .env
+
+# Generate strong secrets and paste them into .env:
+openssl rand -hex 24    # -> AUTH_DB_PASSWORD
+openssl rand -hex 32    # -> SESSION_SECRET
+\end{lstlisting}
+
+\noindent Key settings in \code{docker/.env} (defaults shown):
+\begin{table}[H]
+\centering\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{>{\raggedright\arraybackslash}p{4.2cm}
+                >{\raggedright\arraybackslash}p{3.0cm}
+                >{\raggedright\arraybackslash}p{6.0cm}}
+\toprule
+\textbf{Variable} & \textbf{Default} & \textbf{Meaning} \\
+\midrule
+\code{UNIFIED\_PORT}        & \code{3006} & External dashboard port. \\
+\code{EMBEDDING\_GPU}       & \code{1}    & Physical GPU index for the embedder/reranker. \\
+\code{RAG\_WEB\_GPU}        & \code{0}    & GPU index for MinerU during ingestion. \\
+\code{MINERU\_HYBRID\_BATCH\_RATIO} & \code{8} & Caps MinerU's batch size to avoid OOM on a shared card. \\
+\code{EMBEDDING\_MODEL}     & \code{gte-Qwen2-7B} & Embedder (must match what populated the DB). \\
+\code{AUTH\_DB\_PASSWORD}   & --- & \textbf{Required.} PostgreSQL password. \\
+\code{SESSION\_SECRET}      & --- & \textbf{Required.} Session/CSRF signing key. \\
+\code{ALLOW\_REGISTRATION}  & \code{true} & Set \code{false} after creating accounts. \\
+\code{SESSION\_COOKIE\_SECURE} & \code{false} & Set \code{true} when behind HTTPS. \\
+\bottomrule
+\end{tabular}
+\caption{Core environment variables (full list in \code{docker/.env.example}).}
+\label{tab:env}
+\end{table}
+
+% =====================================================================
+\section{Option A --- Two-GPU deployment (default)}\label{sec:twogpu}
+% =====================================================================
+The embedder/reranker run on \code{EMBEDDING\_GPU}; the answer LLM
+(\code{gemma4:31b}) runs as a separate Ollama service on its own GPU.
+
+\paragraph{Step 1 --- Start the answer LLM.}
+The standalone Ollama compose pins the model to GPU index \code{2}; edit
+\code{NVIDIA\_VISIBLE\_DEVICES}/\code{CUDA\_VISIBLE\_DEVICES} in the file to pick
+another card.
+\begin{lstlisting}
+cd docker/local_llm
+docker compose -f docker-compose.gemma4_31b_ollama.yml up -d
+# First start pulls gemma4:31b (~19 GB) and warms it. API on :11434.
+docker logs -f gemma4_ollama        # wait for "Model ready."
+\end{lstlisting}
+
+\paragraph{Step 2 --- Start the RAG stack.}
+From \code{docker/}, with your \code{.env} in place:
+\begin{lstlisting}
+cd ..                 # back to docker/
+./up.sh --build       # builds images, starts auth-db, embedding-server,
+                      # rag-web, and the proxy (foreground; logs to log.txt)
+# Detached instead:   ./up.sh -d --build
+\end{lstlisting}
+The first boot downloads the 7B embedder (${\sim}29$\,GB) and reranker into
+\code{docker/../hf\_cache}; the \code{embedding-server} healthcheck has a
+${\sim}10$\,minute grace window while this happens. \code{rag-web} starts only
+once the embedder is healthy.
+
+\paragraph{Step 3 --- Confirm the LLM connection.}
+\code{rag-web} reaches the LLM via \code{docker/RAG/.env}
+(\code{LOCAL\_LLM\_BASE\_URL}, default \code{http://host.docker.internal:11434/v1},
+and \code{LLM\_MODEL\_NAME=gemma4:31b}). Adjust if your LLM runs elsewhere.
+
+Continue at Section~\ref{sec:firstrun}.
+
+% =====================================================================
+\section{Option B --- Single-GPU deployment}\label{sec:onegpu}
+% =====================================================================
+A compose override (\code{docker/docker-compose.one-gpu.yml}) runs
+\emph{everything} on one card: a lighter embedder, the reranker, MinerU, and an
+in-stack Ollama LLM. Your default two-GPU setup is untouched --- this is an
+opt-in launcher. Full notes: \code{docker/README.one-gpu.md}.
+
+\paragraph{Step 1 --- (Optional) pick models and token.}
+Defaults: embedder \code{embeddinggemma-300m}, LLM \code{gemma3:12b-it-qat}.
+\code{embeddinggemma} is \emph{gated} on Hugging Face --- either accept its
+license and set a token, or switch to a non-gated embedder. Put any overrides in
+\code{docker/.env}:
+\begin{lstlisting}
+# docker/.env  (single-GPU knobs; all optional)
+HF_TOKEN=hf_xxx                              # needed only for embeddinggemma
+ONE_GPU_EMBEDDING_MODEL=BAAI/bge-large-en-v1.5   # non-gated alternative
+ONE_GPU_LLM_MODEL=gemma3:12b-it-qat
+# OLLAMA_CONTEXT_LENGTH=32768                 # cap the LLM context to fit VRAM
+\end{lstlisting}
+
+\paragraph{Step 2 --- Launch on a chosen card.}
+\begin{lstlisting}
+cd docker
+GPU=0 ./up.one-gpu.sh --build     # GPU=<physical index> selects the card
+# Detached:  GPU=0 ./up.one-gpu.sh -d --build
+\end{lstlisting}
+First boot builds the embedding image, pulls the LLM (${\sim}8$--$19$\,GB), and
+loads the models; the in-stack \code{ollama} healthcheck waits for the pull to
+finish before \code{rag-web} starts.
+
+\paragraph{Note --- switching embedders is non-destructive.}
+Each embedder writes to its own Qdrant collections
+(\code{rag\_embeddings\_\_<model>}), so different-dimension models coexist; you
+do not need to wipe the database when changing \code{ONE\_GPU\_EMBEDDING\_MODEL}.
+The new model's collections start empty, so re-ingest your papers under it.
+
+% =====================================================================
+\section{First run and verification}\label{sec:firstrun}
+% =====================================================================
+\begin{enumerate}[leftmargin=1.5em,itemsep=3pt]
+  \item \textbf{Watch startup.} \code{docker compose ps} shows service health;
+        \code{docker logs -f embedding-server} shows the embedder loading.
+        Expect several minutes on a cold cache.
+  \item \textbf{Open the dashboard:} \code{http://<host>:3006/}. Over SSH:
+        \code{ssh -L 3006:localhost:3006 user@host} then browse
+        \code{http://localhost:3006/}.
+  \item \textbf{Create an account.} Register on the login page (open
+        registration is on by default). Set \code{ALLOW\_REGISTRATION=false} in
+        \code{.env} and restart once your accounts exist.
+  \item \textbf{Ingest a paper.} Upload a PDF (and, optionally, its Fortran
+        source). Ingestion is synchronous --- PDF parsing, enrichment, code
+        digestion, chunking, embedding --- and can take several minutes per
+        paper on the first run.
+  \item \textbf{Ask a question.} Each paper's vectors are isolated per user;
+        answers cite paper titles and are grounded in retrieved context.
+\end{enumerate}
+
+% =====================================================================
+\section{Day-to-day operations}
+% =====================================================================
+Run these from \code{docker/} (add \code{-f docker-compose.yml -f
+docker-compose.one-gpu.yml} for single-GPU mode, or just use the matching
+\code{up} script).
+
+\begin{table}[H]
+\centering\small
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{>{\raggedright\arraybackslash}p{7.2cm}
+                >{\raggedright\arraybackslash}p{6.6cm}}
+\toprule
+\textbf{Task} & \textbf{Command} \\
+\midrule
+Start (two-GPU)        & \code{./up.sh -d} \\
+Start (single-GPU)     & \code{GPU=0 ./up.one-gpu.sh -d} \\
+Status / health        & \code{docker compose ps} \\
+Follow a service log   & \code{docker logs -f rag-web} \\
+Rebuild after a code change & \code{./up.sh -d --build} \\
+Stop (keep data)       & \code{docker compose down} \\
+Stop single-GPU stack  & \code{docker compose -f docker-compose.yml -f docker-compose.one-gpu.yml down} \\
+GPU usage              & \code{nvidia-smi} \\
+\bottomrule
+\end{tabular}
+\caption{Common operational commands.}
+\label{tab:ops}
+\end{table}
+
+\noindent Persistent state lives in the repository tree and survives
+\code{down}: \code{db/} (Qdrant vectors), \code{data/} (uploaded papers),
+\code{auth\_db/} (PostgreSQL), and \code{hf\_cache/} (downloaded model weights).
+
+% =====================================================================
+\section{Troubleshooting}
+% =====================================================================
+\begin{itemize}[leftmargin=1.4em,itemsep=3pt]
+  \item \textbf{``could not select device driver \dots gpu''} --- the NVIDIA
+        Container Toolkit is not configured. Re-run
+        \code{sudo nvidia-ctk runtime configure --runtime=docker} and restart
+        Docker; confirm with the \code{--gpus all} test in Section~\ref{sec:req}.
+  \item \textbf{Port 3006 already in use} --- set a different
+        \code{UNIFIED\_PORT} in \code{.env} and restart.
+  \item \textbf{\code{embedding-server} stuck ``starting''} --- it is still
+        downloading the 7B weights (${\sim}29$\,GB). Watch
+        \code{docker logs -f embedding-server}; the healthcheck allows
+        ${\sim}10$\,min.
+  \item \textbf{GPU out-of-memory during ingestion} --- lower
+        \code{MINERU\_HYBRID\_BATCH\_RATIO} (8 $\rightarrow$ 4 $\rightarrow$ 2),
+        and in single-GPU mode lower \code{OLLAMA\_CONTEXT\_LENGTH}.
+  \item \textbf{Ingestion times out (504)} --- very large Fortran files make a
+        single upload exceed the proxy timeout; the bundled Nginx/Gunicorn
+        timeouts are 3600\,s, which suits large files but still bounds them.
+  \item \textbf{Empty answers / LLM errors} --- verify the LLM is reachable:
+        \code{curl http://localhost:11434/api/tags} should list the model named
+        in \code{LLM\_MODEL\_NAME}.
+  \item \textbf{Gated-model 401 (single-GPU)} --- set \code{HF\_TOKEN} in
+        \code{.env} for \code{embeddinggemma}, or use the non-gated
+        \code{BAAI/bge-large-en-v1.5}.
+\end{itemize}
+
+% =====================================================================
+\section{Quick reference}
+% =====================================================================
+\begin{lstlisting}
+# ---- Two-GPU (default) -------------------------------------------------
+git clone https://github.com/desmondc65/NTU-DAVID-RAG.git
+cd NTU-DAVID-RAG/docker && cp .env.example .env      # set AUTH_DB_PASSWORD + SESSION_SECRET
+( cd local_llm && docker compose -f docker-compose.gemma4_31b_ollama.yml up -d )
+./up.sh -d --build
+# open http://<host>:3006/
+
+# ---- Single-GPU -------------------------------------------------------
+cd NTU-DAVID-RAG/docker && cp .env.example .env      # set secrets (+ HF_TOKEN or bge-large)
+GPU=0 ./up.one-gpu.sh -d --build
+# open http://<host>:3006/
+\end{lstlisting}
+
+\end{document}
