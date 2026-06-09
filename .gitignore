@@ -20,3 +20,10 @@ graph_data/*
 graph_db/*
 hf_cache/
 auth_db/
+
+# Claude Code local state (here a symlink to ~/.claude)
+.claude
+
+# Run logs and underscore-prefixed scratch tooling/eval artifacts
+docker/*.log
+RAG_quality_test/_*
