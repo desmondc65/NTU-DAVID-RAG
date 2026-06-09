@@ -47,12 +47,20 @@ if str(PROJECT_ROOT) not in sys.path:
 from qdrant_client import models  # noqa: E402
 
 from utils.orchestrator.ingest_paper import extract_paper_metadata  # noqa: E402
-from utils.orchestrator.paper_profiler import PROFILE_COLLECTION  # noqa: E402
 from utils.s2_embedding.qdrant_store import QdrantVectorStore  # noqa: E402
+from utils.s2_embedding.collections import (  # noqa: E402
+    CHUNK_COLLECTION_BASE,
+    PROFILE_COLLECTION_BASE,
+    matching_collections,
+)
 
 logger = logging.getLogger(__name__)
 
-MAIN_COLLECTION = "rag_embeddings"
+# Bases shared with the rest of the stack. A paper may have been ingested under
+# more than one embedder (each writes to `<base>__<tag>` collections), so the
+# rename below sweeps every matching collection, not just these bare names.
+MAIN_COLLECTION = CHUNK_COLLECTION_BASE
+PROFILE_COLLECTION = PROFILE_COLLECTION_BASE
 
 
 # ── JSON helpers ────────────────────────────────────────────────────────
@@ -128,6 +136,26 @@ def _filter_by(key: str, value: str) -> "models.Filter":
     )
 
 
+def _list_collection_names(qdrant_dir: Path) -> List[str]:
+    """List collection names in the store (empty list if it can't be opened)."""
+    try:
+        store = QdrantVectorStore(
+            persist_dir=str(qdrant_dir),
+            collection_name=MAIN_COLLECTION,
+            manage_schema=False,
+        )
+    except Exception as exc:
+        logger.warning("Cannot open Qdrant store at %s: %s", qdrant_dir, exc)
+        return []
+    try:
+        return [c.name for c in store.client.get_collections().collections]
+    except Exception as exc:
+        logger.warning("Cannot list Qdrant collections: %s", exc)
+        return []
+    finally:
+        store.close()
+
+
 def _update_qdrant_collection(
     qdrant_dir: Path,
     collection: str,
@@ -148,7 +176,11 @@ def _update_qdrant_collection(
     Returns the total number of points updated.
     """
     try:
-        store = QdrantVectorStore(persist_dir=str(qdrant_dir), collection_name=collection)
+        # Payload-only update — never create or dimension-check the collection
+        # (vector size is unknown here and irrelevant to a payload write).
+        store = QdrantVectorStore(
+            persist_dir=str(qdrant_dir), collection_name=collection, manage_schema=False
+        )
     except Exception as exc:
         logger.warning("Cannot open Qdrant collection %r: %s", collection, exc)
         return 0
@@ -164,7 +196,10 @@ def _update_qdrant_collection(
         for sf in old_source_files:
             if sf:
                 filters.append(_filter_by("source_file", sf))
-        if collection == PROFILE_COLLECTION and not old_title:
+        is_profile = collection == PROFILE_COLLECTION or collection.startswith(
+            f"{PROFILE_COLLECTION}__"
+        )
+        if is_profile and not old_title:
             # The profile collection doesn't carry source_file on its
             # synthetic point, and an untitled paper's payload still has
             # paper_title=="" — match that directly.
@@ -270,15 +305,26 @@ def retry_paper_metadata(
     # of this paper's points even when ``old_title`` was empty.
     qdrant_dir = db_path / "qdrant_data"
     old_source_files = [p for p in (content_list_path, fortran_digest_path) if p]
-    points_main = _update_qdrant_collection(
-        qdrant_dir, MAIN_COLLECTION,
-        old_title=old_title, old_source_files=old_source_files,
-        new_title=new_title, new_authors=new_authors,
+
+    # The paper may live in several per-embedder collections (rag_embeddings,
+    # rag_embeddings__<tag>, …). Update every one so the rename is consistent
+    # regardless of which embedder ingested it.
+    existing = _list_collection_names(qdrant_dir)
+    points_main = sum(
+        _update_qdrant_collection(
+            qdrant_dir, coll,
+            old_title=old_title, old_source_files=old_source_files,
+            new_title=new_title, new_authors=new_authors,
+        )
+        for coll in matching_collections(existing, MAIN_COLLECTION)
     )
-    points_profile = _update_qdrant_collection(
-        qdrant_dir, PROFILE_COLLECTION,
-        old_title=old_title, old_source_files=old_source_files,
-        new_title=new_title, new_authors=new_authors,
+    points_profile = sum(
+        _update_qdrant_collection(
+            qdrant_dir, coll,
+            old_title=old_title, old_source_files=old_source_files,
+            new_title=new_title, new_authors=new_authors,
+        )
+        for coll in matching_collections(existing, PROFILE_COLLECTION)
     )
 
     # ── Registry ────────────────────────────────────────────────────────

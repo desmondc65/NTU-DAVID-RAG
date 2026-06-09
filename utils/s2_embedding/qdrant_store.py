@@ -22,6 +22,7 @@ class QdrantVectorStore:
         collection_name: str = "rag_embeddings",
         vector_size: int = 3584,
         client: Optional[QdrantClient] = None,
+        manage_schema: bool = True,
     ):
         """
         Args:
@@ -34,6 +35,12 @@ class QdrantVectorStore:
                 process (e.g. the chunk collection + the paper_profiles
                 collection). When ``None`` a new client is created and
                 owned by this instance.
+            manage_schema: When True (write path), create the collection if it
+                is missing and, if it already exists, assert its vector size
+                matches ``vector_size`` — this catches a wrong-dimension write
+                loudly instead of letting Qdrant fail opaquely on upsert.
+                Set False for payload-only / read-only opens (delete, metadata
+                rename), where ``vector_size`` is unknown and irrelevant.
         """
         self.persist_dir = persist_dir
         self.collection_name = collection_name
@@ -46,15 +53,40 @@ class QdrantVectorStore:
             self.client = QdrantClient(path=persist_dir)
             self._owns_client = True
 
-        # Create collection if it doesn't exist
         existing = [c.name for c in self.client.get_collections().collections]
         if collection_name not in existing:
-            self.client.create_collection(
-                collection_name=collection_name,
-                vectors_config=models.VectorParams(
-                    size=vector_size,
-                    distance=models.Distance.COSINE,
-                ),
+            if manage_schema:
+                self.client.create_collection(
+                    collection_name=collection_name,
+                    vectors_config=models.VectorParams(
+                        size=vector_size,
+                        distance=models.Distance.COSINE,
+                    ),
+                )
+        elif manage_schema:
+            self._assert_vector_size(vector_size)
+
+    def _assert_vector_size(self, expected: int) -> None:
+        """Raise if the existing collection's vector size != ``expected``.
+
+        Different embedding models must live in different collections (see
+        ``utils.s2_embedding.collections``); this guard makes a misroute fail
+        with an actionable message rather than a cryptic upsert error.
+        """
+        try:
+            params = self.client.get_collection(self.collection_name).config.params.vectors
+            size = getattr(params, "size", None)
+        except Exception:
+            return  # can't introspect (e.g. named-vector config) — don't block
+        if size is None or expected is None:
+            return
+        if int(size) != int(expected):
+            raise ValueError(
+                f"Collection '{self.collection_name}' stores {size}-dim vectors, "
+                f"but the active embedder produces {expected}-dim vectors. Each "
+                f"embedding model uses its own collection — see "
+                f"utils/s2_embedding/collections.py. Point this model at its own "
+                f"collection (the default), or wipe this one to repurpose it."
             )
 
     def add_documents(

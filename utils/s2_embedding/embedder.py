@@ -81,6 +81,11 @@ _DEFAULT_MODEL = "Alibaba-NLP/gte-Qwen2-7B-instruct"
 _BGE_QUERY_PREFIX = "Represent this sentence for searching relevant passages: "
 _GTE_QUERY_PREFIX = "Instruct: Given a web search query, retrieve relevant passages that answer the query\nQuery: "
 _E5_QUERY_PREFIX = "query: "
+# EmbeddingGemma is trained with explicit task prompts; these are the exact
+# retrieval prompts from its model card. The document side assumes no title
+# is available ("title: none | text: <passage>").
+_EMBEDDINGGEMMA_QUERY_PREFIX = "task: search result | query: "
+_EMBEDDINGGEMMA_DOC_PREFIX = "title: none | text: "
 
 
 def _query_prefix(model_name: str) -> str:
@@ -88,6 +93,8 @@ def _query_prefix(model_name: str) -> str:
     name = model_name.lower()
     if "gte-qwen" in name:
         return _GTE_QUERY_PREFIX
+    if "embeddinggemma" in name:
+        return _EMBEDDINGGEMMA_QUERY_PREFIX
     if "bge" in name:
         return _BGE_QUERY_PREFIX
     if "e5" in name:
@@ -98,6 +105,8 @@ def _query_prefix(model_name: str) -> str:
 def _doc_prefix(model_name: str) -> str:
     """Return the appropriate document-side instruction prefix."""
     name = model_name.lower()
+    if "embeddinggemma" in name:
+        return _EMBEDDINGGEMMA_DOC_PREFIX
     if "e5" in name:
         return "passage: "
     return ""

@@ -96,6 +96,11 @@ services:
       # is only touched transiently by MinerU during PDF ingestion.
       RAG_EMBEDDING_SERVER_URL: "http://embedding-server:8080"
       RAG_RERANKER_SERVER_URL: "http://embedding-server:8080"
+      # Identity of the embedder the server loaded. The backend uses it to
+      # select this model's Qdrant collections — vectors from different
+      # embedders live in separate collections, so this MUST match the
+      # embedding-server's EMBEDDING_MODEL above.
+      EMBEDDING_MODEL: "${EMBEDDING_MODEL:-Alibaba-NLP/gte-Qwen2-7B-instruct}"
       RAG_DEVICE: "cpu"
       RAG_EMBEDDING_DEVICE: "cpu"
       RAG_RERANKER_DEVICE: "cpu"

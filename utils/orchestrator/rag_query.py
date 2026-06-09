@@ -34,11 +34,11 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from utils.s2_embedding.embedder import EmbeddingModel, _DEFAULT_MODEL
 from utils.s2_embedding.qdrant_store import QdrantVectorStore
+from utils.s2_embedding.collections import collection_names, resolve_embedding_model
 from utils.s3_RAG.bm25_retriever import BM25Retriever
 from utils.s3_RAG.reranker import Reranker
 from utils.llm_clients.local_llm import LocalLLMClient
 from utils.orchestrator.paper_profiler import (
-    PROFILE_COLLECTION,
     compute_profile_overlap,
     format_profile_block,
 )
@@ -83,6 +83,10 @@ class QdrantDenseRetriever:
         self.store = QdrantVectorStore(
             persist_dir=qdrant_dir,
             collection_name=collection_name,
+            # Reader: the collection already exists at the active embedder's
+            # dimension. Don't let the write-path dimension guard fire on the
+            # default vector_size here (query embeddings match by construction).
+            manage_schema=False,
         )
         self.embedder = EmbeddingModel(
             model_name=embedding_model,
@@ -529,11 +533,26 @@ class RAGQueryEngine:
         self.reranker_device = _resolve_torch_device(reranker_pref)
         logger.info("Embedding device: %s | Reranker device: %s", self.embedding_device, self.reranker_device)
 
+        # Route to this embedder's own collections so vectors from different
+        # embedding models coexist in one store. The embedder is remote in the
+        # Docker stack, so resolve the active model from env / the server's
+        # /info rather than the `embedding_model` arg (which defaults).
+        active_model = resolve_embedding_model(
+            embedding_model if embedding_model != _DEFAULT_MODEL else None
+        )
+        chunk_collection, self.profile_collection = collection_names(
+            active_model, base_chunk=collection_name
+        )
+        logger.info(
+            "Active embedder '%s' → chunk collection '%s', profile collection '%s'",
+            active_model, chunk_collection, self.profile_collection,
+        )
+
         logger.info("Loading dense retriever (Qdrant)…")
         self.dense = QdrantDenseRetriever(
             qdrant_dir=qdrant_dir,
-            collection_name=collection_name,
-            embedding_model=embedding_model,
+            collection_name=chunk_collection,
+            embedding_model=active_model,
             device=self.embedding_device,
         )
 
@@ -543,14 +562,14 @@ class RAGQueryEngine:
             existing_collections = {
                 c.name for c in self.dense.store.client.get_collections().collections
             }
-            self.profile_enabled = PROFILE_COLLECTION in existing_collections
+            self.profile_enabled = self.profile_collection in existing_collections
         except Exception as exc:
             logger.warning("Could not list Qdrant collections: %s", exc)
             self.profile_enabled = False
         if self.profile_enabled:
-            logger.info("Profile collection '%s' detected — global-query routing enabled.", PROFILE_COLLECTION)
+            logger.info("Profile collection '%s' detected — global-query routing enabled.", self.profile_collection)
         else:
-            logger.info("Profile collection missing — global queries will fall back to local retrieval.")
+            logger.info("Profile collection '%s' missing — global queries will fall back to local retrieval.", self.profile_collection)
 
         logger.info("Building BM25 index from Qdrant…")
         self.bm25 = BM25Retriever()
@@ -820,7 +839,7 @@ class RAGQueryEngine:
         try:
             query_emb = self.dense.embedder.embed_query(query)
             points = self.dense.store.client.query_points(
-                collection_name=PROFILE_COLLECTION,
+                collection_name=self.profile_collection,
                 query=query_emb,
                 limit=top_k,
                 with_payload=True,

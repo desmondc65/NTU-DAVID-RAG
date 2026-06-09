@@ -34,6 +34,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from utils.s2_embedding.embedder import EmbeddingModel, _DEFAULT_MODEL
 from utils.s2_embedding.qdrant_store import QdrantVectorStore
+from utils.s2_embedding.collections import collection_names, resolve_embedding_model
 from utils.orchestrator.paper_profiler import (
     PROFILE_COLLECTION,
     build_paper_profile,
@@ -433,6 +434,7 @@ def _store_paper_profile(
     fortran_digest_json: str,
     embedder: EmbeddingModel,
     vector_size: int,
+    profile_collection: str = PROFILE_COLLECTION,
     llm_client: Optional[LocalLLMClient] = None,
 ) -> Optional[Dict]:
     """Build a paper profile via LLM, embed it, upsert into the profile collection.
@@ -457,7 +459,7 @@ def _store_paper_profile(
 
     profile_store = QdrantVectorStore(
         persist_dir=str(db_path / "qdrant_data"),
-        collection_name=PROFILE_COLLECTION,
+        collection_name=profile_collection,
         vector_size=vector_size,
     )
     try:
@@ -468,7 +470,7 @@ def _store_paper_profile(
             metadatas=[profile_to_payload(profile)],
             ids=[profile_id],
         )
-        logger.info("Upserted paper profile for '%s' into '%s'", paper_title, PROFILE_COLLECTION)
+        logger.info("Upserted paper profile for '%s' into '%s'", paper_title, profile_collection)
     finally:
         profile_store.close()
 
@@ -528,7 +530,23 @@ def store_ingested_data(
 
     # ── 2. Embedding ─────────────────────────────────────────────────────
     logger.info("═══ Step 2/4: Embedding ═══")
-    embedder = EmbeddingModel(model_name=embedding_model, device=embedding_device)
+
+    # Resolve the active embedder first, so the model that encodes the chunks
+    # and the collections they're stored in always agree. In the Docker stack
+    # the embedder is remote, so the id comes from env / the server's /info
+    # rather than the local `embedding_model` arg (which just defaults).
+    active_model = resolve_embedding_model(
+        embedding_model if embedding_model != _DEFAULT_MODEL else None
+    )
+    chunk_collection, profile_collection = collection_names(
+        active_model, base_chunk=collection_name
+    )
+    logger.info(
+        "Active embedder '%s' → chunk collection '%s', profile collection '%s'",
+        active_model, chunk_collection, profile_collection,
+    )
+
+    embedder = EmbeddingModel(model_name=active_model, device=embedding_device)
 
     texts = [c["text"] for c in all_chunks]
     t0 = time.time()
@@ -540,11 +558,12 @@ def store_ingested_data(
     # ── 3. Store in Qdrant ───────────────────────────────────────────────
     logger.info("═══ Step 3/4: Storing in Qdrant ═══")
 
-    # Determine vector size from first embedding
+    # Determine vector size from first embedding (routed to this embedder's
+    # own collections, derived above).
     vector_size = len(embeddings[0]) if embeddings else 3584
     store = QdrantVectorStore(
         persist_dir=str(db_path / "qdrant_data"),
-        collection_name=collection_name,
+        collection_name=chunk_collection,
         vector_size=vector_size,
     )
 
@@ -602,6 +621,7 @@ def store_ingested_data(
             fortran_digest_json=fortran_digest_json,
             embedder=embedder,
             vector_size=vector_size,
+            profile_collection=profile_collection,
         )
 
     return {

@@ -258,8 +258,12 @@ def delete_paper(paper_title: str):
     Remove a paper from the registry and delete its vectors from Qdrant.
     """
     try:
-        from utils.s2_embedding.qdrant_store import QdrantVectorStore
-        from qdrant_client import models
+        from qdrant_client import QdrantClient, models
+        from utils.s2_embedding.collections import (
+            CHUNK_COLLECTION_BASE,
+            PROFILE_COLLECTION_BASE,
+            matching_collections,
+        )
 
         user = current_user()
 
@@ -267,28 +271,36 @@ def delete_paper(paper_title: str):
             # Close any active reader engine before opening a writer client.
             _reload_rag_engine(user.id)
 
-            # 1. Remove from Qdrant
+            # 1. Remove from Qdrant — sweep every per-embedder collection the
+            #    paper might live in (rag_embeddings[/__tag] + paper_profiles[/__tag]),
+            #    since different embedders write to different collections.
             qdrant_dir = str(_user_db_path(user.id) / "qdrant_data")
             if Path(qdrant_dir).exists():
-                store = QdrantVectorStore(persist_dir=qdrant_dir)
+                client = QdrantClient(path=qdrant_dir)
                 try:
-                    # Delete all points matching the paper title
-                    store.client.delete(
-                        collection_name=store.collection_name,
-                        points_selector=models.FilterSelector(
-                            filter=models.Filter(
-                                must=[
-                                    models.FieldCondition(
-                                        key="paper_title",
-                                        match=models.MatchValue(value=paper_title),
-                                    )
-                                ]
-                            )
-                        ),
+                    names = [c.name for c in client.get_collections().collections]
+                    targets = (
+                        matching_collections(names, CHUNK_COLLECTION_BASE)
+                        + matching_collections(names, PROFILE_COLLECTION_BASE)
                     )
-                    logger.info("Deleted Qdrant points for '%s' (user=%s)", paper_title, user.id)
+                    selector = models.FilterSelector(
+                        filter=models.Filter(
+                            must=[
+                                models.FieldCondition(
+                                    key="paper_title",
+                                    match=models.MatchValue(value=paper_title),
+                                )
+                            ]
+                        )
+                    )
+                    for coll in targets:
+                        client.delete(collection_name=coll, points_selector=selector)
+                    logger.info(
+                        "Deleted Qdrant points for '%s' across %d collection(s) (user=%s)",
+                        paper_title, len(targets), user.id,
+                    )
                 finally:
-                    store.close()
+                    client.close()
 
             # 2. Remove from registry
             registry = _get_registry(user.id)
